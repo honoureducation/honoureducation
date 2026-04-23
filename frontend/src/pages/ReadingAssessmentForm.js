@@ -38,6 +38,7 @@ export default function ReadingAssessmentForm() {
   });
 
   const [score, setScore] = useState(null);
+  const [teacherNotes, setTeacherNotes] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleInputChange = (e) => {
@@ -73,13 +74,15 @@ export default function ReadingAssessmentForm() {
     try {
       const assessmentData = {
         assessmentType: 'Reading Assessment',
+        yearGroupType: 'junior',
         email: formData.email,
         studentName: formData.studentName,
         yearGroupAndClass: formData.yearGroupAndClass,
         teacherName: formData.teacherName,
         readingScore: score,
         level: score,
-        totalScore: ['A', 'B', 'C', 'D', 'E'].indexOf(score)
+        totalScore: ['A', 'B', 'C', 'D', 'E'].indexOf(score),
+        readingNotes: teacherNotes
       };
 
       await assessmentAPI.createAssessment(assessmentData);
@@ -95,6 +98,7 @@ export default function ReadingAssessmentForm() {
         teacherName: ''
       });
       setScore(null);
+      setTeacherNotes('');
     } catch (err) {
       toast.error(`❌ Error: ${err.message || 'Failed to submit assessment'}`, {
         position: 'top-right',
@@ -223,6 +227,8 @@ export default function ReadingAssessmentForm() {
           <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-yellow-500">
             <h3 className="text-lg font-bold text-gray-900 mb-4">Teacher Notes</h3>
             <textarea
+              value={teacherNotes}
+              onChange={(e) => setTeacherNotes(e.target.value)}
               placeholder="Mark accuracy, fluency errors, and additional comments..."
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 h-24 resize-none"
             />

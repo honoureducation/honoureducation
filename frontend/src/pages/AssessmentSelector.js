@@ -5,14 +5,14 @@ export default function AssessmentSelector() {
   const navigate = useNavigate();
 
   const assessments = [
-    {
-      id: 'eal-ell',
-      title: 'Secondary EAL & ELL Teacher Assessment',
-      icon: '📝',
-      description: 'Comprehensive English language assessment covering communication, listening, reading, speaking, and writing skills.',
-      color: 'from-blue-500 to-blue-600',
-      route: '/assessment/eal-ell'
-    },
+    // {
+    //   id: 'eal-ell',
+    //   title: 'Secondary EAL & ELL Teacher Assessment',
+    //   icon: '📝',
+    //   description: 'Comprehensive English language assessment covering communication, listening, reading, speaking, and writing skills.',
+    //   color: 'from-blue-500 to-blue-600',
+    //   route: '/assessment/eal-ell'
+    // },
     {
       id: 'listening-p1',
       title: 'Listening Assessment Part 1',
@@ -33,7 +33,7 @@ export default function AssessmentSelector() {
       id: 'speaking',
       title: 'Speaking Assessment',
       icon: '🎙️',
-      description: '6 speaking comprehension questions (Year 7-9 / Grade 6-8) with CEFR level scoring (A1-C2).',
+      description: '6 speaking comprehension questions with CEFR level scoring (A1-C2). Available for Year 7-9 (Grade 6-8) and Year 10-13 (Grade 9-12).',
       color: 'from-red-500 to-red-600',
       route: '/assessment/speaking'
     },
@@ -41,7 +41,7 @@ export default function AssessmentSelector() {
       id: 'reading',
       title: 'Reading Assessment',
       icon: '📚',
-      description: 'Reading accuracy assessment with passage comprehension (Year 7-9 / Grade 6-8) using A-E scoring.',
+      description: 'Reading accuracy assessment with different passages. A-E scoring based on decoding, blending, and fluency. Available for Year 7-9 (Grade 6-8) and Year 10-13 (Grade 9-12).',
       color: 'from-green-500 to-green-600',
       route: '/assessment/reading'
     },

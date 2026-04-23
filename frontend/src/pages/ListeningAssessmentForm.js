@@ -39,9 +39,8 @@ export default function ListeningAssessmentForm() {
   const [totalScore, setTotalScore] = useState(0);
   const [cefrLevel, setCefrLevel] = useState('');
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
-  const [error, setError] = useState('');
-
+const [error, setError] = useState('');
+const [success, setSuccess] = useState(false);
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({

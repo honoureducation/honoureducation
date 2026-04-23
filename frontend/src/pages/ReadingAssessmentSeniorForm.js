@@ -2,30 +2,34 @@ import React, { useState } from 'react';
 import { toast } from 'react-toastify';
 import { assessmentAPI } from '../services/api';
 
-const WRITING_QUESTIONS = [
-  'Who can you see?',
-  'What are they doing?',
-  'Can you write a story for these pictures?'
-];
+const READING_STORY_SENIOR = `A World Between Worlds
 
-const WRITING_SCORING = {
-  'A': 'Labels or single words only; no sentences; meaning unclear.',
-  'B': 'Fragmented or very short sentences; many errors; little sequence or link to pictures.',
-  'C': 'Simple sentences with some sequence; basic vocabulary; capitals and full stops mostly correct.',
-  'D': 'Organised into short paragraphs; clear sequence; developing vocabulary; mostly correct tense and punctuation.',
-  'E': 'Fluent, cohesive narrative; varied sentences and precise vocabulary; accurate punctuation; minimal errors.'
+In a small international school nestled in the heart of Tokyo, a group of 17-year-old students gathered in the bustling cafeteria, their laughter and chatter a blend of various accents and languages. These students had grown up in a unique environment, navigating the complexities of living in a culture different from their parents' and the one they were born into.
+
+Ava, originally from Brazil, moved to Japan with her family when she was just eight. As she shared stories of her recent trip back to São Paulo, her classmates listened intently, fascinated by her tales of vibrant street festivals and tropical beaches. Meanwhile, Amir, whose parents came from Egypt but who spent his early years in London, nodded along, relating Ava's experiences to his own summer visits to Cairo, filled with bustling bazaars and aromatic spices. Despite their diverse backgrounds, the common thread of living in Japan tied them together.
+
+Their lives were a tapestry of cultural experiences, from celebrating Japanese festivals to observing Ramadan with their families. This multicultural environment had its challenges, too. Sometimes, Ava felt like she was living in a state of in-betweenness, not entirely fitting in with her Brazilian roots nor fully embracing Japanese customs. However, with each other's support, they found solace in their shared experiences, carving out a unique identity that was neither here nor there but entirely their own.
+
+These third culture students, had developed a profound understanding of the value of diversity. They learned to appreciate different perspectives and adapt to ever-changing environments, skills they knew would serve them well in life. As they prepared for university applications and life beyond their school, they carried with them not just academic knowledge but also a deeper wisdom that came from growing up between worlds.`;
+
+const READING_SCORING = {
+  'A': 'Very limited decoding and blending; frequent pauses; >15 errors per 100 words.',
+  'B': 'Many errors, often misreads common digraphs; choppy phrasing; 11–15 errors per 100 words.',
+  'C': 'Some errors; blends most words; occasional mistakes on longer words; 6–10 errors per 100 words.',
+  'D': 'Few errors; reads in phrases with steady pace; self-corrects; 1–5 errors per 100 words.',
+  'E': 'Accurate, fluent, and expressive; handles unfamiliar words; 0–1 errors per 100 words.'
 };
 
-function getPictureUrl(picNum) {
+function getPictureUrlSenior(picNum) {
   const pictures = [
-    'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=400&h=300&fit=crop',
-    'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=400&h=300&fit=crop',
-    'https://images.unsplash.com/photo-1508050108904-51772f8229cc?w=400&h=300&fit=crop'
+    'https://images.unsplash.com/photo-1552668473-b2a5514e7635?w=400&h=300&fit=crop',
+    'https://images.unsplash.com/photo-1524661135-423995f22d0b?w=400&h=300&fit=crop',
+    'https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=400&h=300&fit=crop'
   ];
   return pictures[picNum % pictures.length];
 }
 
-export default function WritingAssessmentForm() {
+export default function ReadingAssessmentSeniorForm() {
   const [formData, setFormData] = useState({
     email: '',
     studentName: '',
@@ -34,8 +38,7 @@ export default function WritingAssessmentForm() {
   });
 
   const [score, setScore] = useState(null);
-  const [notes, setNotes] = useState('');
-  const [studentWriting, setStudentWriting] = useState('');
+  const [teacherNotes, setTeacherNotes] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleInputChange = (e) => {
@@ -60,7 +63,7 @@ export default function WritingAssessmentForm() {
     }
 
     if (score === null) {
-      toast.error('❌ Please select a writing quality score (A-E)', {
+      toast.error('❌ Please select a reading accuracy score (A-E)', {
         position: 'top-right',
         autoClose: 4000,
       });
@@ -70,16 +73,16 @@ export default function WritingAssessmentForm() {
 
     try {
       const assessmentData = {
-        assessmentType: 'Writing Assessment',
+        assessmentType: 'Reading Assessment',
+        yearGroupType: 'senior',
         email: formData.email,
         studentName: formData.studentName,
         yearGroupAndClass: formData.yearGroupAndClass,
         teacherName: formData.teacherName,
-        writingScore: score,
+        readingScore: score,
         level: score,
         totalScore: ['A', 'B', 'C', 'D', 'E'].indexOf(score),
-        writingNotes: notes,
-        studentWriting: studentWriting
+        readingNotes: teacherNotes
       };
 
       await assessmentAPI.createAssessment(assessmentData);
@@ -95,8 +98,7 @@ export default function WritingAssessmentForm() {
         teacherName: ''
       });
       setScore(null);
-      setNotes('');
-      setStudentWriting('');
+      setTeacherNotes('');
     } catch (err) {
       toast.error(`❌ Error: ${err.message || 'Failed to submit assessment'}`, {
         position: 'top-right',
@@ -112,55 +114,42 @@ export default function WritingAssessmentForm() {
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">Writing Assessment</h1>
-          <p className="text-gray-600 mb-4">Year 7-9 / Grade 6-8</p>
+          <h1 className="text-4xl font-bold text-gray-900 mb-2">Reading Assessment</h1>
+          <p className="text-gray-600 mb-4">Year 10-13 / Grade 9-12</p>
           <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded space-y-2">
             <p className="text-sm text-gray-700"><strong>Instructions for assessor:</strong></p>
             <ul className="text-sm text-gray-700 space-y-1 ml-4">
-              <li>• Sit with the pupil in a calm, distraction-free space.</li>
-              <li>• Ask the pupil to write paragraphs / sentences for this picture.</li>
-              <li>• Use the questions to prompt.</li>
+              <li>• Present the story and ask the pupil to read aloud.</li>
+              <li>• Allow 10-15 seconds per line.</li>
+              <li>• Use the Teacher Notes box to mark accuracy, fluency, and comments.</li>
             </ul>
           </div>
         </div>
 
-        {/* Pictures and Questions */}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-          <h2 className="text-lg font-bold text-gray-900 mb-4">Questions</h2>
-          <ol className="list-decimal list-inside space-y-2 text-gray-700 mb-6">
-            {WRITING_QUESTIONS.map((q, idx) => (
-              <li key={idx} className="font-medium">{q}</li>
+        {/* Story Section */}
+        <div className="bg-gray-100 rounded-lg p-8 mb-8">
+          <h2 className="text-xl font-bold text-gray-900 mb-4">The Story</h2>
+          <div className="bg-white p-6 rounded-lg mb-6 text-gray-800 leading-relaxed border-l-4 border-teal-500">
+            {READING_STORY_SENIOR.split('\n\n').map((paragraph, idx) => (
+              <p key={idx} className="mb-4">{paragraph}</p>
             ))}
-          </ol>
+          </div>
 
-          {/* Pictures */}
-          <div className="grid grid-cols-3 gap-4 mb-6">
+          {/* Supporting Pictures */}
+          <div className="grid grid-cols-3 gap-4">
             {[0, 1, 2].map((i) => (
               <div key={i} className="relative bg-gray-100 rounded-lg overflow-hidden">
                 <img
-                  src={getPictureUrl(i)}
-                  alt={`Writing prompt picture ${i + 1}`}
-                  className="w-full h-48 object-cover rounded-lg shadow-md border-4 border-purple-300"
+                  src={getPictureUrlSenior(i)}
+                  alt={`Story picture ${i + 1}`}
+                  className="w-full h-48 object-cover rounded-lg shadow-md border-2 border-teal-300"
                   onError={(e) => {
-                    e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="300"%3E%3Crect fill="%23e5e7eb" width="400" height="300"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="Arial" font-size="16" fill="%236b7280"%3EImage %23' + (i+1) + '%3C/text%3E%3C/svg%3E';
+                    e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="300"%3E%3Crect fill="%23e5e7eb" width="400" height="300"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="Arial" font-size="16" fill="%236b7280"%3EImage ' + (i+1) + '%3C/text%3E%3C/svg%3E';
                   }}
                 />
               </div>
             ))}
           </div>
-        </div>
-
-        {/* Student Writing Area */}
-        <div className="bg-white rounded-lg shadow-md p-8 mb-8 border-t-4 border-blue-500">
-          <h2 className="text-lg font-bold text-gray-900 mb-4">Student Writing Response</h2>
-          <p className="text-sm text-gray-600 mb-4">Student should write their response below:</p>
-          <textarea
-            value={studentWriting}
-            onChange={(e) => setStudentWriting(e.target.value)}
-            placeholder="Student writes here... Use the questions above to help guide the response."
-            className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent h-64 resize-vertical font-mono"
-            style={{lineHeight: '2rem', backgroundImage: 'repeating-linear-gradient(transparent, transparent 31px, #e5e7eb 31px, #e5e7eb 32px)'}}
-          />
         </div>
 
         {/* Form */}
@@ -215,15 +204,15 @@ export default function WritingAssessmentForm() {
             </div>
           </div>
 
-          {/* Writing Quality Scoring */}
+          {/* Reading Accuracy Scoring */}
           <div className="bg-white rounded-lg shadow-md p-6">
-            <h3 className="text-lg font-bold text-gray-900 mb-6">Writing Quality (A-E)</h3>
+            <h3 className="text-lg font-bold text-gray-900 mb-6">Reading Accuracy Score (A-E)</h3>
             <div className="space-y-4">
-              {Object.entries(WRITING_SCORING).map(([level, description]) => (
-                <label key={level} className="flex items-start p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition-all" style={{borderColor: score === level ? '#8b5cf6' : '#e5e7eb', backgroundColor: score === level ? '#f5f3ff' : 'transparent'}}>
+              {Object.entries(READING_SCORING).map(([level, description]) => (
+                <label key={level} className="flex items-start p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition-all" style={{borderColor: score === level ? '#14b8a6' : '#e5e7eb', backgroundColor: score === level ? '#f0fdfa' : 'transparent'}}>
                   <input
                     type="radio"
-                    name="writingScore"
+                    name="readingScore"
                     value={level}
                     checked={score === level}
                     onChange={() => setScore(level)}
@@ -238,13 +227,13 @@ export default function WritingAssessmentForm() {
             </div>
           </div>
 
-          {/* Teacher Observations */}
+          {/* Teacher Notes */}
           <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-yellow-500">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">Teacher Observations</h3>
+            <h3 className="text-lg font-bold text-gray-900 mb-4">Teacher Notes</h3>
             <textarea
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="Record observations about sentence construction, vocabulary use, spelling, punctuation, and engagement..."
+              value={teacherNotes}
+              onChange={(e) => setTeacherNotes(e.target.value)}
+              placeholder="Mark accuracy, fluency errors, and additional comments..."
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 h-24 resize-none"
             />
           </div>
@@ -254,7 +243,7 @@ export default function WritingAssessmentForm() {
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 px-6 py-3 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white font-bold rounded-lg transition-all duration-200 transform hover:scale-105 disabled:opacity-50 shadow-lg"
+              className="flex-1 px-6 py-3 bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-600 hover:to-teal-700 text-white font-bold rounded-lg transition-all duration-200 transform hover:scale-105 disabled:opacity-50 shadow-lg"
             >
               {loading ? 'Submitting...' : '📤 Submit Assessment'}
             </button>

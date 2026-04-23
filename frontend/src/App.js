@@ -11,8 +11,12 @@ import AssessmentSelector from './pages/AssessmentSelector';
 import AssessmentForm from './pages/AssessmentForm';
 import ListeningAssessmentForm from './pages/ListeningAssessmentForm';
 import ListeningAssessmentPart2Form from './pages/ListeningAssessmentPart2Form';
+import SpeakingAssessmentSelector from './pages/SpeakingAssessmentSelector';
 import SpeakingAssessmentForm from './pages/SpeakingAssessmentForm';
+import SpeakingAssessmentSeniorForm from './pages/SpeakingAssessmentSeniorForm';
+import ReadingAssessmentSelector from './pages/ReadingAssessmentSelector';
 import ReadingAssessmentForm from './pages/ReadingAssessmentForm';
+import ReadingAssessmentSeniorForm from './pages/ReadingAssessmentSeniorForm';
 import WritingAssessmentForm from './pages/WritingAssessmentForm';
 import AssessmentList from './pages/AssessmentList';
 import './index.css';
@@ -56,8 +60,12 @@ function App() {
             <Route path="/assessment/eal-ell" element={<AssessmentForm />} />
             <Route path="/assessment/listening" element={<ListeningAssessmentForm />} />
             <Route path="/assessment/listening-part2" element={<ListeningAssessmentPart2Form />} />
-            <Route path="/assessment/speaking" element={<SpeakingAssessmentForm />} />
-            <Route path="/assessment/reading" element={<ReadingAssessmentForm />} />
+            <Route path="/assessment/speaking" element={<SpeakingAssessmentSelector />} />
+            <Route path="/assessment/speaking/junior" element={<SpeakingAssessmentForm />} />
+            <Route path="/assessment/speaking/senior" element={<SpeakingAssessmentSeniorForm />} />
+            <Route path="/assessment/reading" element={<ReadingAssessmentSelector />} />
+            <Route path="/assessment/reading/junior" element={<ReadingAssessmentForm />} />
+            <Route path="/assessment/reading/senior" element={<ReadingAssessmentSeniorForm />} />
             <Route path="/assessment/writing" element={<WritingAssessmentForm />} />
             <Route path="/form" element={<AssessmentForm />} />
             <Route path="/records" element={<AssessmentList />} />

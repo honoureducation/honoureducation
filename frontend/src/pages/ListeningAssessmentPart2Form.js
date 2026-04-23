@@ -47,7 +47,7 @@ export default function ListeningAssessmentPart2Form() {
     yearGroupAndClass: '',
     teacherName: ''
   });
-
+const [success, setSuccess] = useState(false);
   const questions = yearGroup === 'junior' ? LISTENING_PART2_QUESTIONS_JUNIOR : LISTENING_PART2_QUESTIONS_SENIOR;
   const cefrLevels = yearGroup === 'junior' ? CEFR_LEVELS_JUNIOR : CEFR_LEVELS_SENIOR;
   const maxScore = yearGroup === 'junior' ? 8 : 20;
@@ -56,7 +56,6 @@ export default function ListeningAssessmentPart2Form() {
   const [totalScore, setTotalScore] = useState(0);
   const [cefrLevel, setCefrLevel] = useState('');
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
 
   const handleInputChange = (e) => {

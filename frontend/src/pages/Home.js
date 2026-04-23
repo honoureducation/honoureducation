@@ -25,7 +25,7 @@ export default function Home() {
               Revolutionizing student assessment with intelligent, comprehensive evaluation tools
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link to="/form" className="px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 rounded-lg font-bold text-lg transition-all transform hover:scale-105 shadow-lg">
+              <Link to="/assessments" className="px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 rounded-lg font-bold text-lg transition-all transform hover:scale-105 shadow-lg">
                 Start Assessment →
               </Link>
               <Link to="/about" className="px-8 py-4 bg-white text-purple-900 hover:bg-purple-50 rounded-lg font-bold text-lg transition-all transform hover:scale-105 shadow-lg">
@@ -113,7 +113,7 @@ export default function Home() {
           <p className="text-xl text-gray-600 mb-8">
             Get started with our comprehensive assessment platform today. It takes just minutes to set up.
           </p>
-          <Link to="/form" className="inline-block px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-lg font-bold text-lg transition-all transform hover:scale-105 shadow-lg">
+          <Link to="/assessments" className="inline-block px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-lg font-bold text-lg transition-all transform hover:scale-105 shadow-lg">
             Begin Assessment Now
           </Link>
         </div>

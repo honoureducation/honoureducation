@@ -2,16 +2,14 @@ import React, { useState } from 'react';
 import { toast } from 'react-toastify';
 import { assessmentAPI } from '../services/api';
 
-const SPEAKING_QUESTIONS = [
+const SPEAKING_QUESTIONS_SENIOR = [
   { id: 1, question: 'What do you see in picture 1?' },
   { id: 2, question: 'Can you tell me what happens next after picture 1?' },
   { id: 3, question: 'Can you tell the whole story from the first picture to the last one?' },
-  { id: 4, question: 'Why do you think the team is celebrating at the end, and what helped them succeed?' },
+  { id: 4, question: 'Why do you think the students are lined up in the end, and what helped them succeed?' },
   { id: 5, question: 'What does this story show about teamwork and solving problems under pressure?' },
   { id: 6, question: 'How could different audiences interpret this story differently, and why?' }
 ];
-
-const CEFR_LEVELS = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
 
 const CEFR_SCORING = {
   '0-2': 'A1',
@@ -22,16 +20,16 @@ const CEFR_SCORING = {
   '11-12': 'C2'
 };
 
-function getPictureUrl(picNum) {
+function getPictureUrlSenior(picNum) {
   const pictures = [
-    'https://images.unsplash.com/photo-1614730321146-b6fa6a46bcb4?w=400&h=300&fit=crop',
-    'https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?w=400&h=300&fit=crop',
-    'https://images.unsplash.com/photo-1552664730-d307ca884978?w=400&h=300&fit=crop'
+    'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=300&fit=crop',
+    'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&h=300&fit=crop',
+    'https://images.unsplash.com/photo-1514306688772-a87cd7f515cc?w=400&h=300&fit=crop'
   ];
   return pictures[picNum % pictures.length];
 }
 
-export default function SpeakingAssessmentForm() {
+export default function SpeakingAssessmentSeniorForm() {
   const [formData, setFormData] = useState({
     email: '',
     studentName: '',
@@ -39,7 +37,7 @@ export default function SpeakingAssessmentForm() {
     teacherName: ''
   });
 
-  const [scores, setScores] = useState(Array(SPEAKING_QUESTIONS.length).fill(null));
+  const [scores, setScores] = useState(Array(SPEAKING_QUESTIONS_SENIOR.length).fill(null));
   const [totalScore, setTotalScore] = useState(0);
   const [cefrLevel, setCefrLevel] = useState('');
   const [teacherComments, setTeacherComments] = useState('');
@@ -101,7 +99,7 @@ export default function SpeakingAssessmentForm() {
 
       const assessmentData = {
         assessmentType: 'Speaking Assessment',
-        yearGroupType: 'junior',
+        yearGroupType: 'senior',
         email: formData.email,
         studentName: formData.studentName,
         yearGroupAndClass: formData.yearGroupAndClass,
@@ -125,7 +123,7 @@ export default function SpeakingAssessmentForm() {
         yearGroupAndClass: '',
         teacherName: ''
       });
-      setScores(Array(SPEAKING_QUESTIONS.length).fill(null));
+      setScores(Array(SPEAKING_QUESTIONS_SENIOR.length).fill(null));
       setTotalScore(0);
       setCefrLevel('');
       setTeacherComments('');
@@ -145,18 +143,22 @@ export default function SpeakingAssessmentForm() {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-2">Speaking Assessment</h1>
-          <p className="text-gray-600 mb-4">Year 7-9 / Grade 6-8</p>
+          <p className="text-gray-600 mb-4">Year 10-13 / Grade 9-12</p>
         </div>
 
         {/* Pictures */}
         <div className="grid grid-cols-3 gap-4 mb-8">
           {[0, 1, 2].map((i) => (
-            <img
-              key={i}
-              src={getPictureUrl(i)}
-              alt={`Assessment picture ${i + 1}`}
-              className="w-full h-48 object-cover rounded-lg shadow-md"
-            />
+            <div key={i} className="relative bg-gray-100 rounded-lg overflow-hidden">
+              <img
+                src={getPictureUrlSenior(i)}
+                alt={`Assessment picture ${i + 1}`}
+                className="w-full h-48 object-cover rounded-lg shadow-md border-4 border-orange-300"
+                onError={(e) => {
+                  e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="300"%3E%3Crect fill="%23e5e7eb" width="400" height="300"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="Arial" font-size="16" fill="%236b7280"%3EImage ' + (i+1) + '%3C/text%3E%3C/svg%3E';
+                }}
+              />
+            </div>
           ))}
         </div>
 
@@ -216,7 +218,7 @@ export default function SpeakingAssessmentForm() {
           <div className="bg-white rounded-lg shadow-md overflow-hidden">
             <table className="w-full">
               <thead>
-                <tr className="bg-gradient-to-r from-purple-500 to-purple-600 text-white">
+                <tr className="bg-gradient-to-r from-orange-500 to-orange-600 text-white">
                   <th className="px-6 py-4 text-left font-bold">Question</th>
                   <th className="px-6 py-4 text-center font-bold">No response (0)</th>
                   <th className="px-6 py-4 text-center font-bold">Some comprehension but unsure response (1)</th>
@@ -224,7 +226,7 @@ export default function SpeakingAssessmentForm() {
                 </tr>
               </thead>
               <tbody>
-                {SPEAKING_QUESTIONS.map((q, index) => (
+                {SPEAKING_QUESTIONS_SENIOR.map((q, index) => (
                   <tr key={q.id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
                     <td className="px-6 py-4 font-semibold text-gray-800">{q.question}</td>
                     <td className="px-6 py-4 text-center">
@@ -288,9 +290,9 @@ export default function SpeakingAssessmentForm() {
                 <p className="text-sm text-gray-600">Total Score</p>
                 <p className="text-3xl font-bold text-blue-600">{totalScore}/12</p>
               </div>
-              <div className="bg-gradient-to-r from-purple-50 to-purple-100 p-4 rounded-lg">
+              <div className="bg-gradient-to-r from-orange-50 to-orange-100 p-4 rounded-lg">
                 <p className="text-sm text-gray-600">CEFR Level</p>
-                <p className="text-3xl font-bold text-purple-600">{cefrLevel || '-'}</p>
+                <p className="text-3xl font-bold text-orange-600">{cefrLevel || '-'}</p>
               </div>
             </div>
           </div>
@@ -311,7 +313,7 @@ export default function SpeakingAssessmentForm() {
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 px-6 py-3 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white font-bold rounded-lg transition-all duration-200 transform hover:scale-105 disabled:opacity-50 shadow-lg"
+              className="flex-1 px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-bold rounded-lg transition-all duration-200 transform hover:scale-105 disabled:opacity-50 shadow-lg"
             >
               {loading ? 'Submitting...' : '📤 Submit Assessment'}
             </button>

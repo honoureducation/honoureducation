@@ -26,8 +26,6 @@ export default function AssessmentForm() {
   });
 
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
-  const [error, setError] = useState('');
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -100,20 +98,6 @@ export default function AssessmentForm() {
           <h1 className="text-4xl font-bold text-gray-900 mb-2">Secondary EAL & ELL Teacher Assessment</h1>
           <p className="text-gray-600">Inclusion Team Assessment Form</p>
         </div>
-
-        {/* Success Message */}
-        {success && (
-          <div className="mb-6 p-4 bg-green-100 border-l-4 border-green-500 text-green-700 rounded">
-            ✅ Assessment submitted successfully!
-          </div>
-        )}
-
-        {/* Error Message */}
-        {error && (
-          <div className="mb-6 p-4 bg-red-100 border-l-4 border-red-500 text-red-700 rounded">
-            ❌ {error}
-          </div>
-        )}
 
         <form onSubmit={handleSubmit} className="space-y-8">
           {/* Section 1: Basic Information */}
