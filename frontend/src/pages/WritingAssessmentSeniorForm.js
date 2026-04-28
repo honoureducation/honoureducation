@@ -1,34 +1,31 @@
 import React, { useState } from 'react';
 import { toast } from 'react-toastify';
 import { assessmentAPI } from '../services/api';
-import readingImg1 from '../assets/reading1.jpg.jpeg';
-import readingImg2 from '../assets/reading2.jpg.jpeg';
-import readingImg3 from '../assets/reading3.jpg.jpeg';
+import writingImg1 from '../assets/writing1.jpg.jpeg';
+import writingImg2 from '../assets/writing2.jpg.jpeg';
+import writingImg3 from '../assets/writing3.jpg.jpeg';
 
-const READING_STORY = `The Mountain Field
+const WRITING_QUESTIONS = [
+  'What can you see and where?',
+  'What significance do these buildings have?',
+  'Can you write a story using these landmarks?'
+];
 
-Asha and Rafi met at the rocky edge of their village, where the mountain winds rushed across the open field. Asha was the only girl who played football in the whole valley, and she carried her ball with pride. Some leaders shake their heads when they saw her train, saying the game was not for girls, but she refused to stop. Rafi walked beside her each day, cheering her on as they climbed the steep path.
-
-The ground was uneven, with stones hidden under the grass, and the thin air made their breaths short. Still, Asha dribbled and kicked with fierce joy. Rafi practised with her, blocking shots and passing the ball across the slope. Sometimes they slipped, sometimes the wind blew the ball too far, but they always tried again.
-
-Asha's brother often joined them, laughing as he chased the ball down the hill. Their father watched from the field's edge, nodding proudly whenever Asha made a strong strike. He told her she had the spirit of a true player.
-
-One evening, as the sun dipped behind the mountains, Asha scored a goal that echoed across the valley. She stood tall, imagining a stadium full of cheering fans. One day, she whispered, she would be a football hero. And with Rafi, her brother, and her father believing in her, the dream felt closer than ever.`;
-
-const READING_SCORING = {
-  'A': 'Very limited decoding and blending; frequent pauses; >15 errors per 100 words.',
-  'B': 'Many errors, often misreads common digraphs; choppy phrasing; 11–15 errors per 100 words.',
-  'C': 'Some errors; blends most words; occasional mistakes on longer words, 6–10 errors per 100 words.',
-  'D': 'Few errors; reads in phrases with steady pace; self-corrects; 1–5 errors per 100 words.',
-  'E': 'Accurate, fluent, and expressive; handles unfamiliar words; 0–1 errors per 100 words.'
+const WRITING_SCORING = {
+  'A': 'Labels or single words only; no sentences; meaning unclear.',
+  'B': 'Fragmented or very short sentences; many errors; little sequence or link to pictures.',
+  'C': 'Simple sentences with some sequence; basic vocabulary; capitals and full stops mostly correct.',
+  'D': 'Organised into short paragraphs; clear sequence; developing vocabulary; mostly correct tense and punctuation.',
+  'E': 'Fluent, cohesive narrative; varied sentences and precise vocabulary; accurate punctuation; minimal errors.'
 };
 
+// Local writing images
 function getPictureUrl(picNum) {
-  const pictures = [readingImg1, readingImg2, readingImg3];
+  const pictures = [writingImg1, writingImg2, writingImg3];
   return pictures[picNum % pictures.length];
 }
 
-export default function ReadingAssessmentForm() {
+export default function WritingAssessmentSeniorForm() {
   const [formData, setFormData] = useState({
     email: '',
     studentName: '',
@@ -37,7 +34,7 @@ export default function ReadingAssessmentForm() {
   });
 
   const [score, setScore] = useState(null);
-  const [teacherNotes, setTeacherNotes] = useState('');
+  const [notes, setNotes] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleInputChange = (e) => {
@@ -62,7 +59,7 @@ export default function ReadingAssessmentForm() {
     }
 
     if (score === null) {
-      toast.error('❌ Please select a reading accuracy score (A-E)', {
+      toast.error('❌ Please select a writing quality score (A-E)', {
         position: 'top-right',
         autoClose: 4000,
       });
@@ -72,16 +69,16 @@ export default function ReadingAssessmentForm() {
 
     try {
       const assessmentData = {
-        assessmentType: 'Reading Assessment',
-        yearGroupType: 'junior',
+        assessmentType: 'Writing Assessment',
+        yearGroupType: 'senior',
         email: formData.email,
         studentName: formData.studentName,
         yearGroupAndClass: formData.yearGroupAndClass,
         teacherName: formData.teacherName,
-        readingScore: score,
+        writingScore: score,
         level: score,
         totalScore: ['A', 'B', 'C', 'D', 'E'].indexOf(score),
-        readingNotes: teacherNotes
+        writingNotes: notes
       };
 
       await assessmentAPI.createAssessment(assessmentData);
@@ -97,7 +94,7 @@ export default function ReadingAssessmentForm() {
         teacherName: ''
       });
       setScore(null);
-      setTeacherNotes('');
+      setNotes('');
     } catch (err) {
       toast.error(`❌ Error: ${err.message || 'Failed to submit assessment'}`, {
         position: 'top-right',
@@ -113,39 +110,44 @@ export default function ReadingAssessmentForm() {
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">Reading Assessment</h1>
-          <p className="text-gray-600 mb-4">Year 7-9 / Grade 6-8</p>
+          <h1 className="text-4xl font-bold text-gray-900 mb-2">Writing Assessment</h1>
+          <p className="text-gray-600 mb-4">Year 10-13 / Grade 9-12</p>
           <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded space-y-2">
             <p className="text-sm text-gray-700"><strong>Instructions for assessor:</strong></p>
             <ul className="text-sm text-gray-700 space-y-1 ml-4">
-              <li>• Present the story and ask the pupil to read aloud.</li>
-              <li>• Allow 10-20 seconds per line.</li>
-              <li>• Use the Teacher Notes box to mark accuracy, fluency, and comments.</li>
+              <li>• Sit with the pupil in a calm, distraction-free space.</li>
+              <li>• Ask the pupil to write paragraphs / sentences for this picture.</li>
+              <li>• Use the questions to prompt.</li>
             </ul>
           </div>
         </div>
 
-        {/* Story Section */}
-        <div className="bg-gray-100 rounded-lg p-8 mb-8">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">The Story</h2>
-          <div className="bg-white p-6 rounded-lg mb-6 text-gray-800 leading-relaxed">
-            {READING_STORY.split('\n\n').map((paragraph, idx) => (
-              <p key={idx} className="mb-4">{paragraph}</p>
+        {/* Pictures and Questions */}
+        <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+          <h2 className="text-lg font-bold text-gray-900 mb-4">Questions</h2>
+          <ol className="list-decimal list-inside space-y-2 text-gray-700 mb-6">
+            {WRITING_QUESTIONS.map((q, idx) => (
+              <li key={idx} className="font-medium">{q}</li>
             ))}
-          </div>
+          </ol>
 
-          {/* Supporting Pictures */}
-          <div className="grid grid-cols-3 gap-4">
+          {/* Pictures */}
+          <div className="grid grid-cols-3 gap-4 mb-6">
             {[0, 1, 2].map((i) => (
-              <img
-                key={i}
-                src={getPictureUrl(i)}
-                alt={`Story picture ${i + 1}`}
-                className="w-full h-48 object-cover rounded-lg shadow-md"
-              />
+              <div key={i} className="relative bg-gray-100 rounded-lg overflow-hidden">
+                <img
+                  src={getPictureUrl(i)}
+                  alt={`Writing prompt picture ${i + 1}`}
+                  className="w-full h-48 object-cover rounded-lg shadow-md border-4 border-purple-300"
+                  onError={(e) => {
+                    e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="300"%3E%3Crect fill="%23e5e7eb" width="400" height="300"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="Arial" font-size="16" fill="%236b7280"%3EImage %23' + (i + 1) + '%3C/text%3E%3C/svg%3E';
+                  }}
+                />
+              </div>
             ))}
           </div>
         </div>
+
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-8">
@@ -199,36 +201,46 @@ export default function ReadingAssessmentForm() {
             </div>
           </div>
 
-          {/* Reading Accuracy Scoring */}
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <h3 className="text-lg font-bold text-gray-900 mb-6">Reading Accuracy Score (A-E)</h3>
-            <div className="space-y-4">
-              {Object.entries(READING_SCORING).map(([level, description]) => (
-                <label key={level} className="flex items-start p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition-all" style={{borderColor: score === level ? '#6366f1' : '#e5e7eb', backgroundColor: score === level ? '#f0f4ff' : 'transparent'}}>
-                  <input
-                    type="radio"
-                    name="readingScore"
-                    value={level}
-                    checked={score === level}
-                    onChange={() => setScore(level)}
-                    className="w-5 h-5 mt-1 cursor-pointer"
-                  />
-                  <div className="ml-4">
-                    <p className="font-bold text-lg text-gray-900">{level}</p>
-                    <p className="text-sm text-gray-600">{description}</p>
-                  </div>
-                </label>
-              ))}
-            </div>
+          {/* Writing Quality Scoring Table */}
+          <div className="bg-white rounded-lg shadow-md overflow-hidden mb-2">
+            <table className="w-full border border-gray-300">
+              <thead>
+                <tr className="bg-blue-50">
+                  <th className="px-6 py-3 text-left font-bold text-gray-800 border-b border-r border-gray-300 w-24">Score</th>
+                  <th className="px-6 py-3 text-left font-bold text-gray-800 border-b border-gray-300">Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                {Object.entries(WRITING_SCORING).map(([level, description], idx) => (
+                  <tr
+                    key={level}
+                    onClick={() => setScore(level)}
+                    className="cursor-pointer transition-colors duration-150"
+                    style={{
+                      backgroundColor: score === level ? '#dbeafe' : idx % 2 === 0 ? '#ffffff' : '#f9fafb',
+                      borderLeft: score === level ? '4px solid #6366f1' : '4px solid transparent'
+                    }}
+                  >
+                    <td className="px-6 py-4 font-bold text-gray-900 border-b border-r border-gray-200 align-top">{level}</td>
+                    <td className="px-6 py-4 text-gray-700 border-b border-gray-200 text-sm leading-relaxed">{description}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            {score && (
+              <div className="px-6 py-3 bg-indigo-50 border-t border-indigo-200">
+                <p className="text-indigo-700 font-semibold text-sm">✅ Selected Score: <span className="text-lg font-bold">{score}</span></p>
+              </div>
+            )}
           </div>
 
-          {/* Teacher Notes */}
+          {/* Teacher Observations */}
           <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-yellow-500">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">Teacher Notes</h3>
+            <h3 className="text-lg font-bold text-gray-900 mb-4">Teacher Observations</h3>
             <textarea
-              value={teacherNotes}
-              onChange={(e) => setTeacherNotes(e.target.value)}
-              placeholder="Mark accuracy, fluency errors, and additional comments..."
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="Record observations about sentence construction, vocabulary use, spelling, punctuation, and engagement..."
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 h-24 resize-none"
             />
           </div>
@@ -238,7 +250,7 @@ export default function ReadingAssessmentForm() {
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 px-6 py-3 bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-600 hover:to-cyan-700 text-white font-bold rounded-lg transition-all duration-200 transform hover:scale-105 disabled:opacity-50 shadow-lg"
+              className="flex-1 px-6 py-3 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white font-bold rounded-lg transition-all duration-200 transform hover:scale-105 disabled:opacity-50 shadow-lg"
             >
               {loading ? 'Submitting...' : '📤 Submit Assessment'}
             </button>

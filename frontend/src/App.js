@@ -17,7 +17,11 @@ import SpeakingAssessmentSeniorForm from './pages/SpeakingAssessmentSeniorForm';
 import ReadingAssessmentSelector from './pages/ReadingAssessmentSelector';
 import ReadingAssessmentForm from './pages/ReadingAssessmentForm';
 import ReadingAssessmentSeniorForm from './pages/ReadingAssessmentSeniorForm';
+import WritingAssessmentSelector from './pages/WritingAssessmentSelector';
 import WritingAssessmentForm from './pages/WritingAssessmentForm';
+import WritingAssessmentJuniorStudentSheet from './pages/WritingAssessmentJuniorStudentSheet';
+import WritingAssessmentSeniorForm from './pages/WritingAssessmentSeniorForm';
+import WritingAssessmentSeniorStudentSheet from './pages/WritingAssessmentSeniorStudentSheet';
 import AssessmentList from './pages/AssessmentList';
 import './index.css';
 
@@ -66,7 +70,11 @@ function App() {
             <Route path="/assessment/reading" element={<ReadingAssessmentSelector />} />
             <Route path="/assessment/reading/junior" element={<ReadingAssessmentForm />} />
             <Route path="/assessment/reading/senior" element={<ReadingAssessmentSeniorForm />} />
-            <Route path="/assessment/writing" element={<WritingAssessmentForm />} />
+            <Route path="/assessment/writing" element={<WritingAssessmentSelector />} />
+            <Route path="/assessment/writing/junior" element={<WritingAssessmentForm />} />
+            <Route path="/assessment/writing/junior-student" element={<WritingAssessmentJuniorStudentSheet />} />
+            <Route path="/assessment/writing/senior" element={<WritingAssessmentSeniorForm />} />
+            <Route path="/assessment/writing/senior-student" element={<WritingAssessmentSeniorStudentSheet />} />
             <Route path="/form" element={<AssessmentForm />} />
             <Route path="/records" element={<AssessmentList />} />
             <Route path="/list" element={<AssessmentList />} />

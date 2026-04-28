@@ -1,0 +1,157 @@
+import React, { useState } from 'react';
+import { toast } from 'react-toastify';
+import { assessmentAPI } from '../services/api';
+import writingImg1 from '../assets/writing1.jpg.jpeg';
+import writingImg2 from '../assets/writing2.jpg.jpeg';
+import writingImg3 from '../assets/writing3.jpg.jpeg';
+
+const WRITING_QUESTIONS = [
+  'Who can you see?',
+  'What are they doing?',
+  'Can you write a story for these pictures?'
+];
+
+// Local writing images
+const PICTURES = [writingImg1, writingImg2, writingImg3];
+
+export default function WritingAssessmentJuniorStudentSheet() {
+  const [formData, setFormData] = useState({
+    email: '',
+    studentName: '',
+    yearGroupAndClass: '',
+    teacherName: ''
+  });
+  const [studentWriting, setStudentWriting] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+
+    if (!formData.email || !formData.studentName || !formData.yearGroupAndClass) {
+      toast.error('❌ Please fill in email, student name, and year group/class', {
+        position: 'top-right', autoClose: 4000,
+      });
+      setLoading(false);
+      return;
+    }
+
+    try {
+      await assessmentAPI.createAssessment({
+        assessmentType: 'Writing Assessment',
+        yearGroupType: 'junior',
+        email: formData.email,
+        studentName: formData.studentName,
+        yearGroupAndClass: formData.yearGroupAndClass,
+        teacherName: formData.teacherName,
+        studentWriting: studentWriting,
+        totalScore: 0,
+        level: 'C'
+      });
+      toast.success('✅ Assessment submitted successfully!', {
+        position: 'top-right', autoClose: 4000,
+      });
+      setFormData({ email: '', studentName: '', yearGroupAndClass: '', teacherName: '' });
+      setStudentWriting('');
+    } catch (err) {
+      toast.error(`❌ Error: ${err.message || 'Failed to submit'}`, {
+        position: 'top-right', autoClose: 4000,
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white py-8">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold text-gray-900 mb-1">Writing Assessment</h1>
+          <p className="text-gray-600 mb-6">Year 7-9</p>
+        </div>
+
+        {/* Questions + Pictures */}
+        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+          <h2 className="text-lg font-bold text-gray-900 mb-4">Questions</h2>
+          <ol className="space-y-1 text-gray-700 mb-6">
+            {WRITING_QUESTIONS.map((q, idx) => (
+              <li key={idx} className="font-medium">{idx + 1}.{q}</li>
+            ))}
+          </ol>
+
+          {/* 3 Pictures */}
+          <div className="grid grid-cols-3 gap-4">
+            {PICTURES.map((url, i) => (
+              <img
+                key={i}
+                src={url}
+                alt={`Writing prompt picture ${i + 1}`}
+                className="w-full h-44 object-cover rounded-lg shadow-md"
+                onError={(e) => {
+                  e.target.src = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300'%3E%3Crect fill='%23e5e7eb' width='400' height='300'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial' font-size='16' fill='%236b7280'%3EPicture ${i + 1}%3C/text%3E%3C/svg%3E`;
+                }}
+              />
+            ))}
+          </div>
+        </div>
+
+        {/* Lined Writing Area */}
+        <div className="bg-white rounded-lg shadow-md p-8 mb-8">
+          <textarea
+            value={studentWriting}
+            onChange={(e) => setStudentWriting(e.target.value)}
+            placeholder="Write your story here..."
+            rows={18}
+            className="w-full px-2 py-2 border-0 focus:outline-none resize-none text-gray-800 text-base"
+            style={{
+              lineHeight: '2.2rem',
+              backgroundImage: 'repeating-linear-gradient(transparent, transparent calc(2.2rem - 1px), #d1d5db calc(2.2rem - 1px), #d1d5db 2.2rem)',
+              backgroundSize: '100% 2.2rem',
+              minHeight: '400px'
+            }}
+          />
+        </div>
+
+        {/* Student Info + Submit */}
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-blue-500">
+            <h2 className="text-xl font-bold text-gray-900 mb-4">Student Information</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Email</label>
+                <input type="email" name="email" value={formData.email} onChange={handleInputChange}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Student Name</label>
+                <input type="text" name="studentName" value={formData.studentName} onChange={handleInputChange}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Year Group & Class</label>
+                <input type="text" name="yearGroupAndClass" value={formData.yearGroupAndClass} onChange={handleInputChange}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Teacher Name</label>
+                <input type="text" name="teacherName" value={formData.teacherName} onChange={handleInputChange}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              </div>
+            </div>
+          </div>
+
+          <button type="submit" disabled={loading}
+            className="w-full px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-bold rounded-lg transition-all duration-200 transform hover:scale-105 disabled:opacity-50 shadow-lg">
+            {loading ? 'Submitting...' : '📤 Submit Assessment'}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}

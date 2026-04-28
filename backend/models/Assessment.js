@@ -10,7 +10,7 @@ const assessmentSchema = new mongoose.Schema({
   yearGroupType: {
     type: String,
     enum: ['junior', 'senior'],
-    comment: 'Used for Listening Part 2 to distinguish between Year 7-9 and Year 10-13'
+    comment: 'Used to distinguish between Year 7-9 (junior) and Year 10-13 (senior) for Listening Part 2, Speaking Assessment, and Reading Assessment'
   },
   email: {
     type: String,
@@ -148,6 +148,10 @@ const assessmentSchema = new mongoose.Schema({
     type: String,
     enum: ['A', 'B', 'C', 'D', 'E']
   },
+  readingNotes: {
+    type: String,
+    trim: true
+  },
   // Writing Assessment specific field
   writingScore: {
     type: String,
@@ -157,14 +161,21 @@ const assessmentSchema = new mongoose.Schema({
     type: String,
     trim: true
   },
-  // Overall Assessment
+  studentWriting: {
+    type: String,
+    trim: true
+  },
+  teacherComments: {
+    type: String,
+    trim: true
+  },
   totalScore: {
     type: Number,
     default: 0
   },
   level: {
     type: String,
-    enum: ['Beginner', 'Developing', 'Competent', 'Advanced', 'A', 'B', 'C', 'D', 'E'],
+    enum: ['Beginner', 'Developing', 'Competent', 'Advanced', 'A', 'B', 'C', 'D', 'E', 'A1', 'A2', 'B1', 'B2', 'C1', 'C2'],
     default: 'Developing'
   },
   createdAt: {

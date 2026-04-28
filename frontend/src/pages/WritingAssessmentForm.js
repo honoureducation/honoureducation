@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
 import { toast } from 'react-toastify';
 import { assessmentAPI } from '../services/api';
+import writingImg1 from '../assets/writing1.jpg.jpeg';
+import writingImg2 from '../assets/writing2.jpg.jpeg';
+import writingImg3 from '../assets/writing3.jpg.jpeg';
 
 const WRITING_QUESTIONS = [
-  'Who can you see?',
+  'Who and what can you see?',
   'What are they doing?',
   'Can you write a story for these pictures?'
 ];
@@ -16,12 +19,9 @@ const WRITING_SCORING = {
   'E': 'Fluent, cohesive narrative; varied sentences and precise vocabulary; accurate punctuation; minimal errors.'
 };
 
+// Local writing images
 function getPictureUrl(picNum) {
-  const pictures = [
-    'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=400&h=300&fit=crop',
-    'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=400&h=300&fit=crop',
-    'https://images.unsplash.com/photo-1508050108904-51772f8229cc?w=400&h=300&fit=crop'
-  ];
+  const pictures = [writingImg1, writingImg2, writingImg3];
   return pictures[picNum % pictures.length];
 }
 
@@ -35,7 +35,6 @@ export default function WritingAssessmentForm() {
 
   const [score, setScore] = useState(null);
   const [notes, setNotes] = useState('');
-  const [studentWriting, setStudentWriting] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleInputChange = (e) => {
@@ -71,6 +70,7 @@ export default function WritingAssessmentForm() {
     try {
       const assessmentData = {
         assessmentType: 'Writing Assessment',
+        yearGroupType: 'junior',
         email: formData.email,
         studentName: formData.studentName,
         yearGroupAndClass: formData.yearGroupAndClass,
@@ -78,8 +78,7 @@ export default function WritingAssessmentForm() {
         writingScore: score,
         level: score,
         totalScore: ['A', 'B', 'C', 'D', 'E'].indexOf(score),
-        writingNotes: notes,
-        studentWriting: studentWriting
+        writingNotes: notes
       };
 
       await assessmentAPI.createAssessment(assessmentData);
@@ -96,7 +95,6 @@ export default function WritingAssessmentForm() {
       });
       setScore(null);
       setNotes('');
-      setStudentWriting('');
     } catch (err) {
       toast.error(`❌ Error: ${err.message || 'Failed to submit assessment'}`, {
         position: 'top-right',
@@ -142,7 +140,7 @@ export default function WritingAssessmentForm() {
                   alt={`Writing prompt picture ${i + 1}`}
                   className="w-full h-48 object-cover rounded-lg shadow-md border-4 border-purple-300"
                   onError={(e) => {
-                    e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="300"%3E%3Crect fill="%23e5e7eb" width="400" height="300"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="Arial" font-size="16" fill="%236b7280"%3EImage %23' + (i+1) + '%3C/text%3E%3C/svg%3E';
+                    e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="300"%3E%3Crect fill="%23e5e7eb" width="400" height="300"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="Arial" font-size="16" fill="%236b7280"%3EImage %23' + (i + 1) + '%3C/text%3E%3C/svg%3E';
                   }}
                 />
               </div>
@@ -150,18 +148,6 @@ export default function WritingAssessmentForm() {
           </div>
         </div>
 
-        {/* Student Writing Area */}
-        <div className="bg-white rounded-lg shadow-md p-8 mb-8 border-t-4 border-blue-500">
-          <h2 className="text-lg font-bold text-gray-900 mb-4">Student Writing Response</h2>
-          <p className="text-sm text-gray-600 mb-4">Student should write their response below:</p>
-          <textarea
-            value={studentWriting}
-            onChange={(e) => setStudentWriting(e.target.value)}
-            placeholder="Student writes here... Use the questions above to help guide the response."
-            className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent h-64 resize-vertical font-mono"
-            style={{lineHeight: '2rem', backgroundImage: 'repeating-linear-gradient(transparent, transparent 31px, #e5e7eb 31px, #e5e7eb 32px)'}}
-          />
-        </div>
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-8">
@@ -215,27 +201,37 @@ export default function WritingAssessmentForm() {
             </div>
           </div>
 
-          {/* Writing Quality Scoring */}
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <h3 className="text-lg font-bold text-gray-900 mb-6">Writing Quality (A-E)</h3>
-            <div className="space-y-4">
-              {Object.entries(WRITING_SCORING).map(([level, description]) => (
-                <label key={level} className="flex items-start p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition-all" style={{borderColor: score === level ? '#8b5cf6' : '#e5e7eb', backgroundColor: score === level ? '#f5f3ff' : 'transparent'}}>
-                  <input
-                    type="radio"
-                    name="writingScore"
-                    value={level}
-                    checked={score === level}
-                    onChange={() => setScore(level)}
-                    className="w-5 h-5 mt-1 cursor-pointer"
-                  />
-                  <div className="ml-4">
-                    <p className="font-bold text-lg text-gray-900">{level}</p>
-                    <p className="text-sm text-gray-600">{description}</p>
-                  </div>
-                </label>
-              ))}
-            </div>
+          {/* Writing Quality Scoring Table */}
+          <div className="bg-white rounded-lg shadow-md overflow-hidden mb-2">
+            <table className="w-full border border-gray-300">
+              <thead>
+                <tr className="bg-blue-50">
+                  <th className="px-6 py-3 text-left font-bold text-gray-800 border-b border-r border-gray-300 w-24">Score</th>
+                  <th className="px-6 py-3 text-left font-bold text-gray-800 border-b border-gray-300">Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                {Object.entries(WRITING_SCORING).map(([level, description], idx) => (
+                  <tr
+                    key={level}
+                    onClick={() => setScore(level)}
+                    className="cursor-pointer transition-colors duration-150"
+                    style={{
+                      backgroundColor: score === level ? '#dbeafe' : idx % 2 === 0 ? '#ffffff' : '#f9fafb',
+                      borderLeft: score === level ? '4px solid #6366f1' : '4px solid transparent'
+                    }}
+                  >
+                    <td className="px-6 py-4 font-bold text-gray-900 border-b border-r border-gray-200 align-top">{level}</td>
+                    <td className="px-6 py-4 text-gray-700 border-b border-gray-200 text-sm leading-relaxed">{description}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            {score && (
+              <div className="px-6 py-3 bg-indigo-50 border-t border-indigo-200">
+                <p className="text-indigo-700 font-semibold text-sm">✅ Selected Score: <span className="text-lg font-bold">{score}</span></p>
+              </div>
+            )}
           </div>
 
           {/* Teacher Observations */}

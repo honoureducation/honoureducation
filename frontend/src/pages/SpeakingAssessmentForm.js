@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { toast } from 'react-toastify';
 import { assessmentAPI } from '../services/api';
+import speaking1 from '../assets/speaking1.jpg.jpeg';
+import speaking2 from '../assets/speaking2.jpg.jpeg';
+import speaking3 from '../assets/speaking3.jpg.jpeg';
 
 const SPEAKING_QUESTIONS = [
   { id: 1, question: 'What do you see in picture 1?' },
@@ -23,11 +26,7 @@ const CEFR_SCORING = {
 };
 
 function getPictureUrl(picNum) {
-  const pictures = [
-    'https://images.unsplash.com/photo-1614730321146-b6fa6a46bcb4?w=400&h=300&fit=crop',
-    'https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?w=400&h=300&fit=crop',
-    'https://images.unsplash.com/photo-1552664730-d307ca884978?w=400&h=300&fit=crop'
-  ];
+  const pictures = [speaking1, speaking2, speaking3];
   return pictures[picNum % pictures.length];
 }
 

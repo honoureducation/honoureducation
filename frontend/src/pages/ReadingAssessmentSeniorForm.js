@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { toast } from 'react-toastify';
 import { assessmentAPI } from '../services/api';
+import readin2nd1 from '../assets/readin2nd1.jpg.jpeg';
+import readin2nd2 from '../assets/readin2nd2.jpg.jpeg';
+import reading2nd3 from '../assets/reading2nd3.jpg.jpeg';
 
 const READING_STORY_SENIOR = `A World Between Worlds
 
@@ -21,11 +24,7 @@ const READING_SCORING = {
 };
 
 function getPictureUrlSenior(picNum) {
-  const pictures = [
-    'https://images.unsplash.com/photo-1552668473-b2a5514e7635?w=400&h=300&fit=crop',
-    'https://images.unsplash.com/photo-1524661135-423995f22d0b?w=400&h=300&fit=crop',
-    'https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=400&h=300&fit=crop'
-  ];
+  const pictures = [readin2nd1, readin2nd2, reading2nd3];
   return pictures[picNum % pictures.length];
 }
 
@@ -144,7 +143,7 @@ export default function ReadingAssessmentSeniorForm() {
                   alt={`Story picture ${i + 1}`}
                   className="w-full h-48 object-cover rounded-lg shadow-md border-2 border-teal-300"
                   onError={(e) => {
-                    e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="300"%3E%3Crect fill="%23e5e7eb" width="400" height="300"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="Arial" font-size="16" fill="%236b7280"%3EImage ' + (i+1) + '%3C/text%3E%3C/svg%3E';
+                    e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="300"%3E%3Crect fill="%23e5e7eb" width="400" height="300"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="Arial" font-size="16" fill="%236b7280"%3EImage ' + (i + 1) + '%3C/text%3E%3C/svg%3E';
                   }}
                 />
               </div>
@@ -209,7 +208,7 @@ export default function ReadingAssessmentSeniorForm() {
             <h3 className="text-lg font-bold text-gray-900 mb-6">Reading Accuracy Score (A-E)</h3>
             <div className="space-y-4">
               {Object.entries(READING_SCORING).map(([level, description]) => (
-                <label key={level} className="flex items-start p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition-all" style={{borderColor: score === level ? '#14b8a6' : '#e5e7eb', backgroundColor: score === level ? '#f0fdfa' : 'transparent'}}>
+                <label key={level} className="flex items-start p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition-all" style={{ borderColor: score === level ? '#14b8a6' : '#e5e7eb', backgroundColor: score === level ? '#f0fdfa' : 'transparent' }}>
                   <input
                     type="radio"
                     name="readingScore"
