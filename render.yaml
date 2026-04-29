@@ -1,0 +1,32 @@
+services:
+  # Backend API Service
+  - type: web
+    name: academic-excellence-api
+    env: node
+    buildCommand: cd backend && npm install
+    startCommand: cd backend && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: MONGODB_URI
+        fromDatabase:
+          name: academic-excellence-db
+          property: connectionString
+
+  # Frontend Static Site
+  - type: web
+    name: academic-excellence-frontend
+    env: static
+    buildCommand: cd frontend && npm install && npm run build
+    staticPublishPath: frontend/build
+    envVars:
+      - key: REACT_APP_API_URL
+        value: https://academic-excellence-api.onrender.com
+
+# Database
+databases:
+  - name: academic-excellence-db
+    databaseName: student_assessment
+    user: admin
