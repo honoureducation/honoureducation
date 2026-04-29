@@ -53,7 +53,7 @@ This application is configured for deployment on Render.com with the following a
 
 #### Backend (.env)
 ```
-MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/student_assessment
+MONGODB_URI=mongodb+srv://db_username:r6iARuRCzjdZlMDf@cluster0.rv2n8gd.mongodb.net/student_assessment?retryWrites=true&w=majority&appName=Cluster0
 NODE_ENV=production
 PORT=10000
 ```
@@ -64,18 +64,15 @@ REACT_APP_API_URL=https://your-backend-service.onrender.com
 GENERATE_SOURCEMAP=false
 ```
 
-### MongoDB Setup
+### MongoDB Setup ✅ COMPLETED
 
-1. **Create MongoDB Atlas Cluster**
-   - Go to [MongoDB Atlas](https://cloud.mongodb.com)
-   - Create a free cluster
-   - Create a database user
-   - Whitelist IP addresses (0.0.0.0/0 for Render)
-   - Get connection string
+Your MongoDB Atlas cluster is already configured:
+- **Cluster**: cluster0.rv2n8gd.mongodb.net
+- **Database**: student_assessment (will be created automatically)
+- **Username**: db_username
+- **Password**: r6iARuRCzjdZlMDf
 
-2. **Database Configuration**
-   - Database Name: `student_assessment`
-   - Collections will be created automatically
+**Important**: Make sure your MongoDB Atlas cluster allows connections from anywhere (0.0.0.0/0) for Render deployment.
 
 ### Post-Deployment
 

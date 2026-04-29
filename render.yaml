@@ -11,9 +11,7 @@ services:
       - key: PORT
         value: 10000
       - key: MONGODB_URI
-        fromDatabase:
-          name: academic-excellence-db
-          property: connectionString
+        value: mongodb+srv://db_username:r6iARuRCzjdZlMDf@cluster0.rv2n8gd.mongodb.net/student_assessment?retryWrites=true&w=majority&appName=Cluster0
 
   # Frontend Static Site
   - type: web
@@ -24,9 +22,3 @@ services:
     envVars:
       - key: REACT_APP_API_URL
         value: https://academic-excellence-api.onrender.com
-
-# Database
-databases:
-  - name: academic-excellence-db
-    databaseName: student_assessment
-    user: admin
