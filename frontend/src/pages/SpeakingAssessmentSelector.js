@@ -9,7 +9,7 @@ export default function SpeakingAssessmentSelector() {
       id: 'junior',
       title: 'Year 7-9 / Grade 6-8',
       icon: '🎙️',
-      description: '6 speaking comprehension questions with CEFR level scoring (A1-C2).',
+      description: 'shakir ayoub 6 speaking comprehension questions with CEFR level scoring (A1-C2).',
       color: 'from-red-500 to-red-600',
       route: '/assessment/speaking/junior'
     },

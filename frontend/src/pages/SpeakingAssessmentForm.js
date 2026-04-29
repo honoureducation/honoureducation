@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { toast } from 'react-toastify';
 import { assessmentAPI } from '../services/api';
-import speaking1 from '../assets/speaking1.jpg.jpeg';
-import speaking2 from '../assets/speaking2.jpg.jpeg';
-import speaking3 from '../assets/speaking3.jpg.jpeg';
+import car1 from '../assets/car1.png';
+import car2 from '../assets/car2.png';
+import car3 from '../assets/car3.png';
 
 const SPEAKING_QUESTIONS = [
   { id: 1, question: 'What do you see in picture 1?' },
@@ -26,7 +26,7 @@ const CEFR_SCORING = {
 };
 
 function getPictureUrl(picNum) {
-  const pictures = [speaking1, speaking2, speaking3];
+  const pictures = [car1, car2, car3];
   return pictures[picNum % pictures.length];
 }
 

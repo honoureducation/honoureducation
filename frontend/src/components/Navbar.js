@@ -25,7 +25,7 @@ export default function Navbar() {
             <Link to="/about" className="hover:text-purple-300 transition-colors duration-200 font-medium hover:scale-105 transform">About</Link>
             
             {/* Assessment Link */}
-            <Link to="/assessments" className="hover:text-purple-300 transition-colors duration-200 font-medium hover:scale-105 transform">📋 Assessment</Link>
+            <Link to="/assessments" className="hover:text-purple-300 transition-colors duration-200 font-medium hover:scale-105 transform">Assessment</Link>
 
             <Link to="/list" className="hover:text-purple-300 transition-colors duration-200 font-medium hover:scale-105 transform">Records</Link>
             <Link to="/contact" className="hover:text-purple-300 transition-colors duration-200 font-medium hover:scale-105 transform">Contact</Link>
@@ -33,9 +33,9 @@ export default function Navbar() {
 
           {/* Actions */}
           <div className="hidden md:flex items-center gap-4">
-            <button className="px-6 py-2 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 rounded-lg font-semibold transition-all duration-200 transform hover:scale-105 shadow-lg">
+            {/* <button className="px-6 py-2 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 rounded-lg font-semibold transition-all duration-200 transform hover:scale-105 shadow-lg">
               Sign In
-            </button>
+            </button> */}
           </div>
 
           {/* Mobile Menu Button */}

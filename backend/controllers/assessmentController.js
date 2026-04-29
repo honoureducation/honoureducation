@@ -51,9 +51,11 @@ exports.createAssessment = async (req, res) => {
       speakingAssessmentAnswers,
       // Reading Assessment fields
       readingScore,
+      readingNotes,
       // Writing Assessment fields
       writingScore,
       writingNotes,
+      studentWriting,
       cefrLevel,
       level,
       totalScore
@@ -115,22 +117,38 @@ exports.createAssessment = async (req, res) => {
 
     // Handle Writing Assessment
     if (assessmentType === 'Writing Assessment') {
-      if (!writingScore) {
-        return res.status(400).json({ error: 'Missing writing score' });
+      // Accept either writingScore (assessor form) or studentWriting (student sheet)
+      if (!writingScore && !studentWriting) {
+        return res.status(400).json({ error: 'Missing writing score or student writing' });
       }
 
-      const assessment = new Assessment({
+      const assessmentData = {
         assessmentType,
+        yearGroupType,
         email,
         studentName,
         yearGroupAndClass,
         teacherName,
-        writingScore,
-        writingNotes,
-        level: writingScore,
-        totalScore: ['A', 'B', 'C', 'D', 'E'].indexOf(writingScore)
-      });
+        level: writingScore || 'Developing',
+        totalScore: writingScore ? ['A', 'B', 'C', 'D', 'E'].indexOf(writingScore) : 0
+      };
 
+      // Only add writingScore if it exists
+      if (writingScore) {
+        assessmentData.writingScore = writingScore;
+      }
+
+      // Only add studentWriting if it exists
+      if (studentWriting) {
+        assessmentData.studentWriting = studentWriting;
+      }
+
+      // Add notes if provided
+      if (writingNotes) {
+        assessmentData.writingNotes = writingNotes;
+      }
+
+      const assessment = new Assessment(assessmentData);
       await assessment.save();
       return res.status(201).json({
         message: 'Writing Assessment saved successfully',

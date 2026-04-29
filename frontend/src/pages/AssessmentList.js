@@ -257,7 +257,7 @@ export default function AssessmentList() {
         setDeletingId(id);
         await assessmentAPI.deleteAssessment(id);
         setAssessments(assessments.filter((a) => a._id !== id));
-        toast.success('✅ Assessment deleted successfully!', {
+        toast.success('Assessment deleted successfully!', {
           position: 'top-right',
           autoClose: 4000,
         });
