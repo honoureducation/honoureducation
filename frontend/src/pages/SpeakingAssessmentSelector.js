@@ -7,82 +7,85 @@ export default function SpeakingAssessmentSelector() {
   const options = [
     {
       id: 'junior',
-      title: 'Year 7-9 / Grade 6-8',
-      icon: '🎙️',
-      description: 'shakir ayoub 6 speaking comprehension questions with CEFR level scoring (A1-C2).',
-      color: 'from-red-500 to-red-600',
+      title: 'Year 7–9 / Grade 6–8',
+      subtitle: 'Junior',
+      desc: '6 speaking comprehension questions with CEFR level scoring (A1–C2). Max score: 12.',
+      color: 'bg-blue-600',
       route: '/assessment/speaking/junior'
     },
     {
       id: 'senior',
-      title: 'Year 10-13 / Grade 9-12',
-      icon: '🎤',
-      description: '6 advanced speaking comprehension questions with CEFR level scoring (A1-C2).',
-      color: 'from-orange-500 to-orange-600',
+      title: 'Year 10–13 / Grade 9–12',
+      subtitle: 'Senior',
+      desc: '6 advanced speaking comprehension questions with CEFR level scoring (A1–C2). Max score: 12.',
+      color: 'bg-cyan-600',
       route: '/assessment/speaking/senior'
     }
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white py-12">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">Speaking Assessment</h1>
-          <p className="text-xl text-gray-600">Select the grade level</p>
-        </div>
-
-        {/* Options Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {options.map((option) => (
-            <div
-              key={option.id}
-              onClick={() => navigate(option.route)}
-              className="group cursor-pointer"
+    <div className="min-h-screen bg-slate-50">
+      <div className="bg-white border-b border-slate-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+          <nav className="breadcrumb mb-2">
+            <button
+              onClick={() => navigate('/assessments')}
+              className="hover:text-slate-700 transition-colors"
             >
-              <div className="h-full bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border-t-4 border-transparent overflow-hidden">
-                {/* Top Color Bar */}
-                <div className={`h-2 bg-gradient-to-r ${option.color}`}></div>
+              Assessments
+            </button>
+            <span className="breadcrumb-sep">/</span>
+            <span className="text-slate-700 font-medium">Speaking</span>
+          </nav>
+          <h1 className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">
+            Speaking Assessment
+          </h1>
+          <p className="text-slate-500 text-sm mt-1">
+            Select the year group to begin.
+          </p>
+        </div>
+      </div>
 
-                {/* Content */}
-                <div className="p-8">
-                  {/* Icon */}
-                  <div className="text-6xl mb-4 transform group-hover:scale-110 transition-transform duration-300">
-                    {option.icon}
-                  </div>
-
-                  {/* Title */}
-                  <h3 className="text-2xl font-bold text-gray-900 mb-3 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-blue-600 group-hover:to-purple-600 transition-all">
-                    {option.title}
-                  </h3>
-
-                  {/* Description */}
-                  <p className="text-gray-600 mb-6 leading-relaxed">
-                    {option.description}
-                  </p>
-
-                  {/* Button */}
-                  <button
-                    onClick={() => navigate(option.route)}
-                    className={`w-full px-6 py-3 bg-gradient-to-r ${option.color} text-white font-bold rounded-lg hover:shadow-lg transition-all duration-200 transform hover:scale-105`}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 max-w-2xl">
+          {options.map((o) => (
+            <button
+              key={o.id}
+              onClick={() => navigate(o.route)}
+              className="group text-left bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 overflow-hidden focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            >
+              <div className={`h-1 ${o.color}`} />
+              <div className="p-6">
+                <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                  {o.subtitle}
+                </span>
+                <h3 className="text-base font-bold text-slate-900 group-hover:text-blue-600 transition-colors mb-2">
+                  {o.title}
+                </h3>
+                <p className="text-xs text-slate-500 leading-relaxed mb-5">{o.desc}</p>
+                <div className="flex items-center gap-1.5 text-xs font-semibold text-blue-600">
+                  Select
+                  <svg
+                    className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={2.5}
                   >
-                    Select
-                  </button>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                  </svg>
                 </div>
               </div>
-            </div>
+            </button>
           ))}
         </div>
 
-        {/* Back Button */}
-        <div className="mt-8 text-center">
-          <button
-            onClick={() => navigate('/assessments')}
-            className="px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-900 font-bold rounded-lg transition-all duration-200"
-          >
-            ← Back to Assessments
-          </button>
-        </div>
+        <button
+          onClick={() => navigate('/assessments')}
+          className="mt-6 btn-secondary btn-sm"
+        >
+          ← Back to Assessments
+        </button>
       </div>
     </div>
   );

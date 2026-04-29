@@ -1,62 +1,124 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useLocation } from 'react-router-dom';
+
+const NAV_LINKS = [
+  { to: '/',           label: 'Home' },
+  { to: '/assessments', label: 'Assessments' },
+  { to: '/records',    label: 'Records' },
+  { to: '/about',      label: 'About' },
+  { to: '/contact',    label: 'Contact' },
+];
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const location = useLocation();
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8);
+    window.addEventListener('scroll', onScroll);
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  // Close mobile menu on route change
+  useEffect(() => { setIsOpen(false); }, [location]);
+
+  const isActive = (to) =>
+    to === '/' ? location.pathname === '/' : location.pathname.startsWith(to);
 
   return (
-    <nav className="bg-gradient-to-r from-slate-900 via-purple-900 to-slate-900 text-white shadow-2xl sticky top-0 z-50">
+    <nav
+      className={`sticky top-0 z-50 transition-all duration-200 ${
+        scrolled
+          ? 'bg-slate-900/95 backdrop-blur-md shadow-lg'
+          : 'bg-slate-900'
+      }`}
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-20">
-          {/* Logo & Brand */}
-          <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-purple-500 rounded-lg flex items-center justify-center text-xl font-bold shadow-lg">
-              📚
+        <div className="flex items-center justify-between h-16">
+
+          {/* Brand */}
+          <Link to="/" className="flex items-center gap-3 group">
+            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center shadow-sm group-hover:bg-blue-500 transition-colors">
+              <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+              </svg>
             </div>
-            <div className="hidden md:block">
-              <h1 className="text-xl font-bold">Academic Excellence</h1>
-              <p className="text-purple-300 text-xs">Student Assessment System</p>
+            <div className="hidden sm:block">
+              <span className="text-white font-semibold text-sm leading-none">Academic Excellence</span>
+              <span className="block text-slate-400 text-xs leading-none mt-0.5">Assessment Platform</span>
             </div>
           </Link>
 
-          {/* Desktop Menu */}
-          <div className="hidden md:flex items-center gap-8">
-            <Link to="/" className="hover:text-purple-300 transition-colors duration-200 font-medium hover:scale-105 transform">Home</Link>
-            <Link to="/about" className="hover:text-purple-300 transition-colors duration-200 font-medium hover:scale-105 transform">About</Link>
-            
-            {/* Assessment Link */}
-            <Link to="/assessments" className="hover:text-purple-300 transition-colors duration-200 font-medium hover:scale-105 transform">Assessment</Link>
-
-            <Link to="/list" className="hover:text-purple-300 transition-colors duration-200 font-medium hover:scale-105 transform">Records</Link>
-            <Link to="/contact" className="hover:text-purple-300 transition-colors duration-200 font-medium hover:scale-105 transform">Contact</Link>
+          {/* Desktop nav */}
+          <div className="hidden md:flex items-center gap-1">
+            {NAV_LINKS.map(({ to, label }) => (
+              <Link
+                key={to}
+                to={to}
+                className={`px-3.5 py-2 rounded-lg text-sm font-medium transition-colors duration-150 ${
+                  isActive(to)
+                    ? 'bg-slate-700 text-white'
+                    : 'text-slate-300 hover:text-white hover:bg-slate-800'
+                }`}
+              >
+                {label}
+              </Link>
+            ))}
           </div>
 
-          {/* Actions */}
-          <div className="hidden md:flex items-center gap-4">
-            {/* <button className="px-6 py-2 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 rounded-lg font-semibold transition-all duration-200 transform hover:scale-105 shadow-lg">
-              Sign In
-            </button> */}
+          {/* Right actions */}
+          <div className="hidden md:flex items-center gap-3">
+            <Link
+              to="/assessments"
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold rounded-lg transition-colors shadow-sm"
+            >
+              New Assessment
+            </Link>
           </div>
 
-          {/* Mobile Menu Button */}
+          {/* Mobile hamburger */}
           <button
-            className="md:hidden p-2 rounded-lg hover:bg-purple-800 transition-colors"
+            className="md:hidden p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
             onClick={() => setIsOpen(!isOpen)}
+            aria-label="Toggle menu"
           >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
+            {isOpen ? (
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            ) : (
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            )}
           </button>
         </div>
 
-        {/* Mobile Menu */}
+        {/* Mobile menu */}
         {isOpen && (
-          <div className="md:hidden pb-4 space-y-2">
-            <Link to="/" className="block px-4 py-2 hover:bg-purple-800 rounded-lg transition-colors">Home</Link>
-            <Link to="/about" className="block px-4 py-2 hover:bg-purple-800 rounded-lg transition-colors">About</Link>
-            <Link to="/assessments" className="block px-4 py-2 hover:bg-purple-800 rounded-lg transition-colors font-semibold">📋 Assessment</Link>
-            <Link to="/list" className="block px-4 py-2 hover:bg-purple-800 rounded-lg transition-colors">Records</Link>
-            <Link to="/contact" className="block px-4 py-2 hover:bg-purple-800 rounded-lg transition-colors">Contact</Link>
+          <div className="md:hidden border-t border-slate-800 py-3 space-y-1 animate-fade-in">
+            {NAV_LINKS.map(({ to, label }) => (
+              <Link
+                key={to}
+                to={to}
+                className={`block px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                  isActive(to)
+                    ? 'bg-slate-700 text-white'
+                    : 'text-slate-300 hover:text-white hover:bg-slate-800'
+                }`}
+              >
+                {label}
+              </Link>
+            ))}
+            <div className="pt-2 pb-1 px-1">
+              <Link
+                to="/assessments"
+                className="block w-full text-center px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold rounded-lg transition-colors"
+              >
+                New Assessment
+              </Link>
+            </div>
           </div>
         )}
       </div>

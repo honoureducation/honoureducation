@@ -1,15 +1,17 @@
 import React, { useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { assessmentAPI } from '../services/api';
 
-const LISTENING_PART2_QUESTIONS_JUNIOR = [
+/* ── Data ─────────────────────────────────────────────────── */
+const QUESTIONS_JUNIOR = [
   'What time does the student wake up?',
   'How does the student travel to school?',
   'What subject does the student enjoy?',
-  'What does the student do at the weekend?'
+  'What does the student do at the weekend?',
 ];
 
-const LISTENING_PART2_QUESTIONS_SENIOR = [
+const QUESTIONS_SENIOR = [
   'What types of volunteering activities were available?',
   'How many students took part in the event?',
   'What unexpected problem affected one of the teams?',
@@ -19,424 +21,299 @@ const LISTENING_PART2_QUESTIONS_SENIOR = [
   'Why is the school considering changing the frequency of the event?',
   'Which student qualities were mentioned positively?',
   'Identify one challenge and one positive outcome mentioned in the passage.',
-  'Summarise the overall success of the event in one sentence.'
+  'Summarise the overall success of the event in one sentence.',
 ];
 
-const CEFR_LEVELS_JUNIOR = {
-  '0-1': { level: 'A1', descriptor: 'Understands very little; isolated words only.' },
-  '2-4': { level: 'A2', descriptor: 'Understands simple, clear factual details with support.' },
-  '5-6': { level: 'B1', descriptor: 'Can follow main points and extract key information.' },
-  '6-7': { level: 'B2', descriptor: 'Accurate, detailed listening; understands all essential information.' },
-  '8': { level: 'C1-C2', descriptor: 'Fully accurate, precise, confident comprehension. No errors.' }
+const CEFR_BANDS_JUNIOR = [
+  { range: '0–1', level: 'A1',    desc: 'Understands very little; isolated words only.',                              color: 'text-red-600',     bg: 'bg-red-50 border-red-200' },
+  { range: '2–4', level: 'A2',    desc: 'Understands simple, clear factual details with support.',                    color: 'text-orange-600',  bg: 'bg-orange-50 border-orange-200' },
+  { range: '5–6', level: 'B1',    desc: 'Can follow main points and extract key information.',                        color: 'text-amber-600',   bg: 'bg-amber-50 border-amber-200' },
+  { range: '6–7', level: 'B2',    desc: 'Accurate, detailed listening; understands all essential information.',       color: 'text-blue-600',    bg: 'bg-blue-50 border-blue-200' },
+  { range: '8',   level: 'C1-C2', desc: 'Fully accurate, precise, confident comprehension. No errors.',              color: 'text-emerald-600', bg: 'bg-emerald-50 border-emerald-200' },
+];
+
+const CEFR_BANDS_SENIOR = [
+  { range: '0–4',   level: 'A1', desc: 'Understands almost none of the text; isolated words only.',                                    color: 'text-red-600',     bg: 'bg-red-50 border-red-200' },
+  { range: '5–8',   level: 'A2', desc: 'Understands basic, simple information; may catch 1–2 details.',                               color: 'text-orange-600',  bg: 'bg-orange-50 border-orange-200' },
+  { range: '9–12',  level: 'B1', desc: 'Understands main ideas but misses detail; partial comprehension.',                            color: 'text-amber-600',   bg: 'bg-amber-50 border-amber-200' },
+  { range: '13–16', level: 'B2', desc: 'Good comprehension of details, reasons, cause/effect; mostly accurate.',                      color: 'text-blue-600',    bg: 'bg-blue-50 border-blue-200' },
+  { range: '17–18', level: 'C1', desc: 'Very accurate and detailed understanding; able to interpret implied meaning.',                color: 'text-emerald-600', bg: 'bg-emerald-50 border-emerald-200' },
+  { range: '19–20', level: 'C2', desc: 'Near-native comprehension; precise, complete, nuanced understanding.',                        color: 'text-violet-600',  bg: 'bg-violet-50 border-violet-200' },
+];
+
+const CEFR_COLORS = {
+  A1:     'text-red-600 bg-red-50 border-red-200',
+  A2:     'text-orange-600 bg-orange-50 border-orange-200',
+  B1:     'text-amber-600 bg-amber-50 border-amber-200',
+  B2:     'text-blue-600 bg-blue-50 border-blue-200',
+  C1:     'text-emerald-600 bg-emerald-50 border-emerald-200',
+  'C1-C2':'text-emerald-600 bg-emerald-50 border-emerald-200',
+  C2:     'text-violet-600 bg-violet-50 border-violet-200',
 };
 
-const CEFR_LEVELS_SENIOR = {
-  '0-4': { level: 'A1', descriptor: 'Understands almost none of the text; isolated words only.' },
-  '5-8': { level: 'A2', descriptor: 'Understands basic, simple information; may catch 1-2 details.' },
-  '9-12': { level: 'B1', descriptor: 'Understands main ideas but misses detail; partial comprehension.' },
-  '13-16': { level: 'B2', descriptor: 'Good comprehension of details, reasons, cause/effect; mostly accurate.' },
-  '17-18': { level: 'C1', descriptor: 'Very accurate and detailed understanding; able to interpret implied meaning.' },
-  '19-20': { level: 'C2', descriptor: 'Near-native comprehension; precise, complete, nuanced understanding.' }
-};
+function getCefrJunior(t) {
+  if (t <= 1) return 'A1'; if (t <= 4) return 'A2'; if (t <= 5) return 'B1';
+  if (t <= 7) return 'B2'; return 'C1-C2';
+}
+function getCefrSenior(t) {
+  if (t <= 4) return 'A1'; if (t <= 8) return 'A2'; if (t <= 12) return 'B1';
+  if (t <= 16) return 'B2'; if (t <= 18) return 'C1'; return 'C2';
+}
 
-export default function ListeningAssessmentPart2Form() {
-  const [yearGroup, setYearGroup] = useState('junior'); // 'junior' or 'senior'
-  const [formData, setFormData] = useState({
-    email: '',
-    studentName: '',
-    yearGroupAndClass: '',
-    teacherName: ''
-  });
-const [success, setSuccess] = useState(false);
-  const questions = yearGroup === 'junior' ? LISTENING_PART2_QUESTIONS_JUNIOR : LISTENING_PART2_QUESTIONS_SENIOR;
-  const cefrLevels = yearGroup === 'junior' ? CEFR_LEVELS_JUNIOR : CEFR_LEVELS_SENIOR;
-  const maxScore = yearGroup === 'junior' ? 8 : 20;
+/* ── Component ────────────────────────────────────────────── */
+export default function ListeningAssessmentPart2Form({ yearGroupProp }) {
+  const navigate = useNavigate();
+  const params   = useParams();
 
-  const [scores, setScores] = useState(Array(questions.length).fill(null));
+  // Support both prop-based and route-based year group detection
+  const yearGroup = yearGroupProp || params.yearGroup || 'junior';
+  const isJunior  = yearGroup === 'junior';
+
+  const questions  = isJunior ? QUESTIONS_JUNIOR  : QUESTIONS_SENIOR;
+  const cefrBands  = isJunior ? CEFR_BANDS_JUNIOR : CEFR_BANDS_SENIOR;
+  const maxScore   = isJunior ? 8 : 20;
+  const getCefr    = isJunior ? getCefrJunior : getCefrSenior;
+
+  const [formData, setFormData] = useState({ email: '', studentName: '', yearGroupAndClass: '', teacherName: '' });
+  const [scores,   setScores]   = useState(Array(questions.length).fill(null));
   const [totalScore, setTotalScore] = useState(0);
-  const [cefrLevel, setCefrLevel] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [cefrLevel,  setCefrLevel]  = useState('');
+  const [loading,    setLoading]    = useState(false);
 
-  const handleInputChange = (e) => {
+  const handleInput = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    setFormData(p => ({ ...p, [name]: value }));
   };
 
-  const handleScoreChange = (index, score) => {
-    const newScores = [...scores];
-    newScores[index] = score;
-    setScores(newScores);
-
-    const total = newScores.reduce((sum, s) => sum + (s !== null ? s : 0), 0);
+  const handleScore = (idx, val) => {
+    const next = [...scores];
+    next[idx] = val;
+    setScores(next);
+    const total = next.reduce((s, v) => s + (v ?? 0), 0);
     setTotalScore(total);
-
-    // Calculate CEFR level
-    let level = '';
-    if (yearGroup === 'junior') {
-      if (total >= 0 && total <= 1) level = 'A1';
-      else if (total >= 2 && total <= 4) level = 'A2';
-      else if (total >= 5 && total <= 5) level = 'B1';
-      else if (total >= 6 && total <= 7) level = 'B2';
-      else if (total >= 8) level = 'C1-C2';
-    } else {
-      if (total >= 0 && total <= 4) level = 'A1';
-      else if (total >= 5 && total <= 8) level = 'A2';
-      else if (total >= 9 && total <= 12) level = 'B1';
-      else if (total >= 13 && total <= 16) level = 'B2';
-      else if (total >= 17 && total <= 18) level = 'C1';
-      else if (total >= 19 && total <= 20) level = 'C2';
-    }
-
-    setCefrLevel(level);
+    setCefrLevel(getCefr(total));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
-    setError('');
-
     if (!formData.email || !formData.studentName || !formData.yearGroupAndClass) {
-      toast.error('❌ Please fill in email, student name, and year group/class', {
-        position: 'top-right',
-        autoClose: 4000,
-      });
-      setLoading(false);
+      toast.error('Please fill in all required fields.');
       return;
     }
-
     if (scores.includes(null)) {
-      toast.error(`❌ Please score all ${questions.length} questions`, {
-        position: 'top-right',
-        autoClose: 4000,
-      });
-      setLoading(false);
+      toast.error(`Please score all ${questions.length} questions.`);
       return;
     }
-
+    setLoading(true);
     try {
-      const listeningAssessmentAnswers = scores.map((score, index) => ({
-        questionId: index + 1,
-        score: parseInt(score)
-      }));
-
-      const assessmentData = {
+      await assessmentAPI.createAssessment({
         assessmentType: 'Listening Part 2',
         yearGroupType: yearGroup,
         email: formData.email,
         studentName: formData.studentName,
         yearGroupAndClass: formData.yearGroupAndClass,
         teacherName: formData.teacherName,
-        listeningAssessmentAnswers,
+        listeningAssessmentAnswers: scores.map((score, i) => ({ questionId: i + 1, score })),
         totalScore,
         cefrLevel,
-        level: cefrLevel
-      };
-
-      await assessmentAPI.createAssessment(assessmentData);
-      toast.success('✅ Assessment submitted successfully!', {
-        position: 'top-right',
-        autoClose: 4000,
+        level: cefrLevel,
       });
-
-      setFormData({
-        email: '',
-        studentName: '',
-        yearGroupAndClass: '',
-        teacherName: ''
-      });
+      toast.success('Assessment submitted successfully!');
+      setFormData({ email: '', studentName: '', yearGroupAndClass: '', teacherName: '' });
       setScores(Array(questions.length).fill(null));
       setTotalScore(0);
       setCefrLevel('');
     } catch (err) {
-      toast.error(`❌ Error: ${err.message || 'Failed to submit assessment'}`, {
-        position: 'top-right',
-        autoClose: 4000,
-      });
+      toast.error(`Failed to submit: ${err.message || 'Unknown error'}`);
     } finally {
       setLoading(false);
     }
   };
 
-  return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white py-8">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">
-            Listening Assessment Part 2 {yearGroup === 'junior' ? 'Year 7-9 / Grade 6-8' : 'Year 10-13 / Grade 9-12'}
-          </h1>
-          <p className="text-gray-600 mb-4">Teacher reads a paragraph aloud, students answer comprehension questions</p>
+  const answered = scores.filter(s => s !== null).length;
+  const progress  = Math.round((answered / questions.length) * 100);
 
-          {/* Year Group Selector */}
-          <div className="bg-white border-l-4 border-blue-500 p-4 rounded mb-6">
-            <p className="text-sm text-gray-700 font-semibold mb-3">Select Year Group:</p>
-            <div className="flex gap-4">
-              <button
-                onClick={() => {
-                  setYearGroup('junior');
-                  setScores(Array(LISTENING_PART2_QUESTIONS_JUNIOR.length).fill(null));
-                  setTotalScore(0);
-                  setCefrLevel('');
-                }}
-                className={`px-6 py-2 rounded-lg font-semibold transition-all ${
-                  yearGroup === 'junior'
-                    ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg'
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                }`}
-              >
-                📚 Year 7-9 / Grade 6-8
-              </button>
-              <button
-                onClick={() => {
-                  setYearGroup('senior');
-                  setScores(Array(LISTENING_PART2_QUESTIONS_SENIOR.length).fill(null));
-                  setTotalScore(0);
-                  setCefrLevel('');
-                }}
-                className={`px-6 py-2 rounded-lg font-semibold transition-all ${
-                  yearGroup === 'senior'
-                    ? 'bg-gradient-to-r from-purple-600 to-purple-700 text-white shadow-lg'
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                }`}
-              >
-                🎓 Year 10-13 / Grade 9-12
-              </button>
+  return (
+    <div className="min-h-screen bg-slate-50">
+      {/* Page header */}
+      <div className="bg-white border-b border-slate-200">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <nav className="breadcrumb mb-2">
+            <button onClick={() => navigate('/assessments')} className="hover:text-slate-700 transition-colors">
+              Assessments
+            </button>
+            <span className="breadcrumb-sep">/</span>
+            <button onClick={() => navigate('/assessment/listening-part2')} className="hover:text-slate-700 transition-colors">
+              Listening Part 2
+            </button>
+            <span className="breadcrumb-sep">/</span>
+            <span className="text-slate-700 font-medium">{isJunior ? 'Junior' : 'Senior'}</span>
+          </nav>
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h1 className="page-title">Listening Assessment — Part 2</h1>
+              <p className="page-subtitle">
+                {isJunior ? 'Year 7–9 · Grade 6–8' : 'Year 10–13 · Grade 9–12'} · Max score: {maxScore}
+              </p>
             </div>
+            {cefrLevel && (
+              <span className={`badge text-sm px-3 py-1.5 border ${CEFR_COLORS[cefrLevel]}`}>
+                CEFR {cefrLevel}
+              </span>
+            )}
           </div>
         </div>
+      </div>
 
-        {/* Success Message */}
-        {success && (
-          <div className="mb-6 p-4 bg-green-100 border-l-4 border-green-500 text-green-700 rounded">
-            ✅ Assessment submitted successfully!
-          </div>
-        )}
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
 
-        {/* Error Message */}
-        {error && (
-          <div className="mb-6 p-4 bg-red-100 border-l-4 border-red-500 text-red-700 rounded">
-            ❌ {error}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-8">
-          {/* Student Information */}
-          <div className="bg-white rounded-lg shadow-lg p-8 border-t-4 border-blue-500">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-              <span className="text-blue-500">📋</span> Student Information
-            </h2>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-gray-700 font-semibold mb-2">Email *</label>
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  placeholder="assessor@school.edu"
-                  className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-gray-700 font-semibold mb-2">Student Name *</label>
-                <input
-                  type="text"
-                  name="studentName"
-                  value={formData.studentName}
-                  onChange={handleInputChange}
-                  placeholder="Student name"
-                  className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-gray-700 font-semibold mb-2">Year Group & Class *</label>
-                <input
-                  type="text"
-                  name="yearGroupAndClass"
-                  value={formData.yearGroupAndClass}
-                  onChange={handleInputChange}
-                  placeholder="e.g. Year 7 - 7A"
-                  className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-gray-700 font-semibold mb-2">Teacher Name</label>
-                <input
-                  type="text"
-                  name="teacherName"
-                  value={formData.teacherName}
-                  onChange={handleInputChange}
-                  placeholder="Your name (optional)"
-                  className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Teacher Script */}
-          <div className="bg-blue-50 rounded-lg shadow-lg p-8 border-t-4 border-blue-500">
-            <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-              <span className="text-blue-500">🎤</span> Teacher Reads Aloud:
-            </h3>
-            {yearGroup === 'junior' ? (
-              <p className="text-gray-800 leading-relaxed text-base">
+        {/* Teacher script */}
+        <div className="info-banner">
+          <svg className="info-banner-icon w-5 h-5 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z" />
+          </svg>
+          <div>
+            <p className="font-semibold text-slate-800 mb-2">Teacher script (read aloud):</p>
+            {isJunior ? (
+              <p className="text-slate-700 text-sm leading-relaxed">
                 "I usually wake up at 6:30 in the morning. After breakfast, I take the bus to school. I enjoy science because we do lots of experiments. At the weekend, I like to play football with my friends or watch movies with my family."
               </p>
             ) : (
-              <p className="text-gray-800 leading-relaxed text-base">
-                "Last weekend, our school organised a community volunteering event in the city. Students were able to choose from several activities, including helping at a local food bank, supporting a beach clean-up, and assisting elderly residents with digital skills training. More than two hundred students took part.
-                <br /><br />
-                Although the event was successful overall, the organisers identified a few challenges. Firstly, the weather forecast changed unexpectedly, causing delays for the beach clean-up team. Secondly, some students mentioned that they would have liked clearer instructions before arriving at their assigned locations.
-                <br /><br />
-                Despite these issues, feedback from community partners was extremely positive. They especially appreciated the students' professionalism and teamwork. As a result, the school is considering making the event a monthly programme rather than an annual one."
-              </p>
+              <div className="text-slate-700 text-sm leading-relaxed space-y-2">
+                <p>"Last weekend, our school organised a community volunteering event in the city. Students were able to choose from several activities, including helping at a local food bank, supporting a beach clean-up, and assisting elderly residents with digital skills training. More than two hundred students took part.</p>
+                <p>Although the event was successful overall, the organisers identified a few challenges. Firstly, the weather forecast changed unexpectedly, causing delays for the beach clean-up team. Secondly, some students mentioned that they would have liked clearer instructions before arriving at their assigned locations.</p>
+                <p>Despite these issues, feedback from community partners was extremely positive. They especially appreciated the students' professionalism and teamwork. As a result, the school is considering making the event a monthly programme rather than an annual one."</p>
+              </div>
             )}
-            <p className="text-sm text-gray-600 mt-4">
+            <p className="text-xs text-slate-500 mt-3">
               Record score '0' for no response, '1' for good response and '2' for a complete response.
             </p>
           </div>
+        </div>
 
-          {/* Assessment Questions */}
-          <div className="bg-white rounded-lg shadow-lg overflow-hidden border-t-4 border-purple-500">
-            <div className="p-8">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                <span className="text-purple-500">🎧</span> Assessment Questions
-              </h2>
+        <form onSubmit={handleSubmit} className="space-y-6">
 
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="bg-gradient-to-r from-gray-100 to-gray-50">
-                      <th className="px-4 py-3 text-left font-bold text-gray-800">Question</th>
-                      <th className="px-4 py-3 text-center font-bold text-gray-800">No Response (0)</th>
-                      <th className="px-4 py-3 text-center font-bold text-gray-800">Some Comprehension (1)</th>
-                      <th className="px-4 py-3 text-center font-bold text-gray-800">Full Comprehension (2)</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {questions.map((question, index) => (
-                      <tr key={index} className={index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
-                        <td className="px-4 py-4 font-medium text-gray-900 max-w-xs">
-                          <span className="font-bold text-purple-600">{index + 1}.</span> {question}
-                        </td>
-                        <td className="px-4 py-4 text-center">
-                          <input
-                            type="radio"
-                            name={`q-${index}`}
-                            value="0"
-                            checked={scores[index] === 0}
-                            onChange={() => handleScoreChange(index, 0)}
-                            className="w-5 h-5 cursor-pointer"
-                          />
-                        </td>
-                        <td className="px-4 py-4 text-center">
-                          <input
-                            type="radio"
-                            name={`q-${index}`}
-                            value="1"
-                            checked={scores[index] === 1}
-                            onChange={() => handleScoreChange(index, 1)}
-                            className="w-5 h-5 cursor-pointer"
-                          />
-                        </td>
-                        <td className="px-4 py-4 text-center">
-                          <input
-                            type="radio"
-                            name={`q-${index}`}
-                            value="2"
-                            checked={scores[index] === 2}
-                            onChange={() => handleScoreChange(index, 2)}
-                            className="w-5 h-5 cursor-pointer"
-                          />
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+          {/* Student info */}
+          <div className="card-section">
+            <h2 className="section-heading">
+              <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+              </svg>
+              Student Information
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="form-label">Email <span className="text-red-500">*</span></label>
+                <input type="email" name="email" value={formData.email} onChange={handleInput} placeholder="assessor@school.edu" className="form-input" required />
+              </div>
+              <div>
+                <label className="form-label">Student Name <span className="text-red-500">*</span></label>
+                <input type="text" name="studentName" value={formData.studentName} onChange={handleInput} placeholder="Full name" className="form-input" required />
+              </div>
+              <div>
+                <label className="form-label">Year Group & Class <span className="text-red-500">*</span></label>
+                <input type="text" name="yearGroupAndClass" value={formData.yearGroupAndClass} onChange={handleInput} placeholder="e.g. Year 8A" className="form-input" required />
+              </div>
+              <div>
+                <label className="form-label">Teacher Name</label>
+                <input type="text" name="teacherName" value={formData.teacherName} onChange={handleInput} placeholder="Optional" className="form-input" />
               </div>
             </div>
           </div>
 
-          {/* Score Summary */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-6 border-2 border-blue-300">
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-lg font-semibold text-gray-800">Total Score:</span>
-                <span className="text-4xl font-bold text-blue-600">{totalScore}/{maxScore}</span>
-              </div>
-              <p className="text-sm text-gray-700">Maximum possible: {maxScore} points ({questions.length} questions × 2)</p>
+          {/* Questions */}
+          <div className="card-section">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="section-heading mb-0">
+                <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19.114 5.636a9 9 0 010 12.728M16.463 8.288a5.25 5.25 0 010 7.424M6.75 8.25l4.72-4.72a.75.75 0 011.28.53v15.88a.75.75 0 01-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.01 9.01 0 012.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75z" />
+                </svg>
+                Assessment Questions
+              </h2>
+              <span className="text-xs text-slate-500">{answered}/{questions.length} scored</span>
             </div>
 
-            <div className={`bg-gradient-to-br rounded-lg p-6 border-2 ${
-              cefrLevel === 'A1' ? 'from-red-50 to-red-100 border-red-300' :
-              cefrLevel === 'A2' ? 'from-orange-50 to-orange-100 border-orange-300' :
-              cefrLevel === 'B1' ? 'from-yellow-50 to-yellow-100 border-yellow-300' :
-              cefrLevel === 'B2' ? 'from-blue-50 to-blue-100 border-blue-300' :
-              cefrLevel === 'C1' ? 'from-green-50 to-green-100 border-green-300' :
-              cefrLevel === 'C1-C2' ? 'from-green-50 to-green-100 border-green-300' :
-              cefrLevel === 'C2' ? 'from-emerald-50 to-emerald-100 border-emerald-300' :
-              'from-gray-50 to-gray-100 border-gray-300'
-            }`}>
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-lg font-semibold text-gray-800">CEFR Level:</span>
-                <span className={`text-4xl font-bold ${
-                  cefrLevel === 'A1' ? 'text-red-600' :
-                  cefrLevel === 'A2' ? 'text-orange-600' :
-                  cefrLevel === 'B1' ? 'text-yellow-600' :
-                  cefrLevel === 'B2' ? 'text-blue-600' :
-                  cefrLevel === 'C1' ? 'text-green-600' :
-                  cefrLevel === 'C1-C2' ? 'text-green-600' :
-                  cefrLevel === 'C2' ? 'text-emerald-600' :
-                  'text-gray-600'
-                }`}>
-                  {cefrLevel || '-'}
-                </span>
-              </div>
-              {cefrLevel && cefrLevels[
-                yearGroup === 'junior'
-                  ? totalScore <= 1 ? '0-1' : totalScore <= 4 ? '2-4' : totalScore <= 5 ? '5-6' : totalScore <= 7 ? '6-7' : '8'
-                  : totalScore <= 4 ? '0-4' : totalScore <= 8 ? '5-8' : totalScore <= 12 ? '9-12' : totalScore <= 16 ? '13-16' : totalScore <= 18 ? '17-18' : '19-20'
-              ] && (
-                <p className="text-sm text-gray-700">{cefrLevels[
-                  yearGroup === 'junior'
-                    ? totalScore <= 1 ? '0-1' : totalScore <= 4 ? '2-4' : totalScore <= 5 ? '5-6' : totalScore <= 7 ? '6-7' : '8'
-                    : totalScore <= 4 ? '0-4' : totalScore <= 8 ? '5-8' : totalScore <= 12 ? '9-12' : totalScore <= 16 ? '13-16' : totalScore <= 18 ? '17-18' : '19-20'
-                ].descriptor}</p>
+            <div className="w-full bg-slate-100 rounded-full h-1.5 mb-5">
+              <div className="bg-blue-600 h-1.5 rounded-full transition-all duration-300" style={{ width: `${progress}%` }} />
+            </div>
+
+            <div className="table-wrapper">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th className="w-12">Question</th>
+                    <th></th>
+                    <th className="text-center w-32">No response (0)</th>
+                    <th className="text-center w-32">Some comprehension (1)</th>
+                    <th className="text-center w-32">Full comprehension (2)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {questions.map((q, i) => {
+                    // Junior questions continue numbering from Part 1 (13 questions), so start at 14
+                    const qNum = isJunior ? i + 14 : i + 1;
+                    return (
+                      <tr key={i} className={scores[i] !== null ? 'bg-blue-50/40' : ''}>
+                        <td className="text-slate-500 font-medium text-sm align-top pt-4">{qNum}</td>
+                        <td className="font-medium text-slate-800">{q}</td>
+                        {[0, 1, 2].map(val => (
+                          <td key={val} className="text-center">
+                            <input
+                              type="radio"
+                              name={`q-${i}`}
+                              value={val}
+                              checked={scores[i] === val}
+                              onChange={() => handleScore(i, val)}
+                              className="w-4 h-4 accent-blue-600 cursor-pointer"
+                            />
+                          </td>
+                        ))}
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Score summary */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="score-box-blue">
+              <p className="text-xs font-semibold text-blue-600 uppercase tracking-wide mb-1">Total Score</p>
+              <p className="text-4xl font-bold text-blue-700">
+                {totalScore}<span className="text-lg text-blue-400">/{maxScore}</span>
+              </p>
+              <p className="text-xs text-slate-500 mt-1">{questions.length} questions × 2 points</p>
+            </div>
+            <div className={`score-box border ${cefrLevel ? CEFR_COLORS[cefrLevel] : 'bg-slate-50 border-slate-200'}`}>
+              <p className="text-xs font-semibold uppercase tracking-wide mb-1 opacity-70">CEFR Level</p>
+              <p className="text-4xl font-bold">{cefrLevel || '—'}</p>
+              {cefrLevel && (
+                <p className="text-xs mt-1 opacity-70">
+                  {cefrBands.find(b => b.level === cefrLevel)?.desc}
+                </p>
               )}
             </div>
           </div>
 
-          {/* CEFR Scoring Table */}
-          <div className="bg-white rounded-lg shadow-lg p-8 border-t-4 border-indigo-500">
-            <h3 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-              <span className="text-indigo-500">📊</span> CEFR Level Scoring
-            </h3>
-            <div className="overflow-x-auto">
-              <table className="w-full">
+          {/* CEFR reference */}
+          <div className="card-section">
+            <h2 className="section-heading">CEFR Scoring Reference</h2>
+            <div className="table-wrapper">
+              <table className="data-table">
                 <thead>
-                  <tr className="bg-indigo-100">
-                    <th className="px-4 py-3 text-left font-bold">Total Score</th>
-                    <th className="px-4 py-3 text-center font-bold">CEFR Level</th>
-                    <th className="px-4 py-3 text-left font-bold">Descriptor</th>
+                  <tr>
+                    <th>Total Score (out of {maxScore})</th>
+                    <th>CEFR Level</th>
+                    <th>{isJunior ? 'Descriptor' : 'Meaning / Interpretation'}</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {Object.entries(cefrLevels).map(([scoreRange, data], idx) => (
-                    <tr key={idx} className={idx % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
-                      <td className="px-4 py-3 font-semibold">{scoreRange}</td>
-                      <td className="px-4 py-3 text-center font-bold text-indigo-600">{data.level}</td>
-                      <td className="px-4 py-3">{data.descriptor}</td>
+                  {cefrBands.map(({ range, level, desc, color }) => (
+                    <tr key={level} className={cefrLevel === level ? 'bg-blue-50/60' : ''}>
+                      <td className="font-semibold">{range}</td>
+                      <td><span className={`font-bold ${color}`}>{level}</span></td>
+                      <td className="text-slate-500 text-xs">{desc}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -444,21 +321,13 @@ const [success, setSuccess] = useState(false);
             </div>
           </div>
 
-          {/* Submit Button */}
-          <div className="flex gap-4">
-            <button
-              type="submit"
-              disabled={loading}
-              className="flex-1 px-8 py-4 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold rounded-lg transition-all transform hover:scale-105 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? 'Submitting...' : '✓ Submit Assessment'}
+          {/* Submit */}
+          <div className="flex gap-3">
+            <button type="submit" disabled={loading} className="btn-primary btn-lg flex-1">
+              {loading ? <><span className="spinner" /> Submitting...</> : 'Submit Assessment'}
             </button>
-            <button
-              type="reset"
-              className="px-8 py-4 bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold rounded-lg transition-all"
-              onClick={() => window.location.reload()}
-            >
-              Clear Form
+            <button type="button" onClick={() => navigate('/assessment/listening-part2')} className="btn-secondary btn-lg">
+              Cancel
             </button>
           </div>
         </form>

@@ -11,6 +11,8 @@ import AssessmentSelector from './pages/AssessmentSelector';
 import AssessmentForm from './pages/AssessmentForm';
 import ListeningAssessmentForm from './pages/ListeningAssessmentForm';
 import ListeningAssessmentPart2Form from './pages/ListeningAssessmentPart2Form';
+import ListeningAssessmentPart2Selector from './pages/ListeningAssessmentPart2Selector';
+import ListeningAssessmentSelector from './pages/ListeningAssessmentSelector';
 import SpeakingAssessmentSelector from './pages/SpeakingAssessmentSelector';
 import SpeakingAssessmentForm from './pages/SpeakingAssessmentForm';
 import SpeakingAssessmentSeniorForm from './pages/SpeakingAssessmentSeniorForm';
@@ -52,7 +54,7 @@ function App() {
         pauseOnHover
         theme="light"
       />
-      <div className="flex flex-col min-h-screen bg-gray-100">
+      <div className="flex flex-col min-h-screen bg-slate-50">
         <Navbar />
         <div className="flex-grow">
           <Routes>
@@ -62,8 +64,11 @@ function App() {
             <Route path="/contact" element={<Contact />} />
             <Route path="/assessments" element={<AssessmentSelector />} />
             <Route path="/assessment/eal-ell" element={<AssessmentForm />} />
-            <Route path="/assessment/listening" element={<ListeningAssessmentForm />} />
-            <Route path="/assessment/listening-part2" element={<ListeningAssessmentPart2Form />} />
+            <Route path="/assessment/listening" element={<ListeningAssessmentSelector />} />
+            <Route path="/assessment/listening/part1" element={<ListeningAssessmentForm />} />
+            <Route path="/assessment/listening-part2" element={<ListeningAssessmentPart2Selector />} />
+            <Route path="/assessment/listening-part2/junior" element={<ListeningAssessmentPart2Form yearGroupProp="junior" />} />
+            <Route path="/assessment/listening-part2/senior" element={<ListeningAssessmentPart2Form yearGroupProp="senior" />} />
             <Route path="/assessment/speaking" element={<SpeakingAssessmentSelector />} />
             <Route path="/assessment/speaking/junior" element={<SpeakingAssessmentForm />} />
             <Route path="/assessment/speaking/senior" element={<SpeakingAssessmentSeniorForm />} />

@@ -1,123 +1,214 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 
+const FEATURES = [
+  {
+    icon: (
+      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
+      </svg>
+    ),
+    color: 'bg-blue-100 text-blue-600',
+    title: 'Real-time Analytics',
+    desc: 'Instant score calculation with CEFR and A–E level mapping across all assessment types.',
+  },
+  {
+    icon: (
+      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+    ),
+    color: 'bg-emerald-100 text-emerald-600',
+    title: 'Structured Rubrics',
+    desc: 'Standardised scoring rubrics for Listening, Speaking, Reading, and Writing skills.',
+  },
+  {
+    icon: (
+      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+      </svg>
+    ),
+    color: 'bg-violet-100 text-violet-600',
+    title: 'Student Records',
+    desc: 'Centralised records with full assessment history, filterable by type, level, and date.',
+  },
+  {
+    icon: (
+      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 8.25h3m-3 3h3m-6 3h.008v.008H7.5v-.008zm0-3h.008v.008H7.5v-.008zm0-3h.008v.008H7.5v-.008z" />
+      </svg>
+    ),
+    color: 'bg-amber-100 text-amber-600',
+    title: 'Multi-skill Coverage',
+    desc: 'Covers EAL/ELL, Listening (Parts 1 & 2), Speaking, Reading, and Writing assessments.',
+  },
+];
+
+const STATS = [
+  { value: '1,000+', label: 'Students Assessed' },
+  { value: '500+',   label: 'Active Teachers' },
+  { value: '50+',    label: 'Schools' },
+  { value: '98%',    label: 'Satisfaction Rate' },
+];
+
+const ASSESSMENTS = [
+  { icon: '🎧', label: 'Listening',  desc: 'Parts 1 & 2 · CEFR A1–C2',  to: '/assessment/listening',  color: 'bg-blue-50 text-blue-600 border-blue-200' },
+  { icon: '🎙️', label: 'Speaking',   desc: 'Junior & Senior · CEFR A1–C2', to: '/assessment/speaking', color: 'bg-violet-50 text-violet-600 border-violet-200' },
+  { icon: '📖', label: 'Reading',    desc: 'Junior & Senior · A–E',       to: '/assessment/reading',   color: 'bg-emerald-50 text-emerald-600 border-emerald-200' },
+  { icon: '✏️', label: 'Writing',    desc: 'Junior & Senior · A–E',       to: '/assessment/writing',   color: 'bg-amber-50 text-amber-600 border-amber-200' },
+];
+
 export default function Home() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
-      {/* Hero Section */}
-      <section className="relative bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white py-20 overflow-hidden">
-        {/* Animated Background */}
-        <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
-          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
-          <div className="absolute top-1/2 left-1/2 w-80 h-80 bg-pink-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
-        </div>
+    <div className="min-h-screen bg-slate-50">
 
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-8">
-            <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight">
-              Welcome to
-              <span className="block bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-                Academic Excellence
-              </span>
+      {/* ── Hero ─────────────────────────────────────────── */}
+      <section className="relative bg-slate-900 overflow-hidden">
+        {/* subtle grid */}
+        <div
+          className="absolute inset-0 opacity-[0.04]"
+          style={{
+            backgroundImage:
+              'linear-gradient(#fff 1px,transparent 1px),linear-gradient(90deg,#fff 1px,transparent 1px)',
+            backgroundSize: '40px 40px',
+          }}
+        />
+        {/* glow blobs */}
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-600 rounded-full filter blur-3xl opacity-10 animate-blob" />
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-violet-600 rounded-full filter blur-3xl opacity-10 animate-blob animation-delay-2000" />
+
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 md:py-32">
+          <div className="max-w-3xl">
+            <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-600/20 border border-blue-500/30 text-blue-300 text-xs font-semibold mb-6">
+              <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
+              Student Assessment Platform
+            </span>
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight tracking-tight mb-6">
+              Assess smarter,<br />
+              <span className="text-blue-400">teach better.</span>
             </h1>
-            <p className="text-xl md:text-2xl text-purple-200 mb-8 max-w-2xl mx-auto">
-              Revolutionizing student assessment with intelligent, comprehensive evaluation tools
+            <p className="text-lg text-slate-400 mb-10 max-w-xl leading-relaxed">
+              A comprehensive platform for EAL/ELL educators to evaluate student language proficiency across all four skills — with instant CEFR scoring.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link to="/assessments" className="px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 rounded-lg font-bold text-lg transition-all transform hover:scale-105 shadow-lg">
-                Start Assessment →
+            <div className="flex flex-wrap gap-3">
+              <Link
+                to="/assessments"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl transition-colors shadow-lg shadow-blue-900/30"
+              >
+                Start an Assessment
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                </svg>
               </Link>
-              <Link to="/about" className="px-8 py-4 bg-white text-purple-900 hover:bg-purple-50 rounded-lg font-bold text-lg transition-all transform hover:scale-105 shadow-lg">
-                Learn More
+              <Link
+                to="/records"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold rounded-xl border border-slate-700 transition-colors"
+              >
+                View Records
               </Link>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Features Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          <h2 className="text-4xl font-bold text-center text-gray-900 mb-12">
-            Why Choose Us?
-          </h2>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {/* Feature 1 */}
-            <div className="bg-white rounded-xl shadow-lg p-8 hover:shadow-2xl transition-shadow duration-300 transform hover:scale-105">
-              <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center text-2xl mb-4 shadow-lg">
-                📊
+      {/* ── Stats bar ────────────────────────────────────── */}
+      <section className="bg-white border-b border-slate-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-slate-200">
+            {STATS.map(({ value, label }) => (
+              <div key={label} className="py-6 px-6 text-center">
+                <div className="text-2xl font-bold text-slate-900">{value}</div>
+                <div className="text-xs text-slate-500 mt-0.5 font-medium">{label}</div>
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-3">Comprehensive Analytics</h3>
-              <p className="text-gray-600">
-                Detailed insights into student performance with real-time tracking and analysis capabilities.
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Assessment types ─────────────────────────────── */}
+      <section className="py-16 md:py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="mb-10">
+            <h2 className="text-2xl font-bold text-slate-900 mb-2">Assessment Types</h2>
+            <p className="text-slate-500 text-sm">Select a skill area to begin evaluating your students.</p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {ASSESSMENTS.map(({ icon, label, desc, to, color }) => (
+              <Link
+                key={label}
+                to={to}
+                className={`group flex flex-col gap-3 p-5 rounded-2xl border bg-white hover:shadow-md transition-all duration-200 hover:-translate-y-0.5`}
+              >
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-xl border ${color}`}>
+                  {icon}
+                </div>
+                <div>
+                  <div className="font-semibold text-slate-900 text-sm group-hover:text-blue-600 transition-colors">{label}</div>
+                  <div className="text-xs text-slate-500 mt-0.5">{desc}</div>
+                </div>
+                <div className="mt-auto flex items-center gap-1 text-xs font-medium text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity">
+                  Open
+                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                  </svg>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Features ─────────────────────────────────────── */}
+      <section className="py-16 md:py-20 bg-white border-y border-slate-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="mb-10">
+            <h2 className="text-2xl font-bold text-slate-900 mb-2">Built for educators</h2>
+            <p className="text-slate-500 text-sm">Everything you need to run effective language assessments.</p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {FEATURES.map(({ icon, color, title, desc }) => (
+              <div key={title} className="flex flex-col gap-3">
+                <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${color}`}>
+                  {icon}
+                </div>
+                <div>
+                  <div className="font-semibold text-slate-900 text-sm mb-1">{title}</div>
+                  <div className="text-xs text-slate-500 leading-relaxed">{desc}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── CTA ──────────────────────────────────────────── */}
+      <section className="py-16 md:py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="bg-slate-900 rounded-3xl px-8 py-12 md:px-12 md:py-16 flex flex-col md:flex-row items-center justify-between gap-8">
+            <div>
+              <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">Ready to get started?</h2>
+              <p className="text-slate-400 text-sm max-w-md">
+                Run your first assessment in minutes. No setup required — just select a skill area and begin.
               </p>
             </div>
-
-            {/* Feature 2 */}
-            <div className="bg-white rounded-xl shadow-lg p-8 hover:shadow-2xl transition-shadow duration-300 transform hover:scale-105">
-              <div className="w-14 h-14 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg flex items-center justify-center text-2xl mb-4 shadow-lg">
-                ✅
-              </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-3">Easy Assessment</h3>
-              <p className="text-gray-600">
-                User-friendly interface designed for educators to quickly evaluate student competencies.
-              </p>
-            </div>
-
-            {/* Feature 3 */}
-            <div className="bg-white rounded-xl shadow-lg p-8 hover:shadow-2xl transition-shadow duration-300 transform hover:scale-105">
-              <div className="w-14 h-14 bg-gradient-to-br from-green-500 to-green-600 rounded-lg flex items-center justify-center text-2xl mb-4 shadow-lg">
-                🎯
-              </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-3">Targeted Insights</h3>
-              <p className="text-gray-600">
-                Identify areas of improvement and celebrate student achievements with precision.
-              </p>
+            <div className="flex flex-wrap gap-3 flex-shrink-0">
+              <Link
+                to="/assessments"
+                className="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl transition-colors shadow-lg shadow-blue-900/30 text-sm"
+              >
+                Start Assessment
+              </Link>
+              <Link
+                to="/records"
+                className="px-6 py-3 bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold rounded-xl border border-slate-700 transition-colors text-sm"
+              >
+                View Records
+              </Link>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Stats Section */}
-      <section className="py-20 bg-gradient-to-r from-slate-900 to-purple-900 text-white px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            <div className="text-center">
-              <div className="text-5xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">1000+</div>
-              <p className="text-gray-300 mt-2">Students Assessed</p>
-            </div>
-            <div className="text-center">
-              <div className="text-5xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">500+</div>
-              <p className="text-gray-300 mt-2">Teachers Using</p>
-            </div>
-            <div className="text-center">
-              <div className="text-5xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">50+</div>
-              <p className="text-gray-300 mt-2">Schools Served</p>
-            </div>
-            <div className="text-center">
-              <div className="text-5xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">98%</div>
-              <p className="text-gray-300 mt-2">Satisfaction Rate</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-4xl font-bold text-gray-900 mb-6">
-            Ready to Assess Your Students?
-          </h2>
-          <p className="text-xl text-gray-600 mb-8">
-            Get started with our comprehensive assessment platform today. It takes just minutes to set up.
-          </p>
-          <Link to="/assessments" className="inline-block px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-lg font-bold text-lg transition-all transform hover:scale-105 shadow-lg">
-            Begin Assessment Now
-          </Link>
-        </div>
-      </section>
     </div>
   );
 }

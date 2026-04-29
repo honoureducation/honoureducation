@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { assessmentAPI } from '../services/api';
 
-const LISTENING_QUESTIONS = [
+const QUESTIONS = [
   'What is your name?',
   'What is your age?',
   'What language do you speak at home?',
@@ -15,392 +16,270 @@ const LISTENING_QUESTIONS = [
   'What was your best subject?',
   'What did you not like in school?',
   'What will you do after school today?',
-  'What would you like to do when you finish school?'
+  'What would you like to do when you finish school?',
 ];
 
-const CEFR_LEVELS = {
-  '0-5': { level: 'A1', descriptor: 'Very limited English. Can answer isolated personal questions.' },
-  '6-10': { level: 'A2', descriptor: 'Basic user. Can describe simple personal information with support.' },
-  '11-15': { level: 'B1', descriptor: 'Intermediate. Can describe past events, preferences, and school topics.' },
-  '16-20': { level: 'B2', descriptor: 'Upper intermediate. Can give detail, reasons, and extended responses.' },
-  '21-24': { level: 'C1', descriptor: 'Advanced. Fluent, coherent, accurate, extended speaking.' },
-  '25-26': { level: 'C2', descriptor: 'Near-native. Precise, nuanced, sophisticated responses.' }
-};
+const CEFR_BANDS = [
+  { range: '0–5',   level: 'A1', desc: 'Very limited English. Can answer isolated personal questions.', color: 'text-red-600',     bg: 'bg-red-50 border-red-200' },
+  { range: '6–10',  level: 'A2', desc: 'Basic user. Can describe simple personal information with support.', color: 'text-orange-600', bg: 'bg-orange-50 border-orange-200' },
+  { range: '11–15', level: 'B1', desc: 'Intermediate. Can describe past events, preferences, and school topics.', color: 'text-amber-600',  bg: 'bg-amber-50 border-amber-200' },
+  { range: '16–20', level: 'B2', desc: 'Upper intermediate. Can give detail, reasons, and extended responses.', color: 'text-blue-600',   bg: 'bg-blue-50 border-blue-200' },
+  { range: '21–24', level: 'C1', desc: 'Advanced. Fluent, coherent, accurate, extended speaking.', color: 'text-emerald-600', bg: 'bg-emerald-50 border-emerald-200' },
+  { range: '25–26', level: 'C2', desc: 'Near-native. Precise, nuanced, sophisticated responses.', color: 'text-violet-600',  bg: 'bg-violet-50 border-violet-200' },
+];
+
+function getCefr(total) {
+  if (total <= 5)  return 'A1';
+  if (total <= 10) return 'A2';
+  if (total <= 15) return 'B1';
+  if (total <= 20) return 'B2';
+  if (total <= 24) return 'C1';
+  return 'C2';
+}
+
+const CEFR_COLORS = { A1: 'text-red-600 bg-red-50 border-red-200', A2: 'text-orange-600 bg-orange-50 border-orange-200', B1: 'text-amber-600 bg-amber-50 border-amber-200', B2: 'text-blue-600 bg-blue-50 border-blue-200', C1: 'text-emerald-600 bg-emerald-50 border-emerald-200', C2: 'text-violet-600 bg-violet-50 border-violet-200' };
 
 export default function ListeningAssessmentForm() {
-  const [formData, setFormData] = useState({
-    email: '',
-    studentName: '',
-    yearGroupAndClass: '',
-    teacherName: ''
-  });
-
-  const [scores, setScores] = useState(Array(LISTENING_QUESTIONS.length).fill(null));
+  const navigate = useNavigate();
+  const [formData, setFormData] = useState({ email: '', studentName: '', yearGroupAndClass: '', teacherName: '' });
+  const [scores, setScores] = useState(Array(QUESTIONS.length).fill(null));
   const [totalScore, setTotalScore] = useState(0);
   const [cefrLevel, setCefrLevel] = useState('');
   const [loading, setLoading] = useState(false);
-const [error, setError] = useState('');
-const [success, setSuccess] = useState(false);
-  const handleInputChange = (e) => {
+
+  const handleInput = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    setFormData(p => ({ ...p, [name]: value }));
   };
 
-  const handleScoreChange = (index, score) => {
-    const newScores = [...scores];
-    newScores[index] = score;
-    setScores(newScores);
-
-    // Calculate total score
-    const total = newScores.reduce((sum, s) => sum + (s !== null ? s : 0), 0);
+  const handleScore = (idx, val) => {
+    const next = [...scores];
+    next[idx] = val;
+    setScores(next);
+    const total = next.reduce((s, v) => s + (v ?? 0), 0);
     setTotalScore(total);
-
-    // Calculate CEFR level
-    let level = '';
-    if (total >= 0 && total <= 5) level = 'A1';
-    else if (total >= 6 && total <= 10) level = 'A2';
-    else if (total >= 11 && total <= 15) level = 'B1';
-    else if (total >= 16 && total <= 20) level = 'B2';
-    else if (total >= 21 && total <= 24) level = 'C1';
-    else if (total >= 25 && total <= 26) level = 'C2';
-
-    setCefrLevel(level);
+    setCefrLevel(getCefr(total));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
-    setError('');
-
     if (!formData.email || !formData.studentName || !formData.yearGroupAndClass) {
-      toast.error('❌ Please fill in email, student name, and year group/class', {
-        position: 'top-right',
-        autoClose: 4000,
-      });
-      setLoading(false);
+      toast.error('Please fill in all required fields.');
       return;
     }
-
     if (scores.includes(null)) {
-      toast.error('❌ Please score all 13 questions', {
-        position: 'top-right',
-        autoClose: 4000,
-      });
-      setLoading(false);
+      toast.error('Please score all 13 questions.');
       return;
     }
-
+    setLoading(true);
     try {
-      const listeningAssessmentAnswers = scores.map((score, index) => ({
-        questionId: index + 1,
-        score: parseInt(score)
-      }));
-
-      const assessmentData = {
+      await assessmentAPI.createAssessment({
         assessmentType: 'Listening Part 1',
         email: formData.email,
         studentName: formData.studentName,
         yearGroupAndClass: formData.yearGroupAndClass,
         teacherName: formData.teacherName,
-        listeningAssessmentAnswers,
+        listeningAssessmentAnswers: scores.map((score, i) => ({ questionId: i + 1, score })),
         totalScore,
         cefrLevel,
-        level: cefrLevel
-      };
-
-      await assessmentAPI.createAssessment(assessmentData);
-      toast.success('✅ Assessment submitted successfully!', {
-        position: 'top-right',
-        autoClose: 4000,
+        level: cefrLevel,
       });
-
-      // Reset form
-      setFormData({
-        email: '',
-        studentName: '',
-        yearGroupAndClass: '',
-        teacherName: ''
-      });
-      setScores(Array(LISTENING_QUESTIONS.length).fill(null));
+      toast.success('Assessment submitted successfully!');
+      setFormData({ email: '', studentName: '', yearGroupAndClass: '', teacherName: '' });
+      setScores(Array(QUESTIONS.length).fill(null));
       setTotalScore(0);
       setCefrLevel('');
     } catch (err) {
-      toast.error(`❌ Error: ${err.message || 'Failed to submit assessment'}`, {
-        position: 'top-right',
-        autoClose: 4000,
-      });
+      toast.error(`Failed to submit: ${err.message || 'Unknown error'}`);
     } finally {
       setLoading(false);
     }
   };
 
+  const answered = scores.filter(s => s !== null).length;
+  const progress = Math.round((answered / QUESTIONS.length) * 100);
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white py-8">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">Listening Assessment Part 1</h1>
-          <p className="text-gray-600 mb-4">Year 7-13 / Grade 6-12</p>
-          <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
-            <p className="text-sm text-gray-700"><strong>Instructions for assessor:</strong></p>
-            <ol className="text-sm text-gray-700 ml-4 mt-2 space-y-1">
-              <li>1. Ask each question once.</li>
-              <li>2. Accept the first answer given.</li>
-              <li>3. Do not probe further.</li>
-              <li>4. Record score '0' for no response, '1' for good response and '2' for a complete response.</li>
+    <div className="min-h-screen bg-slate-50">
+      {/* Page header */}
+      <div className="bg-white border-b border-slate-200">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <nav className="breadcrumb mb-2">
+            <button onClick={() => navigate('/assessments')} className="hover:text-slate-700 transition-colors">Assessments</button>
+            <span className="breadcrumb-sep">/</span>
+            <button onClick={() => navigate('/assessment/listening')} className="hover:text-slate-700 transition-colors">Listening</button>
+            <span className="breadcrumb-sep">/</span>
+            <span className="text-slate-700 font-medium">Part 1</span>
+          </nav>
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h1 className="page-title">Listening Assessment — Part 1</h1>
+              <p className="page-subtitle">Year 7–13 · Grade 6–12 · Max score: 26</p>
+            </div>
+            {cefrLevel && (
+              <span className={`badge text-sm px-3 py-1.5 border ${CEFR_COLORS[cefrLevel]}`}>
+                CEFR {cefrLevel}
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+
+        {/* Instructions */}
+        <div className="info-banner">
+          <svg className="info-banner-icon w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
+          </svg>
+          <div>
+            <p className="font-semibold text-slate-800 mb-1">Instructions for assessor</p>
+            <ol className="text-slate-600 space-y-0.5 text-xs list-decimal list-inside">
+              <li>Ask each question once.</li>
+              <li>Accept the first answer given.</li>
+              <li>Do not probe further.</li>
+              <li>Record score '0' for no response, '1' for good response and '2' for a complete response.</li>
             </ol>
           </div>
         </div>
 
-        {/* Success Message */}
-        {success && (
-          <div className="mb-6 p-4 bg-green-100 border-l-4 border-green-500 text-green-700 rounded">
-            ✅ Assessment submitted successfully!
-          </div>
-        )}
+        <form onSubmit={handleSubmit} className="space-y-6">
 
-        {/* Error Message */}
-        {error && (
-          <div className="mb-6 p-4 bg-red-100 border-l-4 border-red-500 text-red-700 rounded">
-            ❌ {error}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-8">
-          {/* Basic Information */}
-          <div className="bg-white rounded-lg shadow-lg p-8 border-t-4 border-blue-500">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-              <span className="text-blue-500">📋</span> Student Information
+          {/* Student info */}
+          <div className="card-section">
+            <h2 className="section-heading">
+              <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+              </svg>
+              Student Information
             </h2>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-gray-700 font-semibold mb-2">Email *</label>
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  placeholder="assessor@school.edu"
-                  className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
-                  required
-                />
+                <label className="form-label">Email <span className="text-red-500">*</span></label>
+                <input type="email" name="email" value={formData.email} onChange={handleInput} placeholder="assessor@school.edu" className="form-input" required />
               </div>
-
               <div>
-                <label className="block text-gray-700 font-semibold mb-2">Student Name *</label>
-                <input
-                  type="text"
-                  name="studentName"
-                  value={formData.studentName}
-                  onChange={handleInputChange}
-                  placeholder="Student name"
-                  className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
-                  required
-                />
+                <label className="form-label">Student Name <span className="text-red-500">*</span></label>
+                <input type="text" name="studentName" value={formData.studentName} onChange={handleInput} placeholder="Full name" className="form-input" required />
               </div>
-
               <div>
-                <label className="block text-gray-700 font-semibold mb-2">Year Group & Class *</label>
-                <input
-                  type="text"
-                  name="yearGroupAndClass"
-                  value={formData.yearGroupAndClass}
-                  onChange={handleInputChange}
-                  placeholder="e.g. Year 7 - 7A"
-                  className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
-                  required
-                />
+                <label className="form-label">Year Group & Class <span className="text-red-500">*</span></label>
+                <input type="text" name="yearGroupAndClass" value={formData.yearGroupAndClass} onChange={handleInput} placeholder="e.g. Year 8A" className="form-input" required />
               </div>
-
               <div>
-                <label className="block text-gray-700 font-semibold mb-2">Teacher Name</label>
-                <input
-                  type="text"
-                  name="teacherName"
-                  value={formData.teacherName}
-                  onChange={handleInputChange}
-                  placeholder="Your name (optional)"
-                  className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
-                />
+                <label className="form-label">Teacher Name</label>
+                <input type="text" name="teacherName" value={formData.teacherName} onChange={handleInput} placeholder="Optional" className="form-input" />
               </div>
             </div>
           </div>
 
-          {/* Assessment Questions */}
-          <div className="bg-white rounded-lg shadow-lg overflow-hidden border-t-4 border-purple-500">
-            <div className="p-8">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                <span className="text-purple-500">🎧</span> Assessment Questions
+          {/* Progress */}
+          <div className="card-section">
+            <div className="flex items-center justify-between mb-2">
+              <h2 className="section-heading mb-0">
+                <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19.114 5.636a9 9 0 010 12.728M16.463 8.288a5.25 5.25 0 010 7.424M6.75 8.25l4.72-4.72a.75.75 0 011.28.53v15.88a.75.75 0 01-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.01 9.01 0 012.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75z" />
+                </svg>
+                Assessment Questions
               </h2>
-
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="bg-gradient-to-r from-gray-100 to-gray-50">
-                      <th className="px-4 py-3 text-left font-bold text-gray-800">Question</th>
-                      <th className="px-4 py-3 text-center font-bold text-gray-800">
-                        No Response (0)
-                      </th>
-                      <th className="px-4 py-3 text-center font-bold text-gray-800">
-                        Some Comprehension (1)
-                      </th>
-                      <th className="px-4 py-3 text-center font-bold text-gray-800">
-                        Full Comprehension (2)
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {LISTENING_QUESTIONS.map((question, index) => (
-                      <tr key={index} className={index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
-                        <td className="px-4 py-4 font-medium text-gray-900 max-w-xs">
-                          <span className="font-bold text-purple-600">{index + 1}.</span> {question}
-                        </td>
-                        <td className="px-4 py-4 text-center">
-                          <input
-                            type="radio"
-                            name={`q-${index}`}
-                            value="0"
-                            checked={scores[index] === 0}
-                            onChange={() => handleScoreChange(index, 0)}
-                            className="w-5 h-5 cursor-pointer"
-                          />
-                        </td>
-                        <td className="px-4 py-4 text-center">
-                          <input
-                            type="radio"
-                            name={`q-${index}`}
-                            value="1"
-                            checked={scores[index] === 1}
-                            onChange={() => handleScoreChange(index, 1)}
-                            className="w-5 h-5 cursor-pointer"
-                          />
-                        </td>
-                        <td className="px-4 py-4 text-center">
-                          <input
-                            type="radio"
-                            name={`q-${index}`}
-                            value="2"
-                            checked={scores[index] === 2}
-                            onChange={() => handleScoreChange(index, 2)}
-                            className="w-5 h-5 cursor-pointer"
-                          />
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <span className="text-xs text-slate-500">{answered}/{QUESTIONS.length} scored</span>
             </div>
-          </div>
-
-          {/* Score Summary */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-6 border-2 border-blue-300">
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-lg font-semibold text-gray-800">Total Score:</span>
-                <span className="text-4xl font-bold text-blue-600">{totalScore}/26</span>
-              </div>
-              <p className="text-sm text-gray-700">Maximum possible: 26 points (13 questions × 2)</p>
+            <div className="w-full bg-slate-100 rounded-full h-1.5 mb-6">
+              <div className="bg-blue-600 h-1.5 rounded-full transition-all duration-300" style={{ width: `${progress}%` }} />
             </div>
 
-            <div className={`bg-gradient-to-br rounded-lg p-6 border-2 ${
-              cefrLevel === 'A1' ? 'from-red-50 to-red-100 border-red-300' :
-              cefrLevel === 'A2' ? 'from-orange-50 to-orange-100 border-orange-300' :
-              cefrLevel === 'B1' ? 'from-yellow-50 to-yellow-100 border-yellow-300' :
-              cefrLevel === 'B2' ? 'from-blue-50 to-blue-100 border-blue-300' :
-              cefrLevel === 'C1' ? 'from-green-50 to-green-100 border-green-300' :
-              cefrLevel === 'C2' ? 'from-emerald-50 to-emerald-100 border-emerald-300' :
-              'from-gray-50 to-gray-100 border-gray-300'
-            }`}>
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-lg font-semibold text-gray-800">CEFR Level:</span>
-                <span className={`text-4xl font-bold ${
-                  cefrLevel === 'A1' ? 'text-red-600' :
-                  cefrLevel === 'A2' ? 'text-orange-600' :
-                  cefrLevel === 'B1' ? 'text-yellow-600' :
-                  cefrLevel === 'B2' ? 'text-blue-600' :
-                  cefrLevel === 'C1' ? 'text-green-600' :
-                  cefrLevel === 'C2' ? 'text-emerald-600' :
-                  'text-gray-600'
-                }`}>
-                  {cefrLevel || '-'}
-                </span>
-              </div>
-              {cefrLevel && (
-                <p className="text-sm text-gray-700">{CEFR_LEVELS[totalScore < 6 ? '0-5' : totalScore < 11 ? '6-10' : totalScore < 16 ? '11-15' : totalScore < 21 ? '16-20' : totalScore < 25 ? '21-24' : '25-26'].descriptor}</p>
-              )}
-            </div>
-          </div>
-
-          {/* CEFR Scoring Table */}
-          <div className="bg-white rounded-lg shadow-lg p-8 border-t-4 border-indigo-500">
-            <h3 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-              <span className="text-indigo-500">📊</span> CEFR Level Scoring
-            </h3>
-            <div className="overflow-x-auto">
-              <table className="w-full">
+            <div className="table-wrapper">
+              <table className="data-table">
                 <thead>
-                  <tr className="bg-indigo-100">
-                    <th className="px-4 py-3 text-left font-bold">Total Score (26 max)</th>
-                    <th className="px-4 py-3 text-center font-bold">CEFR Level</th>
-                    <th className="px-4 py-3 text-left font-bold">Descriptor</th>
+                  <tr>
+                    <th className="w-8">#</th>
+                    <th>Question</th>
+                    <th className="text-center w-28">No Response<br /><span className="font-normal normal-case">(0)</span></th>
+                    <th className="text-center w-28">Some comprehension<br /><span className="font-normal normal-case">(1)</span></th>
+                    <th className="text-center w-28">Full comprehension<br /><span className="font-normal normal-case">(2)</span></th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr className="bg-red-50">
-                    <td className="px-4 py-3 font-semibold">0 - 5</td>
-                    <td className="px-4 py-3 text-center font-bold text-red-600">A1</td>
-                    <td className="px-4 py-3">Very limited English. Can answer isolated personal questions.</td>
-                  </tr>
-                  <tr className="bg-orange-50">
-                    <td className="px-4 py-3 font-semibold">6 - 10</td>
-                    <td className="px-4 py-3 text-center font-bold text-orange-600">A2</td>
-                    <td className="px-4 py-3">Basic user. Can describe simple personal information with support.</td>
-                  </tr>
-                  <tr className="bg-yellow-50">
-                    <td className="px-4 py-3 font-semibold">11 - 15</td>
-                    <td className="px-4 py-3 text-center font-bold text-yellow-600">B1</td>
-                    <td className="px-4 py-3">Intermediate. Can describe past events, preferences, and school topics.</td>
-                  </tr>
-                  <tr className="bg-blue-50">
-                    <td className="px-4 py-3 font-semibold">16 - 20</td>
-                    <td className="px-4 py-3 text-center font-bold text-blue-600">B2</td>
-                    <td className="px-4 py-3">Upper intermediate. Can give detail, reasons, and extended responses.</td>
-                  </tr>
-                  <tr className="bg-green-50">
-                    <td className="px-4 py-3 font-semibold">21 - 24</td>
-                    <td className="px-4 py-3 text-center font-bold text-green-600">C1</td>
-                    <td className="px-4 py-3">Advanced. Fluent, coherent, accurate, extended speaking.</td>
-                  </tr>
-                  <tr className="bg-emerald-50">
-                    <td className="px-4 py-3 font-semibold">25 - 26</td>
-                    <td className="px-4 py-3 text-center font-bold text-emerald-600">C2</td>
-                    <td className="px-4 py-3">Near-native. Precise, nuanced, sophisticated responses.</td>
-                  </tr>
+                  {QUESTIONS.map((q, i) => (
+                    <tr key={i} className={scores[i] !== null ? 'bg-blue-50/40' : ''}>
+                      <td className="text-slate-400 text-xs font-medium">{i + 1}</td>
+                      <td className="font-medium text-slate-800">{q}</td>
+                      {[0, 1, 2].map(val => (
+                        <td key={val} className="text-center">
+                          <label className="inline-flex items-center justify-center cursor-pointer">
+                            <input
+                              type="radio"
+                              name={`q-${i}`}
+                              value={val}
+                              checked={scores[i] === val}
+                              onChange={() => handleScore(i, val)}
+                              className="w-4 h-4 accent-blue-600 cursor-pointer"
+                            />
+                          </label>
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>
           </div>
 
-          {/* Submit Button */}
-          <div className="flex gap-4">
-            <button
-              type="submit"
-              disabled={loading}
-              className="flex-1 px-8 py-4 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold rounded-lg transition-all transform hover:scale-105 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? 'Submitting...' : '✓ Submit Assessment'}
+          {/* Score summary */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="score-box-blue">
+              <p className="text-xs font-semibold text-blue-600 uppercase tracking-wide mb-1">Total Score</p>
+              <p className="text-4xl font-bold text-blue-700">{totalScore}<span className="text-lg text-blue-400">/26</span></p>
+              <p className="text-xs text-slate-500 mt-1">13 questions × 2 points</p>
+            </div>
+            <div className={`score-box border ${cefrLevel ? CEFR_COLORS[cefrLevel] : 'bg-slate-50 border-slate-200'}`}>
+              <p className="text-xs font-semibold uppercase tracking-wide mb-1 opacity-70">CEFR Level</p>
+              <p className="text-4xl font-bold">{cefrLevel || '—'}</p>
+              {cefrLevel && (
+                <p className="text-xs mt-1 opacity-70">
+                  {CEFR_BANDS.find(b => b.level === cefrLevel)?.desc}
+                </p>
+              )}
+            </div>
+          </div>
+
+          {/* CEFR reference table */}
+          <div className="card-section">
+            <h2 className="section-heading">
+              <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
+              </svg>
+              CEFR Scoring Reference
+            </h2>
+            <div className="table-wrapper">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>Total Score (26 max)</th>
+                    <th>CEFR Level</th>
+                    <th>Descriptor</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {CEFR_BANDS.map(({ range, level, desc, color, bg }) => (
+                    <tr key={level} className={cefrLevel === level ? 'ring-1 ring-inset ring-blue-300' : ''}>
+                      <td className="font-semibold">{range}</td>
+                      <td><span className={`font-bold ${color}`}>{level}</span></td>
+                      <td className="text-slate-500 text-xs">{desc}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Submit */}
+          <div className="flex gap-3">
+            <button type="submit" disabled={loading} className="btn-primary btn-lg flex-1">
+              {loading ? <><span className="spinner" /> Submitting...</> : 'Submit Assessment'}
             </button>
-            <button
-              type="reset"
-              className="px-8 py-4 bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold rounded-lg transition-all"
-              onClick={() => window.location.reload()}
-            >
-              Clear Form
+            <button type="button" onClick={() => window.location.reload()} className="btn-secondary btn-lg">
+              Clear
             </button>
           </div>
         </form>
