@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import logo from '../assets/logonew.PNG';
 
 const FEATURES = [
   {
@@ -78,34 +79,44 @@ export default function Home() {
         <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-violet-600 rounded-full filter blur-3xl opacity-10 animate-blob animation-delay-2000" />
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 md:py-32">
-          <div className="max-w-3xl">
-            <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-600/20 border border-blue-500/30 text-blue-300 text-xs font-semibold mb-6">
-              <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
-              Student Assessment Platform
-            </span>
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight tracking-tight mb-6">
-              Assess smarter,<br />
-              <span className="text-blue-400">teach better.</span>
-            </h1>
-            <p className="text-lg text-slate-400 mb-10 max-w-xl leading-relaxed">
-              A comprehensive platform for EAL/ELL educators to evaluate student language proficiency across all four skills — with instant CEFR scoring.
-            </p>
-            <div className="flex flex-wrap gap-3">
-              <Link
-                to="/assessments"
-                className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl transition-colors shadow-lg shadow-blue-900/30"
-              >
-                Start an Assessment
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-                </svg>
-              </Link>
-              <Link
-                to="/records"
-                className="inline-flex items-center gap-2 px-6 py-3 bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold rounded-xl border border-slate-700 transition-colors"
-              >
-                View Records
-              </Link>
+          <div className="flex flex-col md:flex-row items-center justify-between gap-12 md:gap-8">
+            <div className="max-w-3xl md:max-w-xl lg:max-w-2xl flex-1">
+              <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-600/20 border border-blue-500/30 text-blue-300 text-xs font-semibold mb-6">
+                <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
+                Student Assessment Platform
+              </span>
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight tracking-tight mb-6">
+                Assess smarter,<br />
+                <span className="text-blue-400">teach better.</span>
+              </h1>
+              <p className="text-lg text-slate-400 mb-10 max-w-xl leading-relaxed">
+                A comprehensive platform for EAL/ELL educators to evaluate student language proficiency across all four skills — with instant CEFR scoring.
+              </p>
+              <div className="flex flex-wrap gap-3">
+                <Link
+                  to="/assessments"
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl transition-colors shadow-lg shadow-blue-900/30"
+                >
+                  Start an Assessment
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                  </svg>
+                </Link>
+                <Link
+                  to="/records"
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold rounded-xl border border-slate-700 transition-colors"
+                >
+                  View Records
+                </Link>
+              </div>
+            </div>
+
+            <div className="flex-1 flex justify-center md:justify-end animate-fade-in-up">
+              <img 
+                src={logo} 
+                alt="Honour Education Logo" 
+                className="h-48 sm:h-64 md:h-80 lg:h-[400px] w-auto object-contain drop-shadow-[0_0_20px_rgba(37,99,235,0.15)] hover:scale-105 transition-transform duration-500" 
+              />
             </div>
           </div>
         </div>
