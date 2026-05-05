@@ -110,6 +110,7 @@ function DetailModal({ assessment: a, onClose }) {
             {[
               { label: 'Email', value: a.email },
               { label: 'Year & Class', value: a.yearGroupAndClass },
+              { label: 'Term', value: a.term || 'T1' },
               a.teacherName && { label: 'Teacher', value: a.teacherName },
               { label: 'Date', value: new Date(a.createdAt).toLocaleString() },
             ].filter(Boolean).map(({ label, value }) => (
@@ -215,6 +216,7 @@ export default function AssessmentList() {
   const [viewing, setViewing] = useState(null);
   const [search, setSearch] = useState('');
   const [filterType, setFilterType] = useState('All');
+  const [filterTerm, setFilterTerm] = useState('All');
 
   useEffect(() => { fetchAssessments(); }, []);
 
@@ -244,12 +246,61 @@ export default function AssessmentList() {
     }
   };
 
+  const handleExportCSV = () => {
+    if (filtered.length === 0) {
+      toast.warning('No data to export');
+      return;
+    }
+
+    const headers = [
+      'Student Name',
+      'Year & Class',
+      'Term',
+      'Assessment Type',
+      'Score',
+      'Max Score',
+      'Level',
+      'Date',
+      'Teacher Name',
+      'Teacher Comments'
+    ];
+
+    const rows = filtered.map(a => [
+      a.studentName,
+      a.yearGroupAndClass,
+      a.term || 'T1',
+      a.assessmentType,
+      a.totalScore ?? 0,
+      getScoreMax(a).replace('/', ''),
+      a.cefrLevel || a.level || '—',
+      new Date(a.createdAt).toLocaleString(),
+      a.teacherName || '',
+      (a.teacherComments || '').replace(/\n/g, ' ')
+    ]);
+
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `honour_assessments_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const types = ['All', ...Object.keys(TYPE_META)];
 
   const filtered = assessments.filter(a => {
     const matchType = filterType === 'All' || a.assessmentType === filterType;
+    const matchTerm = filterTerm === 'All' || (a.term || 'T1') === filterTerm;
     const matchSearch = !search || a.studentName?.toLowerCase().includes(search.toLowerCase()) || a.yearGroupAndClass?.toLowerCase().includes(search.toLowerCase());
-    return matchType && matchSearch;
+    return matchType && matchTerm && matchSearch;
   });
 
   const stats = [
@@ -270,15 +321,26 @@ export default function AssessmentList() {
               <h1 className="page-title">Assessment Records</h1>
               <p className="page-subtitle">Track and manage all student assessments.</p>
             </div>
-            <button
-              onClick={fetchAssessments}
-              className="btn-secondary btn-sm flex items-center gap-1.5"
-            >
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
-              </svg>
-              Refresh
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleExportCSV}
+                className="btn-primary btn-sm flex items-center gap-1.5"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M7.5 12l4.5 4.5m0 0l4.5-4.5M12 3v13.5" />
+                </svg>
+                Export CSV
+              </button>
+              <button
+                onClick={fetchAssessments}
+                className="btn-secondary btn-sm flex items-center gap-1.5"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+                </svg>
+                Refresh
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -337,7 +399,23 @@ export default function AssessmentList() {
                         : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
                     }`}
                   >
-                    {t === 'All' ? 'All' : (TYPE_META[t]?.label || t)}
+                    {t === 'All' ? 'All Skills' : (TYPE_META[t]?.label || t)}
+                  </button>
+                ))}
+              </div>
+
+              <div className="flex gap-2">
+                {['All', 'T1', 'T2', 'T3'].map(t => (
+                  <button
+                    key={t}
+                    onClick={() => setFilterTerm(t)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+                      filterTerm === t
+                        ? 'bg-indigo-600 text-white'
+                        : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+                    }`}
+                  >
+                    {t === 'All' ? 'All Terms' : t}
                   </button>
                 ))}
               </div>
@@ -350,6 +428,7 @@ export default function AssessmentList() {
                   <tr>
                     <th>Student</th>
                     <th>Year & Class</th>
+                    <th>Term</th>
                     <th>Assessment Type</th>
                     <th className="text-center">Score</th>
                     <th className="text-center">Level</th>
@@ -360,7 +439,7 @@ export default function AssessmentList() {
                 <tbody>
                   {filtered.length === 0 ? (
                     <tr>
-                      <td colSpan={7} className="text-center py-10 text-slate-400 text-sm">
+                      <td colSpan={8} className="text-center py-10 text-slate-400 text-sm">
                         No results match your search.
                       </td>
                     </tr>
@@ -377,6 +456,11 @@ export default function AssessmentList() {
                           </div>
                         </td>
                         <td className="text-sm">{a.yearGroupAndClass}</td>
+                        <td className="text-sm">
+                          <span className="px-2 py-1 bg-indigo-50 text-indigo-600 rounded-md font-bold text-[10px]">
+                            {a.term || 'T1'}
+                          </span>
+                        </td>
                         <td>
                           <span className={`type-pill ${typeMeta.color}`}>
                             {typeMeta.label}

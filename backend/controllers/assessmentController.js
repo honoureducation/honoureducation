@@ -58,7 +58,8 @@ exports.createAssessment = async (req, res) => {
       studentWriting,
       cefrLevel,
       level,
-      totalScore
+      totalScore,
+      term
     } = req.body;
 
     // Validate required fields
@@ -81,7 +82,8 @@ exports.createAssessment = async (req, res) => {
         speakingAssessmentAnswers,
         cefrLevel,
         level: cefrLevel,
-        totalScore: totalScore || 0
+        totalScore: totalScore || 0,
+        term: term || 'T1'
       });
 
       await assessment.save();
@@ -105,7 +107,8 @@ exports.createAssessment = async (req, res) => {
         teacherName,
         readingScore,
         level: readingScore,
-        totalScore: ['A', 'B', 'C', 'D', 'E'].indexOf(readingScore)
+        totalScore: ['A', 'B', 'C', 'D', 'E'].indexOf(readingScore),
+        term: term || 'T1'
       });
 
       await assessment.save();
@@ -130,7 +133,8 @@ exports.createAssessment = async (req, res) => {
         yearGroupAndClass,
         teacherName,
         level: writingScore || 'Developing',
-        totalScore: writingScore ? ['A', 'B', 'C', 'D', 'E'].indexOf(writingScore) : 0
+        totalScore: writingScore ? ['A', 'B', 'C', 'D', 'E'].indexOf(writingScore) : 0,
+        term: term || 'T1'
       };
 
       // Only add writingScore if it exists
@@ -172,7 +176,8 @@ exports.createAssessment = async (req, res) => {
         listeningAssessmentAnswers,
         cefrLevel,
         level: cefrLevel,
-        totalScore: totalScore || 0
+        totalScore: totalScore || 0,
+        term: term || 'T1'
       });
 
       await assessment.save();
@@ -221,7 +226,8 @@ exports.createAssessment = async (req, res) => {
       suggestionsForMaterials,
       classroomSupportIdeas,
       totalScore: ealTotalScore,
-      level: ealLevel
+      level: ealLevel,
+      term: term || 'T1'
     });
 
     await assessment.save();

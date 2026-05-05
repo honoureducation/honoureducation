@@ -30,7 +30,7 @@ const LEVEL_COLORS = { A: 'text-red-600 bg-red-50 border-red-200', B: 'text-oran
 
 export default function ReadingAssessmentForm() {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({ email: '', studentName: '', yearGroupAndClass: '', teacherName: '' });
+  const [formData, setFormData] = useState({ email: '', studentName: '', yearGroupAndClass: '', teacherName: '', term: 'T1' });
   const [score, setScore] = useState(null);
   const [teacherNotes, setTeacherNotes] = useState('');
   const [loading, setLoading] = useState(false);
@@ -61,11 +61,12 @@ export default function ReadingAssessmentForm() {
         teacherName: formData.teacherName,
         readingScore: score,
         level: score,
+        term: formData.term,
         totalScore: ['A', 'B', 'C', 'D', 'E'].indexOf(score),
         readingNotes: teacherNotes,
       });
       toast.success('Assessment submitted successfully!');
-      setFormData({ email: '', studentName: '', yearGroupAndClass: '', teacherName: '' });
+      setFormData({ email: '', studentName: '', yearGroupAndClass: '', teacherName: '', term: 'T1' });
       setScore(null);
       setTeacherNotes('');
     } catch (err) {
@@ -165,6 +166,14 @@ export default function ReadingAssessmentForm() {
               <div>
                 <label className="form-label">Teacher Name</label>
                 <input type="text" name="teacherName" value={formData.teacherName} onChange={handleInput} placeholder="Optional" className="form-input" />
+              </div>
+              <div>
+                <label className="form-label">Assessment Term <span className="text-red-500">*</span></label>
+                <select name="term" value={formData.term} onChange={handleInput} className="form-input" required>
+                  <option value="T1">Term 1 (T1)</option>
+                  <option value="T2">Term 2 (T2)</option>
+                  <option value="T3">Term 3 (T3)</option>
+                </select>
               </div>
             </div>
           </div>

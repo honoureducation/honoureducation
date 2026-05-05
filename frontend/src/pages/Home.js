@@ -83,30 +83,30 @@ export default function Home() {
             <div className="max-w-3xl md:max-w-xl lg:max-w-2xl flex-1">
               <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-600/20 border border-blue-500/30 text-blue-300 text-xs font-semibold mb-6">
                 <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
-                Student Assessment Platform
+                Honour Education
               </span>
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight tracking-tight mb-6">
-                Assess smarter,<br />
-                <span className="text-blue-400">teach better.</span>
+                Excellence in <br />
+                <span className="text-blue-400">Student Assessment.</span>
               </h1>
               <p className="text-lg text-slate-400 mb-10 max-w-xl leading-relaxed">
-                A comprehensive platform for EAL/ELL educators to evaluate student language proficiency across all four skills — with instant CEFR scoring.
+                A premium, comprehensive platform designed specifically for EAL/ELL educators to evaluate and track student progress across all four core language skills.
               </p>
               <div className="flex flex-wrap gap-3">
                 <Link
-                  to="/assessments"
+                  to="/login"
                   className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl transition-colors shadow-lg shadow-blue-900/30"
                 >
-                  Start an Assessment
+                  Teacher Login
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
                   </svg>
                 </Link>
                 <Link
-                  to="/records"
+                  to="/register"
                   className="inline-flex items-center gap-2 px-6 py-3 bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold rounded-xl border border-slate-700 transition-colors"
                 >
-                  View Records
+                  Create Account
                 </Link>
               </div>
             </div>
@@ -117,6 +117,54 @@ export default function Home() {
                 alt="Honour Education Logo" 
                 className="h-48 sm:h-64 md:h-80 lg:h-[400px] w-auto object-contain drop-shadow-[0_0_20px_rgba(37,99,235,0.15)] hover:scale-105 transition-transform duration-500" 
               />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Role access for teachers and admin ────────────────────────────────────── */}
+      <section className="py-16 md:py-20 bg-slate-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+            <div>
+              <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-semibold mb-4">
+                Teacher Access
+              </span>
+              <h2 className="text-3xl font-bold text-slate-900 mb-4">Empowering educators with professional tools.</h2>
+              <p className="text-slate-500 text-sm leading-relaxed max-w-xl">
+                Teachers can create an account and immediately begin conducting assessments. Once logged in, you'll have full access to our suite of evaluation forms for Listening, Speaking, Reading, and Writing.
+              </p>
+              <div className="mt-8 flex flex-wrap gap-3">
+                <Link
+                  to="/login"
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl shadow-lg shadow-blue-900/10 transition-colors"
+                >
+                  Get Started
+                </Link>
+                <Link
+                  to="/about"
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl transition-colors"
+                >
+                  Learn More
+                </Link>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="rounded-3xl bg-white border border-slate-200 p-6 shadow-sm">
+                <div className="text-3xl mb-4">📝</div>
+                <h3 className="text-lg font-semibold text-slate-900 mb-2">Teacher workflow</h3>
+                <p className="text-sm text-slate-500 leading-relaxed">
+                  Log in, select a skill area, complete assessment forms, and save student records with instant scoring.
+                </p>
+              </div>
+              <div className="rounded-3xl bg-white border border-slate-200 p-6 shadow-sm">
+                <div className="text-3xl mb-4">🎓</div>
+                <h3 className="text-lg font-semibold text-slate-900 mb-2">Academic Excellence</h3>
+                <p className="text-sm text-slate-500 leading-relaxed">
+                  Track student progress over time with our standardized CEFR levels and detailed assessment records.
+                </p>
+              </div>
             </div>
           </div>
         </div>

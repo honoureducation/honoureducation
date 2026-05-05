@@ -35,7 +35,8 @@ export default function SpeakingAssessmentForm() {
     email: '',
     studentName: '',
     yearGroupAndClass: '',
-    teacherName: ''
+    teacherName: '',
+    term: 'T1'
   });
 
   const [scores, setScores] = useState(Array(SPEAKING_QUESTIONS.length).fill(null));
@@ -109,6 +110,7 @@ export default function SpeakingAssessmentForm() {
         totalScore,
         cefrLevel,
         level: cefrLevel,
+        term: formData.term,
         teacherComments
       };
 
@@ -122,7 +124,8 @@ export default function SpeakingAssessmentForm() {
         email: '',
         studentName: '',
         yearGroupAndClass: '',
-        teacherName: ''
+        teacherName: '',
+        term: 'T1'
       });
       setScores(Array(SPEAKING_QUESTIONS.length).fill(null));
       setTotalScore(0);
@@ -198,7 +201,7 @@ export default function SpeakingAssessmentForm() {
                   required
                 />
               </div>
-              <div>
+               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">Teacher Name</label>
                 <input
                   type="text"
@@ -207,6 +210,20 @@ export default function SpeakingAssessmentForm() {
                   onChange={handleInputChange}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Assessment Term</label>
+                <select
+                  name="term"
+                  value={formData.term}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                >
+                  <option value="T1">Term 1 (T1)</option>
+                  <option value="T2">Term 2 (T2)</option>
+                  <option value="T3">Term 3 (T3)</option>
+                </select>
               </div>
             </div>
           </div>

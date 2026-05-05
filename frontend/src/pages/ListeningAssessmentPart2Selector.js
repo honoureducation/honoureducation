@@ -35,7 +35,7 @@ export default function ListeningAssessmentPart2Selector() {
             <span className="text-slate-700 font-medium">Listening Part 2</span>
           </nav>
           <h1 className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">
-            Listening Assessment — Part 2
+           Listening Comprehension part 2
           </h1>
           <p className="text-slate-500 text-sm mt-1">Select the year group to begin.</p>
         </div>

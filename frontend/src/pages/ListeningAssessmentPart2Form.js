@@ -151,7 +151,7 @@ export default function ListeningAssessmentPart2Form({ yearGroupProp }) {
           </nav>
           <div className="flex items-start justify-between gap-4">
             <div>
-              <h1 className="page-title">Listening Assessment — Part 2</h1>
+              <h1 className="page-title">Listening Comprehension part 2</h1>
               <p className="page-subtitle">
                 {isJunior ? 'Year 7–9 · Grade 6–8' : 'Year 10–13 · Grade 9–12'} · Max score: {maxScore}
               </p>

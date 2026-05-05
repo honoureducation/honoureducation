@@ -12,6 +12,12 @@ const assessmentSchema = new mongoose.Schema({
     enum: ['junior', 'senior'],
     comment: 'Used to distinguish between Year 7-9 (junior) and Year 10-13 (senior) for Listening Part 2, Speaking Assessment, and Reading Assessment'
   },
+  term: {
+    type: String,
+    enum: ['T1', 'T2', 'T3'],
+    default: 'T1',
+    required: true
+  },
   email: {
     type: String,
     required: true,
