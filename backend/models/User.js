@@ -21,7 +21,7 @@ const userSchema = new mongoose.Schema({
   },
   password: {
     type: String,
-    required: true,
+    required: false,
     minlength: 6
   },
   
@@ -108,6 +108,12 @@ const userSchema = new mongoose.Schema({
     default: 0
   },
   lockUntil: {
+    type: Date
+  },
+  resetPasswordToken: {
+    type: String
+  },
+  resetPasswordExpires: {
     type: Date
   },
   

@@ -18,11 +18,11 @@ const OPTIONS = [
     route: '/assessment/listening/part1',
   },
   {
-    id: 'part2-junior',
+    id: 'part2-junior-standard',
     subtitle: 'Part 2',
-    title: 'Listening Assessment',
+    title: 'Listening Assessment (Junior)',
     tag: 'Year 7–9 · Grade 6–8',
-    desc: 'Paragraph comprehension — 4 questions based on a short passage read aloud. Max score: 8.',
+    desc: 'Standard paragraph comprehension — 4 questions. Max score: 8.',
     color: 'bg-cyan-600',
     lightColor: 'bg-cyan-50 text-cyan-600 border-cyan-200',
     icon: (
@@ -33,13 +33,43 @@ const OPTIONS = [
     route: '/assessment/listening-part2/junior',
   },
   {
-    id: 'part2-senior',
+    id: 'part2-senior-standard',
     subtitle: 'Part 2',
-    title: 'Listening Assessment',
+    title: 'Listening Assessment (Senior)',
     tag: 'Year 10–13 · Grade 9–12',
-    desc: 'Paragraph comprehension — 10 questions based on an extended passage read aloud. Max score: 20.',
+    desc: 'Standard paragraph comprehension — 10 questions. Max score: 20.',
     color: 'bg-teal-600',
     lightColor: 'bg-teal-50 text-teal-600 border-teal-200',
+    icon: (
+      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z" />
+      </svg>
+    ),
+    route: '/assessment/listening-part2/senior',
+  },
+  {
+    id: 'part2-junior-comp',
+    subtitle: 'Part 2',
+    title: 'Listening Comprehension (Junior)',
+    tag: 'Year 7–9 · Grade 6–8',
+    desc: 'Focused comprehension questions based on a short passage. Max score: 8.',
+    color: 'bg-indigo-600',
+    lightColor: 'bg-indigo-50 text-indigo-600 border-indigo-200',
+    icon: (
+      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z" />
+      </svg>
+    ),
+    route: '/assessment/listening-part2/junior',
+  },
+  {
+    id: 'part2-senior-comp',
+    subtitle: 'Part 2',
+    title: 'Listening Comprehension (Senior)',
+    tag: 'Year 10–13 · Grade 9–12',
+    desc: 'Extended comprehension questions based on a long passage. Max score: 20.',
+    color: 'bg-blue-800',
+    lightColor: 'bg-blue-50 text-blue-800 border-blue-200',
     icon: (
       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z" />
@@ -82,7 +112,7 @@ export default function ListeningAssessmentSelector() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 max-w-4xl">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl">
           {OPTIONS.map((o) => (
             <button
               key={o.id}
@@ -90,7 +120,7 @@ export default function ListeningAssessmentSelector() {
               className="group text-left bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 overflow-hidden focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
             >
               {/* Top accent bar */}
-              <div className={`h-1 ${o.color}`} />
+              <div className={`h-1.5 ${o.color}`} />
 
               <div className="p-6">
                 {/* Icon + tag */}
@@ -98,29 +128,29 @@ export default function ListeningAssessmentSelector() {
                   <div className={`w-10 h-10 rounded-xl flex items-center justify-center border ${o.lightColor}`}>
                     {o.icon}
                   </div>
-                  <span className="text-xs font-medium text-slate-400 bg-slate-100 px-2.5 py-1 rounded-full whitespace-nowrap">
+                  <span className="text-[10px] font-bold text-slate-400 bg-slate-50 px-2 py-1 rounded-md whitespace-nowrap uppercase tracking-wider">
                     {o.tag}
                   </span>
                 </div>
 
                 {/* Title */}
                 <div className="mb-1">
-                  <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                  <span className="text-[10px] font-bold text-blue-500 uppercase tracking-widest">
                     {o.subtitle}
                   </span>
-                  <h3 className="text-base font-bold text-slate-900 group-hover:text-blue-600 transition-colors leading-snug">
+                  <h3 className="text-lg font-black text-slate-900 group-hover:text-blue-600 transition-colors leading-snug">
                     {o.title}
                   </h3>
                 </div>
 
                 {/* Description */}
-                <p className="text-xs text-slate-500 leading-relaxed mb-5">{o.desc}</p>
+                <p className="text-xs text-slate-500 leading-relaxed mb-6 h-10 overflow-hidden">{o.desc}</p>
 
                 {/* CTA */}
-                <div className="flex items-center gap-1.5 text-xs font-semibold text-blue-600">
-                  Start {selectedTerm} Assessment
+                <div className="flex items-center gap-1.5 text-xs font-bold text-blue-600 uppercase tracking-wide">
+                  Start {selectedTerm}
                   <svg
-                    className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform"
+                    className="w-4 h-4 group-hover:translate-x-1 transition-transform"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -136,7 +166,7 @@ export default function ListeningAssessmentSelector() {
 
         <button
           onClick={() => navigate('/assessments')}
-          className="mt-6 btn-secondary btn-sm"
+          className="mt-8 flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-slate-800 transition-colors bg-white px-4 py-2 rounded-xl border border-slate-200 shadow-sm hover:shadow-md"
         >
           ← Back to Assessments
         </button>

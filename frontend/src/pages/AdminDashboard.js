@@ -121,13 +121,26 @@ export default function AdminDashboard() {
     try {
       setActionLoading(prev => ({ ...prev, [selectedTeacher._id]: 'deleting' }));
       await adminService.deleteTeacher(selectedTeacher._id);
-      toast.success('Teacher deleted successfully');
+      toast.success('Teacher permanently deleted');
       setIsDeleteModalOpen(false);
       loadDashboardData();
     } catch (error) {
       toast.error(error.message || 'Failed to delete teacher');
     } finally {
       setActionLoading(prev => ({ ...prev, [selectedTeacher._id]: null }));
+    }
+  };
+
+  const handleSuspendTeacher = async (teacherId, suspend) => {
+    try {
+      setActionLoading(prev => ({ ...prev, [teacherId]: suspend ? 'suspending' : 'revoking' }));
+      await adminService.toggleTeacherSuspension(teacherId, suspend, suspend ? 'Suspended by admin' : '');
+      toast.success(suspend ? 'Teacher suspended — data preserved, access revoked' : 'Teacher access restored');
+      loadDashboardData();
+    } catch (error) {
+      toast.error(error.message || 'Failed to update teacher status');
+    } finally {
+      setActionLoading(prev => ({ ...prev, [teacherId]: null }));
     }
   };
 
@@ -525,14 +538,39 @@ export default function AdminDashboard() {
                           <p className="text-sm text-slate-700">{teacher.school?.name || teacher.school || 'N/A'}</p>
                         </td>
                         <td className="px-8 py-6 text-center">
-                          <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${teacher.status === 'approved' ? 'bg-emerald-100 text-emerald-700' :
-                              teacher.status === 'pending' ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'
-                            }`}>
+                          <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                            teacher.status === 'approved' ? 'bg-emerald-100 text-emerald-700' :
+                            teacher.status === 'pending' ? 'bg-amber-100 text-amber-700' :
+                            teacher.status === 'suspended' ? 'bg-orange-100 text-orange-700' :
+                            'bg-red-100 text-red-700'
+                          }`}>
                             {teacher.status}
                           </span>
                         </td>
                         <td className="px-8 py-6">
-                          <div className="flex items-center justify-center gap-2">
+                          <div className="flex items-center justify-center gap-1">
+                            {/* Approve & Reject for pending teachers */}
+                            {teacher.status === 'pending' && (
+                              <>
+                                <button
+                                  onClick={() => handleApproveTeacher(teacher._id)}
+                                  disabled={actionLoading[teacher._id]}
+                                  className="bg-emerald-500 hover:bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all shadow-sm disabled:opacity-50"
+                                  title="Approve Teacher"
+                                >
+                                  {actionLoading[teacher._id] === 'approving' ? '...' : '✓ Approve'}
+                                </button>
+                                <button
+                                  onClick={() => handleRejectTeacher(teacher._id, 'Requirements not met')}
+                                  disabled={actionLoading[teacher._id]}
+                                  className="bg-rose-500 hover:bg-rose-600 text-white px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all shadow-sm disabled:opacity-50"
+                                  title="Reject Teacher"
+                                >
+                                  {actionLoading[teacher._id] === 'rejecting' ? '...' : '✕ Reject'}
+                                </button>
+                              </>
+                            )}
+                            {/* View */}
                             <button 
                               onClick={() => handleViewTeacher(teacher._id)}
                               className="p-2 text-slate-400 hover:text-indigo-600 transition-colors"
@@ -543,6 +581,7 @@ export default function AdminDashboard() {
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                               </svg>
                             </button>
+                            {/* Edit */}
                             <button 
                               onClick={() => handleEditTeacher(teacher)}
                               className="p-2 text-slate-400 hover:text-indigo-600 transition-colors"
@@ -552,10 +591,36 @@ export default function AdminDashboard() {
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                               </svg>
                             </button>
+                            {/* Suspend / Revoke (temporary) */}
+                            {teacher.status === 'approved' && (
+                              <button 
+                                onClick={() => handleSuspendTeacher(teacher._id, true)}
+                                disabled={actionLoading[teacher._id]}
+                                className="p-2 text-slate-400 hover:text-orange-600 transition-colors"
+                                title="Suspend (Temporary — data preserved)"
+                              >
+                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                                </svg>
+                              </button>
+                            )}
+                            {teacher.status === 'suspended' && (
+                              <button 
+                                onClick={() => handleSuspendTeacher(teacher._id, false)}
+                                disabled={actionLoading[teacher._id]}
+                                className="p-2 text-slate-400 hover:text-emerald-600 transition-colors"
+                                title="Revoke Suspension (Restore access)"
+                              >
+                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                </svg>
+                              </button>
+                            )}
+                            {/* Permanent Delete */}
                             <button 
                               onClick={() => confirmDeleteTeacher(teacher)}
                               className="p-2 text-slate-400 hover:text-rose-600 transition-colors"
-                              title="Delete Teacher"
+                              title="Permanently Delete (Cannot be undone)"
                             >
                               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -773,11 +838,12 @@ export default function AdminDashboard() {
           <div className="bg-white rounded-3xl w-full max-w-sm relative z-10 shadow-2xl animate-fade-in-up p-8 text-center">
             <div className="w-16 h-16 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center mx-auto mb-6">
               <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
               </svg>
             </div>
-            <h3 className="text-xl font-bold text-slate-900 mb-2">Delete Teacher?</h3>
-            <p className="text-slate-500 text-sm mb-8">Are you sure you want to delete <strong>{selectedTeacher?.firstName} {selectedTeacher?.lastName}</strong>? This action cannot be undone.</p>
+            <h3 className="text-xl font-bold text-slate-900 mb-2">Permanent Delete?</h3>
+            <p className="text-slate-500 text-sm mb-4">Are you sure you want to <strong className="text-rose-600">permanently delete</strong> <strong>{selectedTeacher?.firstName} {selectedTeacher?.lastName}</strong>?</p>
+            <p className="text-rose-500 text-xs font-bold mb-6 bg-rose-50 rounded-xl px-4 py-3">⚠️ This will remove ALL data from the database. This action cannot be undone. Use <strong>Suspend</strong> instead to temporarily revoke access.</p>
             <div className="flex gap-3">
               <button 
                 onClick={() => setIsDeleteModalOpen(false)}
@@ -790,7 +856,7 @@ export default function AdminDashboard() {
                 disabled={actionLoading[selectedTeacher?._id] === 'deleting'}
                 className="flex-1 py-3 bg-rose-600 text-white rounded-xl font-bold hover:bg-rose-700 transition-all shadow-lg shadow-rose-600/20 disabled:opacity-50"
               >
-                {actionLoading[selectedTeacher?._id] === 'deleting' ? 'Deleting...' : 'Confirm Delete'}
+                {actionLoading[selectedTeacher?._id] === 'deleting' ? 'Deleting...' : 'Delete Forever'}
               </button>
             </div>
           </div>

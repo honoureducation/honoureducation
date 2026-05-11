@@ -32,6 +32,7 @@ import WritingAssessmentSeniorForm from './pages/WritingAssessmentSeniorForm';
 import WritingAssessmentSeniorStudentSheet from './pages/WritingAssessmentSeniorStudentSheet';
 import AssessmentList from './pages/AssessmentList';
 import Profile from './pages/Profile';
+import SetPassword from './pages/SetPassword';
 import './index.css';
 
 // Scroll to top on route change
@@ -85,6 +86,7 @@ function App() {
             <Route path="/contact" element={<Contact />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/set-password/:token" element={<SetPassword />} />
             
             {/* Account Status Routes */}
             <Route path="/pending-approval" element={<PendingApproval />} />

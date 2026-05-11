@@ -12,17 +12,15 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  // Redirect if already logged in
+  // Redirect if already logged in as a teacher (not admin — they have their own login)
   useEffect(() => {
     if (authService.isAuthenticated()) {
       const user = authService.getCurrentUser();
-      if (user.role === 'admin' || user.role === 'platform_admin' || user.role === 'school_admin') {
-        navigate('/admin/dashboard');
-      } else if (user.role === 'teacher' && user.status === 'approved') {
+      // Only auto-redirect teachers — admins should use /admin login page
+      if (user?.role === 'teacher' && user?.status === 'approved') {
         navigate('/teacher/dashboard');
-      } else {
-        navigate('/');
       }
+      // Do NOT auto-redirect admins from teacher login page
     }
   }, [navigate]);
 

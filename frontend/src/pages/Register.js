@@ -9,8 +9,6 @@ export default function Register() {
     firstName: '',
     lastName: '',
     email: '',
-    password: '',
-    confirmPassword: '',
     school: '',
     department: '',
     phoneNumber: '',
@@ -32,18 +30,7 @@ export default function Register() {
     e.preventDefault();
     setLoading(true);
 
-    // Validation
-    if (formData.password !== formData.confirmPassword) {
-      toast.error('Passwords do not match');
-      setLoading(false);
-      return;
-    }
-
-    if (formData.password.length < 6) {
-      toast.error('Password must be at least 6 characters long');
-      setLoading(false);
-      return;
-    }
+    // No password validation needed here as it's set after approval
 
     try {
       const registrationData = { ...formData };
@@ -197,56 +184,6 @@ export default function Register() {
               </div>
             </div>
 
-            {/* Security */}
-            <div>
-              <h3 className="text-lg font-semibold text-slate-900 mb-4">Security</h3>
-              <div className="space-y-4">
-                <div>
-                  <label className="form-label">Password *</label>
-                  <div className="relative">
-                    <input
-                      type={showPassword ? 'text' : 'password'}
-                      name="password"
-                      value={formData.password}
-                      onChange={handleInputChange}
-                      className="form-input pr-12"
-                      placeholder="Create a strong password"
-                      minLength="6"
-                      required
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600"
-                    >
-                      {showPassword ? (
-                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21" />
-                        </svg>
-                      ) : (
-                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                        </svg>
-                      )}
-                    </button>
-                  </div>
-                  <p className="form-hint">Password must be at least 6 characters long</p>
-                </div>
-                <div>
-                  <label className="form-label">Confirm Password *</label>
-                  <input
-                    type="password"
-                    name="confirmPassword"
-                    value={formData.confirmPassword}
-                    onChange={handleInputChange}
-                    className="form-input"
-                    placeholder="Confirm your password"
-                    required
-                  />
-                </div>
-              </div>
-            </div>
 
             {/* Submit Button */}
             <div className="pt-4">
@@ -291,7 +228,7 @@ export default function Register() {
             </svg>
             <div className="text-sm text-blue-800">
               <p className="font-semibold mb-1">Account Approval Process</p>
-              <p>After registration, your account will be reviewed by an administrator. You'll receive access to the assessment platform once approved. This typically takes 1-2 business days.</p>
+              <p>After registration, your account will be reviewed by an administrator. Once approved, you will receive an email with a link to <strong>set your password</strong> and access the platform.</p>
             </div>
           </div>
         </div>

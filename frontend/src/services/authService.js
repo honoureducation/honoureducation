@@ -131,6 +131,19 @@ export const authService = {
     } catch (error) {
       throw error.response?.data || { message: error.message };
     }
+  },
+
+  // Set password (after approval)
+  async setPassword(token, password) {
+    try {
+      const response = await authAPI.post('/auth/set-password', {
+        token,
+        password
+      });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { message: error.message };
+    }
   }
 };
 

@@ -106,11 +106,10 @@ export default function AssessmentSelector() {
                 <button
                   key={term}
                   onClick={() => setSelectedTerm(term)}
-                  className={`px-8 py-3 rounded-xl text-sm font-black transition-all duration-300 ${
-                    selectedTerm === term 
-                      ? 'bg-white text-blue-600 shadow-lg scale-105' 
+                  className={`px-8 py-3 rounded-xl text-sm font-black transition-all duration-300 ${selectedTerm === term
+                      ? 'bg-white text-blue-600 shadow-lg scale-105'
                       : 'text-slate-400 hover:text-slate-600 hover:bg-slate-200'
-                  }`}
+                    }`}
                 >
                   {term === 'T1' ? 'Term 1' : term === 'T2' ? 'Term 2' : 'Term 3'}
                 </button>
@@ -162,7 +161,7 @@ export default function AssessmentSelector() {
                     </svg>
                   </div>
                   <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-all duration-300">
-                     <span className="text-[10px] font-black">{selectedTerm}</span>
+                    <span className="text-[10px] font-black">{selectedTerm}</span>
                   </div>
                 </div>
               </div>

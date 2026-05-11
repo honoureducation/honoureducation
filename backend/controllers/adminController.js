@@ -3,6 +3,8 @@ const School = require('../models/School');
 const Student = require('../models/Student');
 const Assessment = require('../models/Assessment');
 const ActivityLog = require('../models/ActivityLog');
+const crypto = require('crypto');
+const emailService = require('../utils/emailService');
 
 // Get All Pending Teachers (filtered by school for school admins)
 const getPendingTeachers = async (req, res) => {
@@ -106,7 +108,16 @@ const approveTeacher = async (req, res) => {
     teacher.status = 'approved';
     teacher.approvedBy = adminId;
     teacher.approvedAt = new Date();
+
+    // Generate password setup token
+    const setupToken = crypto.randomBytes(32).toString('hex');
+    teacher.resetPasswordToken = setupToken;
+    teacher.resetPasswordExpires = Date.now() + 24 * 60 * 60 * 1000; // 24 hours
+
     await teacher.save();
+
+    // Send "Your account is approved" email with password setup link
+    await emailService.sendApprovalEmail(teacher, setupToken);
 
     // Log activity
     await ActivityLog.create({

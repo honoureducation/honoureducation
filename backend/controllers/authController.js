@@ -1,6 +1,8 @@
 const User = require('../models/User');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
+const emailService = require('../utils/emailService');
 
 // Generate JWT Token
 const generateToken = (userId) => {
@@ -30,9 +32,10 @@ const registerTeacher = async (req, res) => {
       return res.status(400).json({ message: 'User with this email already exists' });
     }
 
-    // Hash password
+    // Hash a temporary random password (user will reset it after approval)
+    const tempPassword = crypto.randomBytes(20).toString('hex');
     const saltRounds = 12;
-    const hashedPassword = await bcrypt.hash(password, saltRounds);
+    const hashedPassword = await bcrypt.hash(tempPassword, saltRounds);
 
     // Create new teacher
     const teacher = new User({
@@ -51,8 +54,11 @@ const registerTeacher = async (req, res) => {
 
     await teacher.save();
 
+    // Send "Thanks for registering" email
+    await emailService.sendRegistrationEmail(teacher);
+
     res.status(201).json({
-      message: 'Teacher registration successful. Please wait for admin approval.',
+      message: 'Teacher registration successful. We have sent a confirmation email to you. Please wait for admin approval.',
       user: {
         id: teacher._id,
         firstName: teacher.firstName,
@@ -242,10 +248,42 @@ const changePassword = async (req, res) => {
   }
 };
 
+// Set Password (after approval)
+const setPassword = async (req, res) => {
+  try {
+    const { token, password } = req.body;
+
+    const user = await User.findOne({
+      resetPasswordToken: token,
+      resetPasswordExpires: { $gt: Date.now() }
+    });
+
+    if (!user) {
+      return res.status(400).json({ message: 'Invalid or expired password reset token' });
+    }
+
+    // Hash new password
+    const saltRounds = 12;
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+    // Update user
+    user.password = hashedPassword;
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+    await user.save();
+
+    res.json({ message: 'Password set successfully. You can now log in.' });
+  } catch (error) {
+    console.error('Set password error:', error);
+    res.status(500).json({ message: 'Failed to set password', error: error.message });
+  }
+};
+
 module.exports = {
   registerTeacher,
   login,
   getProfile,
   updateProfile,
-  changePassword
+  changePassword,
+  setPassword
 };
