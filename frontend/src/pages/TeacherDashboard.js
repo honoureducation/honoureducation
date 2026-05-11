@@ -11,8 +11,10 @@ import {
 export default function TeacherDashboard() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
+  const [allAssessments, setAllAssessments] = useState([]);
   const [recentAssessments, setRecentAssessments] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedStudent, setSelectedStudent] = useState('');
 
   useEffect(() => {
     loadDashboardData();
@@ -24,9 +26,7 @@ export default function TeacherDashboard() {
       const currentUser = authService.getCurrentUser();
       setUser(currentUser);
 
-      // Load recent assessments (you'll need to modify the API to filter by teacher)
       const assessments = await assessmentAPI.getAllAssessments();
-      // Filter assessments by current teacher
       const teacherAssessments = assessments.filter(assessment => {
         const tName = (assessment.teacherName || '').toLowerCase();
         const tEmail = (assessment.email || '').toLowerCase();
@@ -37,9 +37,17 @@ export default function TeacherDashboard() {
         return tName === curName || 
                tName === curFirst ||
                tEmail === curEmail ||
-               (curFirst === 'demo' && assessments.length > 0); // Show all if demo user
+               (curFirst === 'demo' && assessments.length > 0);
       });
+      
+      setAllAssessments(teacherAssessments);
       setRecentAssessments(teacherAssessments.slice(0, 10));
+      
+      // Select first student by default if available
+      const uniqueStudents = Array.from(new Set(teacherAssessments.map(a => a.studentName))).filter(Boolean);
+      if (uniqueStudents.length > 0 && !selectedStudent) {
+        setSelectedStudent(uniqueStudents[0]);
+      }
     } catch (error) {
       toast.error('Failed to load dashboard data');
       console.error('Dashboard error:', error);
@@ -95,7 +103,7 @@ export default function TeacherDashboard() {
 
   const getAssessmentStats = () => {
     const stats = {
-      total: recentAssessments.length,
+      total: allAssessments.length,
       thisWeek: 0,
       byType: {}
     };
@@ -103,13 +111,10 @@ export default function TeacherDashboard() {
     const oneWeekAgo = new Date();
     oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
 
-    recentAssessments.forEach(assessment => {
-      // Count this week's assessments
+    allAssessments.forEach(assessment => {
       if (new Date(assessment.createdAt) > oneWeekAgo) {
         stats.thisWeek++;
       }
-
-      // Count by type
       const type = assessment.assessmentType;
       stats.byType[type] = (stats.byType[type] || 0) + 1;
     });
@@ -117,19 +122,24 @@ export default function TeacherDashboard() {
     return stats;
   };
 
-  const getChartData = () => {
-    // 1. Termly Progress Data (Sample based on recent assessments)
+  const getChartData = (dataToProcess) => {
     const termlyData = [
-      { name: 'Reading', T1: 0, T2: 0, T3: 0 },
-      { name: 'Writing', T1: 0, T2: 0, T3: 0 },
-      { name: 'Speaking', T1: 0, T2: 0, T3: 0 },
-      { name: 'Listening', T1: 0, T2: 0, T3: 0 },
+      { name: 'Reading', T1: 0, T2: 0, T3: 0, count: { T1: 0, T2: 0, T3: 0 } },
+      { name: 'Writing', T1: 0, T2: 0, T3: 0, count: { T1: 0, T2: 0, T3: 0 } },
+      { name: 'Speaking', T1: 0, T2: 0, T3: 0, count: { T1: 0, T2: 0, T3: 0 } },
+      { name: 'Listening', T1: 0, T2: 0, T3: 0, count: { T1: 0, T2: 0, T3: 0 } },
     ];
 
-    recentAssessments.forEach(a => {
-      const term = a.term || 'T1';
+    const termScores = { T1: 0, T2: 0, T3: 0 };
+
+    dataToProcess.forEach(a => {
+      const term = (a.term || 'T1').toUpperCase();
       const type = a.assessmentType.toLowerCase();
       
+      const score = a.totalScore || (a.cefrLevel ? (['A1','A2','B1','B2','C1','C2'].indexOf(a.cefrLevel) + 1) * 4 : 5);
+      
+      if (termScores[term] !== undefined) termScores[term] += score;
+
       let index = -1;
       if (type.includes('reading')) index = 0;
       else if (type.includes('writing')) index = 1;
@@ -137,15 +147,22 @@ export default function TeacherDashboard() {
       else if (type.includes('listening')) index = 3;
 
       if (index !== -1) {
-        // Simple average/score mapping for demo
-        const score = a.totalScore || (a.cefrLevel ? (['A1','A2','B1','B2','C1','C2'].indexOf(a.cefrLevel) + 1) * 4 : 5);
-        termlyData[index][term] = (termlyData[index][term] || 0) + score;
+        termlyData[index][term] += score;
+        termlyData[index].count[term] += 1;
       }
     });
 
-    // 2. CEFR Level Distribution
+    // Calculate averages
+    const finalTermlyData = termlyData.map(item => ({
+      name: item.name,
+      T1: item.count.T1 > 0 ? parseFloat((item.T1 / item.count.T1).toFixed(1)) : 0,
+      T2: item.count.T2 > 0 ? parseFloat((item.T2 / item.count.T2).toFixed(1)) : 0,
+      T3: item.count.T3 > 0 ? parseFloat((item.T3 / item.count.T3).toFixed(1)) : 0,
+    }));
+
+    // CEFR Level Distribution
     const levelCounts = { A1: 0, A2: 0, B1: 0, B2: 0, C1: 0, C2: 0 };
-    recentAssessments.forEach(a => {
+    dataToProcess.forEach(a => {
       const level = a.cefrLevel || a.level;
       if (levelCounts[level] !== undefined) levelCounts[level]++;
     });
@@ -155,20 +172,14 @@ export default function TeacherDashboard() {
       count: levelCounts[level]
     }));
 
-    // 3. Progress Overview (Pie Chart)
-    const termCounts = { T1: 0, T2: 0, T3: 0 };
-    recentAssessments.forEach(a => {
-      const term = a.term || 'T1';
-      if (termCounts[term] !== undefined) termCounts[term]++;
-    });
+    // Term Pie Data (Based on Scores)
+    const termPieData = [
+      { name: 'Progress Score T1', value: termScores.T1 },
+      { name: 'Progress Score T2', value: termScores.T2 },
+      { name: 'Progress Score T3', value: termScores.T3 },
+    ].filter(d => d.value > 0);
 
-    const pieData = [
-      { name: 'Term 1', value: termCounts.T1 || 1 },
-      { name: 'Term 2', value: termCounts.T2 || 0 },
-      { name: 'Term 3', value: termCounts.T3 || 0 },
-    ];
-
-    return { termlyData, distributionData, pieData };
+    return { termlyData: finalTermlyData, distributionData, termPieData };
   };
 
   if (loading) {
@@ -183,6 +194,10 @@ export default function TeacherDashboard() {
   }
 
   const stats = getAssessmentStats();
+  const students = Array.from(new Set(allAssessments.map(a => a.studentName))).filter(Boolean).sort();
+  const selectedStudentData = allAssessments.filter(a => a.studentName === selectedStudent);
+  const studentChartData = getChartData(selectedStudentData);
+  const overallChartData = getChartData(allAssessments);
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -272,70 +287,155 @@ export default function TeacherDashboard() {
         </div>
 
         {/* Analytics Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Individual Termly Progress */}
-          <div className="card-section">
-            <h2 className="section-heading">
-              <svg className="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
-              </svg>
-              Individual Termly Student Progress
-            </h2>
-            <div className="h-[300px] mt-6">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={getChartData().termlyData}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 12}} />
-                  <YAxis axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 12}} />
-                  <Tooltip 
-                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
-                  />
-                  <Legend iconType="circle" />
-                  <Bar dataKey="T1" name="Term 1" fill="#3b82f6" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="T2" name="Term 2" fill="#ef4444" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="T3" name="Term 3" fill="#eab308" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
+        <div className="space-y-8">
+          {/* Individual Student Report */}
+          <div className="card-section bg-white p-8 rounded-3xl border border-slate-100 shadow-sm">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+              <div>
+                <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+                  <svg className="w-6 h-6 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                  Individual Student Performance
+                </h2>
+                <p className="text-slate-500 text-sm">Select a student to view their detailed progress report.</p>
+              </div>
+              <div className="w-full md:w-72">
+                <select 
+                  value={selectedStudent}
+                  onChange={(e) => setSelectedStudent(e.target.value)}
+                  className="w-full px-4 py-3 rounded-2xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50 text-slate-700 font-bold shadow-inner transition-all"
+                >
+                  <option value="">Select a student...</option>
+                  {students.map(student => (
+                    <option key={student} value={student}>{student}</option>
+                  ))}
+                </select>
+              </div>
             </div>
+
+            {selectedStudent ? (
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                <div className="lg:col-span-8">
+                  <div className="h-[350px] w-full bg-slate-50/50 p-4 rounded-2xl border border-slate-100">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={studentChartData.termlyData}>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                        <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 12, fontWeight: 600}} />
+                        <YAxis axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 12, fontWeight: 600}} />
+                        <Tooltip 
+                          contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }}
+                          cursor={{fill: '#f1f5f9'}}
+                        />
+                        <Legend iconType="circle" wrapperStyle={{paddingTop: '20px'}} />
+                        <Bar dataKey="T1" name="Term 1" fill="#4f46e5" radius={[6, 6, 0, 0]} barSize={20} />
+                        <Bar dataKey="T2" name="Term 2" fill="#ef4444" radius={[6, 6, 0, 0]} barSize={20} />
+                        <Bar dataKey="T3" name="Term 3" fill="#f59e0b" radius={[6, 6, 0, 0]} barSize={20} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+                <div className="lg:col-span-4">
+                  <div className="bg-indigo-50/50 rounded-2xl p-6 border border-indigo-100 h-full">
+                    <h3 className="text-xs font-black text-indigo-900 mb-4 uppercase tracking-widest">Recent Assessments</h3>
+                    <div className="space-y-3 max-h-[280px] overflow-y-auto pr-2 custom-scrollbar">
+                      {selectedStudentData.length === 0 ? (
+                        <p className="text-slate-400 text-sm italic py-10 text-center">No records found.</p>
+                      ) : selectedStudentData.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt)).map((a, i) => (
+                        <div key={i} className="bg-white p-4 rounded-xl border border-indigo-100 flex justify-between items-center shadow-sm hover:border-indigo-300 transition-colors">
+                          <div>
+                            <p className="text-sm font-bold text-slate-900">{a.assessmentType}</p>
+                            <p className="text-[10px] text-indigo-500 font-black uppercase">{a.term || 'T1'}</p>
+                          </div>
+                          <div className="text-right">
+                            <span className="px-2 py-1 bg-indigo-600 text-white text-[10px] font-bold rounded-lg">{a.totalScore || a.level}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="h-[300px] flex flex-col items-center justify-center bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200">
+                <div className="w-16 h-16 bg-white rounded-2xl shadow-sm flex items-center justify-center mb-4">
+                  <svg className="w-8 h-8 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                </div>
+                <p className="text-slate-500 font-bold">Select a student above to view report</p>
+              </div>
+            )}
           </div>
 
-          {/* CEFR Level Distribution */}
-          <div className="card-section">
-            <h2 className="section-heading">
-              <svg className="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" />
-              </svg>
-              EAL Proficiency Scale Distribution
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 h-[300px] mt-6">
-              <div className="h-full">
+          {/* Overall Performance */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="card-section bg-white p-8 rounded-3xl border border-slate-100 shadow-sm">
+              <h2 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
+                <svg className="w-6 h-6 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+                Class Average
+              </h2>
+              <div className="h-[250px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={overallChartData.termlyData}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 10, fontWeight: 600}} />
+                    <YAxis axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 10, fontWeight: 600}} />
+                    <Tooltip 
+                      contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }}
+                    />
+                    <Legend iconType="circle" wrapperStyle={{fontSize: '10px'}} />
+                    <Bar dataKey="T1" name="T1" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="T2" name="T2" fill="#ef4444" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="T3" name="T3" fill="#eab308" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            <div className="card-section bg-white p-8 rounded-3xl border border-slate-100 shadow-sm">
+              <h2 className="text-sm font-bold text-slate-400 mb-6 uppercase tracking-widest">
+                Total student progress - Reading, Writing, Speaking & Listening
+              </h2>
+              <div className="h-[250px]">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
-                      data={getChartData().pieData}
+                      data={overallChartData.termPieData}
                       cx="50%"
                       cy="50%"
-                      innerRadius={60}
+                      innerRadius={0}
                       outerRadius={80}
-                      paddingAngle={5}
+                      paddingAngle={0}
                       dataKey="value"
+                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(1)}%`}
                     >
-                      {getChartData().pieData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={['#3b82f6', '#ef4444', '#eab308'][index % 3]} />
+                      {overallChartData.termPieData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={['#3b82f6', '#ef4444', '#f59e0b'][index % 3]} />
                       ))}
                     </Pie>
                     <Tooltip />
                   </PieChart>
                 </ResponsiveContainer>
               </div>
-              <div className="h-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart layout="vertical" data={getChartData().distributionData}>
+            </div>
+
+            <div className="card-section bg-white p-8 rounded-3xl border border-slate-100 shadow-sm">
+              <h2 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
+                <svg className="w-6 h-6 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+                Proficiency
+              </h2>
+              <div className="h-[250px] flex items-center">
+                <ResponsiveContainer width="100%" height="80%">
+                  <BarChart layout="vertical" data={overallChartData.distributionData}>
                     <XAxis type="number" hide />
-                    <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 12}} />
-                    <Tooltip />
-                    <Bar dataKey="count" fill="#8b5cf6" radius={[0, 4, 4, 0]} />
+                    <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 10, fontWeight: 700}} />
+                    <Tooltip cursor={{fill: 'transparent'}} />
+                    <Bar dataKey="count" fill="#8b5cf6" radius={[0, 6, 6, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -344,9 +444,9 @@ export default function TeacherDashboard() {
         </div>
 
         {/* Assessment Types */}
-        <div className="card-section">
-          <h2 className="section-heading">
-            <svg className="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <div className="card-section bg-white p-8 rounded-3xl border border-slate-100 shadow-sm">
+          <h2 className="text-xl font-bold text-slate-800 mb-8 flex items-center gap-2">
+            <svg className="w-6 h-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
             </svg>
             Create New Assessment
@@ -356,26 +456,26 @@ export default function TeacherDashboard() {
               <button
                 key={type.id}
                 onClick={() => navigate(type.route)}
-                className="group text-left bg-white rounded-xl border border-slate-200 p-6 hover:border-slate-300 hover:shadow-md transition-all duration-200"
+                className="group text-left bg-slate-50 rounded-2xl border border-slate-100 p-6 hover:bg-white hover:border-blue-200 hover:shadow-xl transition-all duration-300"
               >
                 <div className="flex items-center gap-4 mb-4">
-                  <div className={`w-12 h-12 ${type.color} rounded-xl flex items-center justify-center text-white text-xl group-hover:scale-110 transition-transform`}>
+                  <div className={`w-14 h-14 ${type.color} rounded-2xl flex items-center justify-center text-white text-2xl group-hover:scale-110 transition-transform shadow-lg`}>
                     {type.icon}
                   </div>
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-slate-900 group-hover:text-blue-600 transition-colors">
-                      {type.title}
-                    </h3>
-                  </div>
                 </div>
-                <p className="text-sm text-slate-600 mb-4">{type.description}</p>
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-slate-500">
-                    {stats.byType[type.title] || 0} completed
+                <h3 className="font-bold text-slate-900 mb-2 group-hover:text-blue-600 transition-colors">
+                  {type.title}
+                </h3>
+                <p className="text-xs text-slate-500 mb-6 leading-relaxed">{type.description}</p>
+                <div className="flex items-center justify-between border-t border-slate-100 pt-4">
+                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                    {stats.byType[type.title] || 0} Records
                   </span>
-                  <svg className="w-4 h-4 text-slate-400 group-hover:text-blue-600 group-hover:translate-x-1 transition-all" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
+                  <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-slate-300 group-hover:text-blue-600 group-hover:bg-blue-50 transition-all">
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </div>
                 </div>
               </button>
             ))}
@@ -383,28 +483,30 @@ export default function TeacherDashboard() {
         </div>
 
         {/* Recent Assessments */}
-        <div className="card-section">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="section-heading mb-0">
-              <svg className="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <div className="card-section bg-white p-8 rounded-3xl border border-slate-100 shadow-sm">
+          <div className="flex items-center justify-between mb-8">
+            <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+              <svg className="w-6 h-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              Recent Assessments
+              Recent Activity
             </h2>
             <button
               onClick={() => navigate('/records')}
-              className="btn-secondary btn-sm"
+              className="px-4 py-2 bg-slate-50 text-slate-600 rounded-xl font-bold text-xs hover:bg-slate-100 transition-all border border-slate-200"
             >
-              View All
+              See All Records
             </button>
           </div>
 
           {recentAssessments.length === 0 ? (
-            <div className="text-center py-12">
-              <svg className="w-12 h-12 text-slate-300 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-              </svg>
-              <p className="text-slate-500 mb-4">No assessments yet</p>
+            <div className="text-center py-16 bg-slate-50 rounded-3xl border border-dashed border-slate-200">
+              <div className="w-16 h-16 bg-white rounded-2xl shadow-sm flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-slate-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 0 012 2" />
+                </svg>
+              </div>
+              <p className="text-slate-500 font-bold mb-4">No assessments found yet</p>
               <button
                 onClick={() => navigate('/assessments')}
                 className="btn-primary"
@@ -413,55 +515,50 @@ export default function TeacherDashboard() {
               </button>
             </div>
           ) : (
-            <div className="table-wrapper">
-              <table className="data-table">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left">
                 <thead>
-                  <tr>
-                    <th>Student</th>
-                    <th>Assessment Type</th>
-                    <th>Level/Score</th>
-                    <th>Date</th>
-                    <th>Actions</th>
+                  <tr className="border-b border-slate-100">
+                    <th className="pb-4 font-black text-[10px] text-slate-400 uppercase tracking-widest px-4">Student</th>
+                    <th className="pb-4 font-black text-[10px] text-slate-400 uppercase tracking-widest px-4">Assessment</th>
+                    <th className="pb-4 font-black text-[10px] text-slate-400 uppercase tracking-widest px-4">Proficiency</th>
+                    <th className="pb-4 font-black text-[10px] text-slate-400 uppercase tracking-widest px-4">Date</th>
+                    <th className="pb-4 font-black text-[10px] text-slate-400 uppercase tracking-widest px-4 text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="divide-y divide-slate-50">
                   {recentAssessments.slice(0, 5).map((assessment) => (
-                    <tr key={assessment._id}>
-                      <td>
+                    <tr key={assessment._id} className="hover:bg-slate-50/50 transition-colors group">
+                      <td className="py-4 px-4">
                         <div>
-                          <p className="font-medium text-slate-900">{assessment.studentName}</p>
-                          <p className="text-xs text-slate-500">{assessment.yearGroupAndClass}</p>
+                          <p className="font-bold text-slate-900 group-hover:text-blue-600 transition-colors">{assessment.studentName}</p>
+                          <p className="text-[10px] text-slate-400 font-bold">{assessment.yearGroupAndClass}</p>
                         </div>
                       </td>
-                      <td>
-                        <span className="type-pill bg-slate-100 text-slate-700">
+                      <td className="py-4 px-4">
+                        <span className="px-3 py-1 bg-slate-100 text-slate-600 rounded-lg text-[10px] font-black uppercase">
                           {assessment.assessmentType}
                         </span>
                       </td>
-                      <td>
+                      <td className="py-4 px-4">
                         <div className="flex items-center gap-2">
-                          <span className={`badge ${
-                            assessment.level === 'A1' || assessment.level === 'A' ? 'badge-red' :
-                            assessment.level === 'A2' || assessment.level === 'B' ? 'badge-orange' :
-                            assessment.level === 'B1' || assessment.level === 'C' ? 'badge-amber' :
-                            assessment.level === 'B2' || assessment.level === 'D' ? 'badge-blue' :
-                            assessment.level === 'C1' || assessment.level === 'E' ? 'badge-emerald' :
-                            assessment.level === 'C2' ? 'badge-purple' : 'badge-slate'
+                          <span className={`px-2 py-0.5 rounded-md text-[10px] font-black ${
+                            assessment.level === 'A1' || assessment.level === 'A' ? 'bg-red-50 text-red-600' :
+                            assessment.level === 'A2' || assessment.level === 'B' ? 'bg-orange-50 text-orange-600' :
+                            assessment.level === 'B1' || assessment.level === 'C' ? 'bg-amber-50 text-amber-600' :
+                            assessment.level === 'B2' || assessment.level === 'D' ? 'bg-blue-50 text-blue-600' :
+                            assessment.level === 'C1' || assessment.level === 'E' ? 'bg-emerald-50 text-emerald-600' :
+                            assessment.level === 'C2' ? 'bg-purple-50 text-purple-600' : 'bg-slate-50 text-slate-600'
                           }`}>
                             {assessment.level}
                           </span>
-                          {assessment.totalScore && (
-                            <span className="text-xs text-slate-500">
-                              ({assessment.totalScore})
-                            </span>
-                          )}
                         </div>
                       </td>
-                      <td className="text-sm text-slate-600">
+                      <td className="py-4 px-4 text-[10px] font-bold text-slate-400 uppercase">
                         {formatDate(assessment.createdAt)}
                       </td>
-                      <td>
-                        <button className="btn-ghost btn-sm">
+                      <td className="py-4 px-4 text-right">
+                        <button className="w-8 h-8 rounded-lg bg-slate-50 text-slate-400 hover:bg-blue-600 hover:text-white transition-all flex items-center justify-center ml-auto">
                           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
@@ -476,58 +573,21 @@ export default function TeacherDashboard() {
           )}
         </div>
 
-        {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <button
-            onClick={() => navigate('/assessments')}
-            className="card-hover p-6 text-left"
-          >
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-                <svg className="w-6 h-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                </svg>
+        {/* Support Section */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-12">
+           <div className="bg-gradient-to-br from-indigo-600 to-blue-700 rounded-3xl p-8 text-white shadow-xl shadow-blue-200 overflow-hidden relative group">
+              <div className="relative z-10">
+                <h3 className="text-2xl font-bold mb-2">Need Assistance?</h3>
+                <p className="text-blue-100 mb-6 text-sm">Our support team is here to help you with any questions about the assessment platform.</p>
+                <button onClick={() => navigate('/contact')} className="px-6 py-3 bg-white text-indigo-600 rounded-2xl font-black text-xs uppercase tracking-widest hover:shadow-lg transition-all active:scale-95">Contact Support</button>
               </div>
-              <div>
-                <h3 className="font-semibold text-slate-900">New Assessment</h3>
-                <p className="text-sm text-slate-600">Create a new student assessment</p>
-              </div>
-            </div>
-          </button>
-
-          <button
-            onClick={() => navigate('/records')}
-            className="card-hover p-6 text-left"
-          >
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center">
-                <svg className="w-6 h-6 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-                </svg>
-              </div>
-              <div>
-                <h3 className="font-semibold text-slate-900">View Records</h3>
-                <p className="text-sm text-slate-600">Browse all assessment records</p>
-              </div>
-            </div>
-          </button>
-
-          <button
-            onClick={() => navigate('/profile')}
-            className="card-hover p-6 text-left"
-          >
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
-                <svg className="w-6 h-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
-              </div>
-              <div>
-                <h3 className="font-semibold text-slate-900">My Profile</h3>
-                <p className="text-sm text-slate-600">Update your information</p>
-              </div>
-            </div>
-          </button>
+              <div className="absolute -right-8 -bottom-8 w-40 h-40 bg-white/10 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-700"></div>
+           </div>
+           <div className="bg-white rounded-3xl p-8 border border-slate-100 shadow-sm flex flex-col justify-center">
+              <h3 className="text-xl font-bold text-slate-800 mb-2">Documentation</h3>
+              <p className="text-slate-500 mb-6 text-sm">Learn more about how to use the assessment tools and interpret the proficiency levels.</p>
+              <button onClick={() => navigate('/about')} className="text-blue-600 font-black text-xs uppercase tracking-widest flex items-center gap-2 hover:gap-4 transition-all">View Guide <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7-7 7" /></svg></button>
+           </div>
         </div>
       </div>
     </div>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 const OPTIONS = [
   {
@@ -51,6 +51,12 @@ const OPTIONS = [
 
 export default function ListeningAssessmentSelector() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const selectedTerm = searchParams.get('term') || 'T1';
+
+  const handleStartAssessment = (route) => {
+    navigate(`${route}?term=${selectedTerm}`);
+  };
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -64,13 +70,13 @@ export default function ListeningAssessmentSelector() {
               Assessments
             </button>
             <span className="breadcrumb-sep">/</span>
-            <span className="text-slate-700 font-medium">Listening</span>
+            <span className="text-slate-700 font-medium">Listening ({selectedTerm})</span>
           </nav>
           <h1 className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">
             Listening Assessment
           </h1>
           <p className="text-slate-500 text-sm mt-1">
-            Select the assessment type to begin.
+            Select the assessment type for <span className="font-bold text-blue-600">{selectedTerm}</span> to begin.
           </p>
         </div>
       </div>
@@ -80,7 +86,7 @@ export default function ListeningAssessmentSelector() {
           {OPTIONS.map((o) => (
             <button
               key={o.id}
-              onClick={() => navigate(o.route)}
+              onClick={() => handleStartAssessment(o.route)}
               className="group text-left bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 overflow-hidden focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
             >
               {/* Top accent bar */}
@@ -112,7 +118,7 @@ export default function ListeningAssessmentSelector() {
 
                 {/* CTA */}
                 <div className="flex items-center gap-1.5 text-xs font-semibold text-blue-600">
-                  Start Assessment
+                  Start {selectedTerm} Assessment
                   <svg
                     className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform"
                     fill="none"

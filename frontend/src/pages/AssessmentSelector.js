@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const ASSESSMENTS = [
@@ -81,57 +81,89 @@ const ASSESSMENTS = [
 
 export default function AssessmentSelector() {
   const navigate = useNavigate();
+  const [selectedTerm, setSelectedTerm] = useState('T1');
+
+  const handleStartAssessment = (route) => {
+    // Pass the selected term as a query parameter
+    navigate(`${route}?term=${selectedTerm}`);
+  };
 
   return (
     <div className="min-h-screen bg-slate-50">
 
       {/* Page header */}
-      <div className="bg-white border-b border-slate-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-          <h1 className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">Assessments</h1>
-          <p className="text-slate-500 text-sm mt-1">Select an assessment type to begin evaluating a student.</p>
+      <div className="bg-white border-b border-slate-200 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-8">
+            <div>
+              <h1 className="text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight">Assessments</h1>
+              <p className="text-slate-500 text-sm mt-2 font-medium">Select a term and assessment type to begin evaluating a student.</p>
+            </div>
+
+            {/* Term Selection */}
+            <div className="bg-slate-100 p-1.5 rounded-2xl flex items-center gap-1 self-start shadow-inner">
+              {['T1', 'T2', 'T3'].map((term) => (
+                <button
+                  key={term}
+                  onClick={() => setSelectedTerm(term)}
+                  className={`px-8 py-3 rounded-xl text-sm font-black transition-all duration-300 ${
+                    selectedTerm === term 
+                      ? 'bg-white text-blue-600 shadow-lg scale-105' 
+                      : 'text-slate-400 hover:text-slate-600 hover:bg-slate-200'
+                  }`}
+                >
+                  {term === 'T1' ? 'Term 1' : term === 'T2' ? 'Term 2' : 'Term 3'}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
           {ASSESSMENTS.map((a) => (
             <button
               key={a.id}
-              onClick={() => navigate(a.route)}
-              className="group text-left bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 overflow-hidden focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              onClick={() => handleStartAssessment(a.route)}
+              className="group text-left bg-white rounded-3xl border border-slate-200 shadow-sm hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 overflow-hidden focus:outline-none focus:ring-4 focus:ring-blue-100"
             >
               {/* Top accent */}
-              <div className={`h-1 ${a.color}`} />
+              <div className={`h-2 ${a.color} opacity-80`} />
 
-              <div className="p-6">
+              <div className="p-8">
                 {/* Icon + tag row */}
-                <div className="flex items-start justify-between mb-4">
-                  <div className={`w-11 h-11 rounded-xl flex items-center justify-center border ${a.lightColor}`}>
+                <div className="flex items-start justify-between mb-6">
+                  <div className={`w-14 h-14 rounded-2xl flex items-center justify-center border shadow-sm ${a.lightColor}`}>
                     {a.icon}
                   </div>
-                  <span className="text-xs font-medium text-slate-400 bg-slate-100 px-2.5 py-1 rounded-full">
+                  <span className="text-[10px] font-black text-slate-400 bg-slate-50 border border-slate-100 px-3 py-1.5 rounded-full uppercase tracking-widest">
                     {a.tag}
                   </span>
                 </div>
 
                 {/* Title */}
-                <div className="mb-1">
-                  <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">{a.subtitle}</span>
-                  <h3 className="text-base font-bold text-slate-900 group-hover:text-blue-600 transition-colors leading-snug">
+                <div className="mb-2">
+                  <span className="text-[10px] font-black text-blue-500 uppercase tracking-[0.2em]">{a.subtitle}</span>
+                  <h3 className="text-xl font-black text-slate-900 group-hover:text-blue-600 transition-colors leading-tight mt-1">
                     {a.title}
                   </h3>
                 </div>
 
                 {/* Description */}
-                <p className="text-xs text-slate-500 leading-relaxed mb-5">{a.desc}</p>
+                <p className="text-sm text-slate-500 leading-relaxed mb-8 opacity-80">{a.desc}</p>
 
                 {/* CTA */}
-                <div className="flex items-center gap-1.5 text-xs font-semibold text-blue-600">
-                  Start Assessment
-                  <svg className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-                  </svg>
+                <div className="flex items-center justify-between border-t border-slate-50 pt-6">
+                  <div className="flex items-center gap-2 text-xs font-black text-blue-600 uppercase tracking-widest">
+                    Start {selectedTerm} Assessment
+                    <svg className="w-4 h-4 group-hover:translate-x-2 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                    </svg>
+                  </div>
+                  <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-all duration-300">
+                     <span className="text-[10px] font-black">{selectedTerm}</span>
+                  </div>
                 </div>
               </div>
             </button>

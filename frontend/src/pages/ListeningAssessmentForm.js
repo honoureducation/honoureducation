@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { assessmentAPI } from '../services/api';
 
@@ -41,11 +41,26 @@ const CEFR_COLORS = { A1: 'text-red-600 bg-red-50 border-red-200', A2: 'text-ora
 
 export default function ListeningAssessmentForm() {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({ email: '', studentName: '', yearGroupAndClass: '', teacherName: '' });
+  const [searchParams] = useSearchParams();
+  const preSelectedTerm = searchParams.get('term') || 'T1';
+
+  const [formData, setFormData] = useState({ 
+    email: '', 
+    studentName: '', 
+    yearGroupAndClass: '', 
+    teacherName: '',
+    term: preSelectedTerm 
+  });
   const [scores, setScores] = useState(Array(QUESTIONS.length).fill(null));
   const [totalScore, setTotalScore] = useState(0);
   const [cefrLevel, setCefrLevel] = useState('');
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (preSelectedTerm) {
+      setFormData(prev => ({ ...prev, term: preSelectedTerm }));
+    }
+  }, [preSelectedTerm]);
 
   const handleInput = (e) => {
     const { name, value } = e.target;
@@ -68,7 +83,7 @@ export default function ListeningAssessmentForm() {
       return;
     }
     if (scores.includes(null)) {
-      toast.error('Please score all 13 questions.');
+      toast.error('Please score all questions.');
       return;
     }
     setLoading(true);
@@ -79,13 +94,20 @@ export default function ListeningAssessmentForm() {
         studentName: formData.studentName,
         yearGroupAndClass: formData.yearGroupAndClass,
         teacherName: formData.teacherName,
+        term: formData.term,
         listeningAssessmentAnswers: scores.map((score, i) => ({ questionId: i + 1, score })),
         totalScore,
         cefrLevel,
         level: cefrLevel,
       });
       toast.success('Assessment submitted successfully!');
-      setFormData({ email: '', studentName: '', yearGroupAndClass: '', teacherName: '' });
+      setFormData({ 
+        email: '', 
+        studentName: '', 
+        yearGroupAndClass: '', 
+        teacherName: '',
+        term: preSelectedTerm 
+      });
       setScores(Array(QUESTIONS.length).fill(null));
       setTotalScore(0);
       setCefrLevel('');
@@ -169,6 +191,14 @@ export default function ListeningAssessmentForm() {
               <div>
                 <label className="form-label">Teacher Name</label>
                 <input type="text" name="teacherName" value={formData.teacherName} onChange={handleInput} placeholder="Optional" className="form-input" />
+              </div>
+              <div>
+                <label className="form-label">Assessment Term <span className="text-red-500">*</span></label>
+                <select name="term" value={formData.term} onChange={handleInput} className="form-input" required>
+                  <option value="T1">Term 1 (T1)</option>
+                  <option value="T2">Term 2 (T2)</option>
+                  <option value="T3">Term 3 (T3)</option>
+                </select>
               </div>
             </div>
           </div>

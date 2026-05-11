@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { assessmentAPI } from '../services/api';
 import car1 from '../assets/car1.png';
@@ -14,29 +15,21 @@ const SPEAKING_QUESTIONS = [
   { id: 6, question: 'How could different audiences interpret this story differently, and why?' }
 ];
 
-const CEFR_LEVELS = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
-
-const CEFR_SCORING = {
-  '0-2': 'A1',
-  '3-4': 'A2',
-  '5-6': 'B1',
-  '7-8': 'B2',
-  '9-10': 'C1',
-  '11-12': 'C2'
-};
-
 function getPictureUrl(picNum) {
   const pictures = [car1, car2, car3];
   return pictures[picNum % pictures.length];
 }
 
 export default function SpeakingAssessmentForm() {
+  const [searchParams] = useSearchParams();
+  const preSelectedTerm = searchParams.get('term') || 'T1';
+
   const [formData, setFormData] = useState({
     email: '',
     studentName: '',
     yearGroupAndClass: '',
     teacherName: '',
-    term: 'T1'
+    term: preSelectedTerm
   });
 
   const [scores, setScores] = useState(Array(SPEAKING_QUESTIONS.length).fill(null));
@@ -44,6 +37,12 @@ export default function SpeakingAssessmentForm() {
   const [cefrLevel, setCefrLevel] = useState('');
   const [teacherComments, setTeacherComments] = useState('');
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (preSelectedTerm) {
+      setFormData(prev => ({ ...prev, term: preSelectedTerm }));
+    }
+  }, [preSelectedTerm]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -125,7 +124,7 @@ export default function SpeakingAssessmentForm() {
         studentName: '',
         yearGroupAndClass: '',
         teacherName: '',
-        term: 'T1'
+        term: preSelectedTerm
       });
       setScores(Array(SPEAKING_QUESTIONS.length).fill(null));
       setTotalScore(0);
@@ -156,7 +155,7 @@ export default function SpeakingAssessmentForm() {
             <img
               key={i}
               src={getPictureUrl(i)}
-              alt={`Assessment picture ${i + 1}`}
+              alt={`Assessment scene ${i + 1}`}
               className="w-full h-48 object-cover rounded-lg shadow-md"
             />
           ))}

@@ -91,7 +91,7 @@ export default function WritingAssessmentSeniorStudentSheet() {
               <img
                 key={i}
                 src={url}
-                alt={`Writing prompt picture ${i + 1}`}
+                alt={`Writing prompt scene ${i + 1}`}
                 className="w-full h-44 object-cover rounded-lg shadow-md"
                 onError={(e) => {
                   e.target.src = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300'%3E%3Crect fill='%23e5e7eb' width='400' height='300'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial' font-size='16' fill='%236b7280'%3EPicture ${i + 1}%3C/text%3E%3C/svg%3E`;

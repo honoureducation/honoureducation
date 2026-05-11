@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { assessmentAPI } from '../services/api';
 
@@ -64,6 +64,8 @@ function getCefrSenior(t) {
 export default function ListeningAssessmentPart2Form({ yearGroupProp }) {
   const navigate = useNavigate();
   const params   = useParams();
+  const [searchParams] = useSearchParams();
+  const preSelectedTerm = searchParams.get('term') || 'T1';
 
   // Support both prop-based and route-based year group detection
   const yearGroup = yearGroupProp || params.yearGroup || 'junior';
@@ -74,11 +76,23 @@ export default function ListeningAssessmentPart2Form({ yearGroupProp }) {
   const maxScore   = isJunior ? 8 : 20;
   const getCefr    = isJunior ? getCefrJunior : getCefrSenior;
 
-  const [formData, setFormData] = useState({ email: '', studentName: '', yearGroupAndClass: '', teacherName: '' });
+  const [formData, setFormData] = useState({ 
+    email: '', 
+    studentName: '', 
+    yearGroupAndClass: '', 
+    teacherName: '',
+    term: preSelectedTerm
+  });
   const [scores,   setScores]   = useState(Array(questions.length).fill(null));
   const [totalScore, setTotalScore] = useState(0);
   const [cefrLevel,  setCefrLevel]  = useState('');
   const [loading,    setLoading]    = useState(false);
+
+  useEffect(() => {
+    if (preSelectedTerm) {
+      setFormData(prev => ({ ...prev, term: preSelectedTerm }));
+    }
+  }, [preSelectedTerm]);
 
   const handleInput = (e) => {
     const { name, value } = e.target;
@@ -113,13 +127,20 @@ export default function ListeningAssessmentPart2Form({ yearGroupProp }) {
         studentName: formData.studentName,
         yearGroupAndClass: formData.yearGroupAndClass,
         teacherName: formData.teacherName,
+        term: formData.term,
         listeningAssessmentAnswers: scores.map((score, i) => ({ questionId: i + 1, score })),
         totalScore,
         cefrLevel,
         level: cefrLevel,
       });
       toast.success('Assessment submitted successfully!');
-      setFormData({ email: '', studentName: '', yearGroupAndClass: '', teacherName: '' });
+      setFormData({ 
+        email: '', 
+        studentName: '', 
+        yearGroupAndClass: '', 
+        teacherName: '',
+        term: preSelectedTerm
+      });
       setScores(Array(questions.length).fill(null));
       setTotalScore(0);
       setCefrLevel('');
@@ -217,6 +238,14 @@ export default function ListeningAssessmentPart2Form({ yearGroupProp }) {
               <div>
                 <label className="form-label">Teacher Name</label>
                 <input type="text" name="teacherName" value={formData.teacherName} onChange={handleInput} placeholder="Optional" className="form-input" />
+              </div>
+              <div>
+                <label className="form-label">Assessment Term <span className="text-red-500">*</span></label>
+                <select name="term" value={formData.term} onChange={handleInput} className="form-input bg-white" required>
+                  <option value="T1">Term 1 (T1)</option>
+                  <option value="T2">Term 2 (T2)</option>
+                  <option value="T3">Term 3 (T3)</option>
+                </select>
               </div>
             </div>
           </div>

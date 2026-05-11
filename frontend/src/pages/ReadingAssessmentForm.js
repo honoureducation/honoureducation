@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { assessmentAPI } from '../services/api';
 import readingImg1 from '../assets/reading1.jpg.jpeg';
@@ -30,10 +30,25 @@ const LEVEL_COLORS = { A: 'text-red-600 bg-red-50 border-red-200', B: 'text-oran
 
 export default function ReadingAssessmentForm() {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({ email: '', studentName: '', yearGroupAndClass: '', teacherName: '', term: 'T1' });
+  const [searchParams] = useSearchParams();
+  const preSelectedTerm = searchParams.get('term') || 'T1';
+
+  const [formData, setFormData] = useState({ 
+    email: '', 
+    studentName: '', 
+    yearGroupAndClass: '', 
+    teacherName: '', 
+    term: preSelectedTerm 
+  });
   const [score, setScore] = useState(null);
   const [teacherNotes, setTeacherNotes] = useState('');
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (preSelectedTerm) {
+      setFormData(prev => ({ ...prev, term: preSelectedTerm }));
+    }
+  }, [preSelectedTerm]);
 
   const handleInput = (e) => {
     const { name, value } = e.target;
@@ -66,7 +81,13 @@ export default function ReadingAssessmentForm() {
         readingNotes: teacherNotes,
       });
       toast.success('Assessment submitted successfully!');
-      setFormData({ email: '', studentName: '', yearGroupAndClass: '', teacherName: '', term: 'T1' });
+      setFormData({ 
+        email: '', 
+        studentName: '', 
+        yearGroupAndClass: '', 
+        teacherName: '', 
+        term: preSelectedTerm 
+      });
       setScore(null);
       setTeacherNotes('');
     } catch (err) {
@@ -135,7 +156,7 @@ export default function ReadingAssessmentForm() {
           <div className="grid grid-cols-3 gap-3">
             {PICTURES.map((src, i) => (
               <div key={i} className="rounded-xl overflow-hidden border border-slate-200 bg-slate-100">
-                <img src={src} alt={`Story picture ${i + 1}`} className="w-full h-auto object-contain" />
+                <img src={src} alt={`Story scene ${i + 1}`} className="w-full h-auto object-contain" />
               </div>
             ))}
           </div>

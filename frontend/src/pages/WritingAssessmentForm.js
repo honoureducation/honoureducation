@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { assessmentAPI } from '../services/api';
 import writingImg1 from '../assets/writing1.jpg.jpeg';
@@ -26,11 +26,26 @@ const LEVEL_COLORS = { A: 'text-red-600 bg-red-50 border-red-200', B: 'text-oran
 
 export default function WritingAssessmentForm() {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({ email: '', studentName: '', yearGroupAndClass: '', teacherName: '', term: 'T1' });
+  const [searchParams] = useSearchParams();
+  const preSelectedTerm = searchParams.get('term') || 'T1';
+
+  const [formData, setFormData] = useState({ 
+    email: '', 
+    studentName: '', 
+    yearGroupAndClass: '', 
+    teacherName: '', 
+    term: preSelectedTerm 
+  });
   const [score, setScore] = useState(null);
   const [notes, setNotes] = useState('');
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
+
+  useEffect(() => {
+    if (preSelectedTerm) {
+      setFormData(prev => ({ ...prev, term: preSelectedTerm }));
+    }
+  }, [preSelectedTerm]);
 
   const handleInput = (e) => {
     const { name, value } = e.target;
@@ -66,7 +81,13 @@ export default function WritingAssessmentForm() {
         writingNotes: notes,
       });
       toast.success('Assessment submitted successfully!');
-      setFormData({ email: '', studentName: '', yearGroupAndClass: '', teacherName: '', term: 'T1' });
+      setFormData({ 
+        email: '', 
+        studentName: '', 
+        yearGroupAndClass: '', 
+        teacherName: '', 
+        term: preSelectedTerm 
+      });
       setScore(null);
       setNotes('');
       setErrors({});

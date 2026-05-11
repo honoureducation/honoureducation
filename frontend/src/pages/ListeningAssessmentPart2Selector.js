@@ -1,5 +1,5 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 const OPTIONS = [
   {
@@ -22,6 +22,12 @@ const OPTIONS = [
 
 export default function ListeningAssessmentPart2Selector() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const selectedTerm = searchParams.get('term') || 'T1';
+
+  const handleStartAssessment = (route) => {
+    navigate(`${route}?term=${selectedTerm}`);
+  };
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -32,12 +38,14 @@ export default function ListeningAssessmentPart2Selector() {
               Assessments
             </button>
             <span className="breadcrumb-sep">/</span>
-            <span className="text-slate-700 font-medium">Listening Part 2</span>
+            <span className="text-slate-700 font-medium">Listening Part 2 ({selectedTerm})</span>
           </nav>
           <h1 className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">
            Listening Comprehension part 2
           </h1>
-          <p className="text-slate-500 text-sm mt-1">Select the year group to begin.</p>
+          <p className="text-slate-500 text-sm mt-1">
+            Select the year group for <span className="font-bold text-blue-600">{selectedTerm}</span> to begin.
+          </p>
         </div>
       </div>
 
@@ -46,7 +54,7 @@ export default function ListeningAssessmentPart2Selector() {
           {OPTIONS.map((o) => (
             <button
               key={o.id}
-              onClick={() => navigate(o.route)}
+              onClick={() => handleStartAssessment(o.route)}
               className="group text-left bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 overflow-hidden focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
             >
               <div className={`h-1 ${o.color}`} />
@@ -59,7 +67,7 @@ export default function ListeningAssessmentPart2Selector() {
                 </h3>
                 <p className="text-xs text-slate-500 leading-relaxed mb-5">{o.desc}</p>
                 <div className="flex items-center gap-1.5 text-xs font-semibold text-blue-600">
-                  Select
+                  Start {selectedTerm} Assessment
                   <svg
                     className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform"
                     fill="none"
