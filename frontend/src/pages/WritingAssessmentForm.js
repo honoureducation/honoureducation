@@ -29,12 +29,12 @@ export default function WritingAssessmentForm() {
   const [searchParams] = useSearchParams();
   const preSelectedTerm = searchParams.get('term') || 'T1';
 
-  const [formData, setFormData] = useState({ 
-    email: '', 
-    studentName: '', 
-    yearGroupAndClass: '', 
-    teacherName: '', 
-    term: preSelectedTerm 
+  const [formData, setFormData] = useState({
+    email: '',
+    studentName: '',
+    yearGroupAndClass: '',
+    teacherName: '',
+    term: preSelectedTerm
   });
   const [score, setScore] = useState(null);
   const [notes, setNotes] = useState('');
@@ -81,12 +81,12 @@ export default function WritingAssessmentForm() {
         writingNotes: notes,
       });
       toast.success('Assessment submitted successfully!');
-      setFormData({ 
-        email: '', 
-        studentName: '', 
-        yearGroupAndClass: '', 
-        teacherName: '', 
-        term: preSelectedTerm 
+      setFormData({
+        email: '',
+        studentName: '',
+        yearGroupAndClass: '',
+        teacherName: '',
+        term: preSelectedTerm
       });
       setScore(null);
       setNotes('');
@@ -218,11 +218,10 @@ export default function WritingAssessmentForm() {
               {SCORING.map(({ level, desc }) => (
                 <label
                   key={level}
-                  className={`flex items-start gap-4 p-4 rounded-xl border cursor-pointer transition-all duration-150 ${
-                    score === level
+                  className={`flex items-start gap-4 p-4 rounded-xl border cursor-pointer transition-all duration-150 ${score === level
                       ? `${LEVEL_COLORS[level]} border-2`
                       : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'
-                  }`}
+                    }`}
                 >
                   <input
                     type="radio"
@@ -255,8 +254,23 @@ export default function WritingAssessmentForm() {
           </div>
 
           <div className="flex gap-3">
-            <button type="submit" disabled={loading} className="btn-primary btn-lg flex-1">
-              {loading ? <><span className="spinner" /> Submitting...</> : 'Submit Assessment'}
+            <button
+              type="submit"
+              disabled={loading}
+              className="flex-1 px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold rounded-2xl hover:from-blue-700 hover:to-indigo-700 active:scale-[0.98] transition-all disabled:opacity-50 disabled:pointer-events-none shadow-xl shadow-blue-600/20 flex items-center justify-center gap-2 text-base"
+            >
+              {loading ? (
+                <>
+                  <span className="spinner" /> Submitting...
+                </>
+              ) : (
+                <>
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Submit Assessment
+                </>
+              )}
             </button>
             <button type="button" onClick={() => navigate('/assessments')} className="btn-secondary btn-lg">
               Cancel

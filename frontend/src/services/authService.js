@@ -15,7 +15,12 @@ const authAPI = axios.create({
 
 // Add token to requests if available
 authAPI.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
+  // Use admin token for admin routes, otherwise teacher token
+  const isAdminPath = window.location.pathname.startsWith('/admin');
+  const token = isAdminPath 
+    ? localStorage.getItem('admin_token') 
+    : localStorage.getItem('teacher_token');
+    
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -27,9 +32,16 @@ authAPI.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      window.location.href = '/login';
+      const isAdminPath = window.location.pathname.startsWith('/admin');
+      if (isAdminPath) {
+        localStorage.removeItem('admin_token');
+        localStorage.removeItem('admin_user');
+        window.location.href = '/admin';
+      } else {
+        localStorage.removeItem('teacher_token');
+        localStorage.removeItem('teacher_user');
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(error);
   }
@@ -48,7 +60,7 @@ export const authService = {
   },
 
   // Login
-  async login(email, password) {
+  async login(email, password, forceRole = null) {
     try {
       console.log('Attempting login for:', email);
       const response = await authAPI.post('/auth/login', { email, password });
@@ -56,45 +68,68 @@ export const authService = {
       
       console.log('Login successful for:', user.email);
       
-      // Store token and user data
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(user));
+      const role = forceRole || (user.role.includes('admin') ? 'admin' : 'teacher');
+      
+      // Store token and user data with role-specific keys
+      if (role === 'admin') {
+        localStorage.setItem('admin_token', token);
+        localStorage.setItem('admin_user', JSON.stringify(user));
+      } else {
+        localStorage.setItem('teacher_token', token);
+        localStorage.setItem('teacher_user', JSON.stringify(user));
+      }
       
       return response.data;
     } catch (error) {
       console.error('Login error:', error);
-      console.error('Error response:', error.response?.data);
       throw error.response?.data || { message: error.message };
     }
   },
 
   // Logout
-  logout() {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    window.location.href = '/login';
+  logout(role = null) {
+    const isAdminPath = window.location.pathname.startsWith('/admin');
+    const targetRole = role || (isAdminPath ? 'admin' : 'teacher');
+
+    if (targetRole === 'admin') {
+      localStorage.removeItem('admin_token');
+      localStorage.removeItem('admin_user');
+      window.location.href = '/admin';
+    } else {
+      localStorage.removeItem('teacher_token');
+      localStorage.removeItem('teacher_user');
+      window.location.href = '/login';
+    }
   },
 
   // Get current user
-  getCurrentUser() {
-    const user = localStorage.getItem('user');
+  getCurrentUser(role = null) {
+    const isAdminPath = window.location.pathname.startsWith('/admin');
+    const targetRole = role || (isAdminPath ? 'admin' : 'teacher');
+    
+    const key = targetRole === 'admin' ? 'admin_user' : 'teacher_user';
+    const user = localStorage.getItem(key);
     return user ? JSON.parse(user) : null;
   },
 
   // Check if user is authenticated
-  isAuthenticated() {
-    return !!localStorage.getItem('token');
+  isAuthenticated(role = null) {
+    const isAdminPath = window.location.pathname.startsWith('/admin');
+    const targetRole = role || (isAdminPath ? 'admin' : 'teacher');
+    
+    const key = targetRole === 'admin' ? 'admin_token' : 'teacher_token';
+    return !!localStorage.getItem(key);
   },
 
   // Check if user is admin
   isAdmin() {
-    const user = this.getCurrentUser();
+    const user = this.getCurrentUser('admin');
     return user?.role === 'platform_admin' || user?.role === 'school_admin' || user?.role === 'admin';
   },
 
   // Check if user is approved teacher
   isApprovedTeacher() {
-    const user = this.getCurrentUser();
+    const user = this.getCurrentUser('teacher');
     return user?.role === 'teacher' && user?.status === 'approved';
   },
 
@@ -111,9 +146,11 @@ export const authService = {
   // Update profile
   async updateProfile(userData) {
     try {
+      const isAdminPath = window.location.pathname.startsWith('/admin');
+      const userKey = isAdminPath ? 'admin_user' : 'teacher_user';
+      
       const response = await authAPI.put('/auth/profile', userData);
-      // Update stored user data
-      localStorage.setItem('user', JSON.stringify(response.data.user));
+      localStorage.setItem(userKey, JSON.stringify(response.data.user));
       return response.data;
     } catch (error) {
       throw error.response?.data || { message: error.message };

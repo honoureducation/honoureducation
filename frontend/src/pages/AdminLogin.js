@@ -33,16 +33,17 @@ export default function AdminLogin() {
     setLoading(true);
 
     try {
-      const response = await authService.login(formData.email, formData.password);
+      const response = await authService.login(formData.email, formData.password, 'admin');
+      
       if (response.user.role === 'teacher') {
         toast.error('Teacher accounts must use the standard Teacher Login page.');
-        authService.logout();
+        authService.logout('admin'); // Explicitly logout admin session
         return;
       }
       
       if (!authService.isAdmin()) {
         toast.error('This page is for admin access only');
-        authService.logout();
+        authService.logout('admin');
         return;
       }
       toast.success(`Welcome back, ${response.user.firstName}!`);

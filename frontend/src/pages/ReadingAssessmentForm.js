@@ -246,8 +246,23 @@ export default function ReadingAssessmentForm() {
           </div>
 
           <div className="flex gap-3">
-            <button type="submit" disabled={loading} className="btn-primary btn-lg flex-1">
-              {loading ? <><span className="spinner" /> Submitting...</> : 'Submit Assessment'}
+            <button 
+              type="submit" 
+              disabled={loading} 
+              className="flex-1 px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold rounded-2xl hover:from-blue-700 hover:to-indigo-700 active:scale-[0.98] transition-all disabled:opacity-50 disabled:pointer-events-none shadow-xl shadow-blue-600/20 flex items-center justify-center gap-2 text-base"
+            >
+              {loading ? (
+                <>
+                  <span className="spinner" /> Submitting...
+                </>
+              ) : (
+                <>
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Submit Assessment
+                </>
+              )}
             </button>
             <button type="button" onClick={() => navigate('/assessments')} className="btn-secondary btn-lg">
               Cancel

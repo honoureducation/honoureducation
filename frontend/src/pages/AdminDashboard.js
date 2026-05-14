@@ -306,10 +306,14 @@ export default function AdminDashboard() {
             <div className="w-px h-8 bg-slate-200 hidden sm:block"></div>
             <div className="flex items-center gap-2 lg:gap-3">
               <div className="text-right hidden sm:block">
-                <p className="text-sm font-bold text-slate-900">Admin</p>
-                <p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">Root</p>
+                <p className="text-sm font-bold text-slate-900">{authService.getCurrentUser('admin')?.firstName || 'Admin'}</p>
+                <p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">
+                  {authService.getCurrentUser('admin')?.role.replace('_', ' ') || 'Root'}
+                </p>
               </div>
-              <div className="w-8 h-8 lg:w-10 lg:h-10 bg-indigo-100 text-indigo-700 rounded-full flex items-center justify-center font-bold text-xs lg:text-sm">PA</div>
+              <div className="w-8 h-8 lg:w-10 lg:h-10 bg-indigo-100 text-indigo-700 rounded-full flex items-center justify-center font-bold text-xs lg:text-sm uppercase">
+                {authService.getCurrentUser('admin')?.firstName?.[0] || 'A'}{authService.getCurrentUser('admin')?.lastName?.[0] || 'D'}
+              </div>
             </div>
           </div>
         </header>

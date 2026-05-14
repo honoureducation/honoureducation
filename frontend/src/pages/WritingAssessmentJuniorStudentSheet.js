@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { assessmentAPI } from '../services/api';
 import writingImg1 from '../assets/writing1.jpg.jpeg';
@@ -15,6 +16,7 @@ const WRITING_QUESTIONS = [
 const PICTURES = [writingImg1, writingImg2, writingImg3];
 
 export default function WritingAssessmentJuniorStudentSheet() {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: '',
     studentName: '',
@@ -70,10 +72,29 @@ export default function WritingAssessmentJuniorStudentSheet() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white py-8">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Breadcrumbs */}
+        <nav className="flex items-center gap-2 text-sm text-slate-500 mb-6 font-medium">
+          <button 
+            onClick={() => navigate('/assessments')}
+            className="hover:text-blue-600 transition-colors"
+          >
+            Assessments
+          </button>
+          <span className="text-slate-300">/</span>
+          <button 
+            onClick={() => navigate('/assessment/writing')}
+            className="hover:text-blue-600 transition-colors"
+          >
+            Writing
+          </button>
+          <span className="text-slate-300">/</span>
+          <span className="text-slate-900">Junior</span>
+        </nav>
+
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-1">Writing Assessment</h1>
-          <p className="text-gray-600 mb-6">Year 7-9</p>
+          <p className="text-gray-600 mb-6 font-medium uppercase tracking-wider text-xs">Year 7-9 / Grade 6-8</p>
         </div>
 
         {/* Questions + Pictures */}
@@ -146,9 +167,23 @@ export default function WritingAssessmentJuniorStudentSheet() {
             </div>
           </div>
 
-          <button type="submit" disabled={loading}
-            className="w-full px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-bold rounded-lg transition-all duration-200 transform hover:scale-105 disabled:opacity-50 shadow-lg">
-            {loading ? 'Submitting...' : '📤 Submit Assessment'}
+          <button 
+            type="submit" 
+            disabled={loading}
+            className="w-full px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold rounded-2xl hover:from-blue-700 hover:to-indigo-700 active:scale-[0.98] transition-all disabled:opacity-50 disabled:pointer-events-none shadow-xl shadow-blue-600/20 flex items-center justify-center gap-2 text-lg"
+          >
+            {loading ? (
+              <>
+                <span className="spinner" /> Submitting...
+              </>
+            ) : (
+              <>
+                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Submit My Assessment
+              </>
+            )}
           </button>
         </form>
       </div>

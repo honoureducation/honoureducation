@@ -37,12 +37,12 @@ export default function Login() {
     setLoading(true);
 
     try {
-      const response = await authService.login(formData.email, formData.password);
+      const response = await authService.login(formData.email, formData.password, 'teacher');
       
       // Strict Separation: Prevent admins from logging in here
       if (response.user.role === 'admin' || response.user.role === 'platform_admin' || response.user.role === 'school_admin') {
         toast.error('Admin accounts must use the dedicated Admin Login page.');
-        authService.logout();
+        authService.logout('teacher'); // Explicitly logout teacher session
         return;
       }
 

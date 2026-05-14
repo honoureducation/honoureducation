@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { assessmentAPI } from '../services/api';
 import readin2nd1 from '../assets/readin2nd1.jpg.jpeg';
@@ -30,6 +30,7 @@ function getPictureUrlSenior(picNum) {
 }
 
 export default function ReadingAssessmentSeniorForm() {
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const preSelectedTerm = searchParams.get('term') || 'T1';
 
@@ -124,10 +125,29 @@ export default function ReadingAssessmentSeniorForm() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white py-8">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Breadcrumbs */}
+        <nav className="flex items-center gap-2 text-sm text-slate-500 mb-6 font-medium">
+          <button 
+            onClick={() => navigate('/assessments')}
+            className="hover:text-blue-600 transition-colors"
+          >
+            Assessments
+          </button>
+          <span className="text-slate-300">/</span>
+          <button 
+            onClick={() => navigate('/assessment/reading')}
+            className="hover:text-blue-600 transition-colors"
+          >
+            Reading
+          </button>
+          <span className="text-slate-300">/</span>
+          <span className="text-slate-900">Senior</span>
+        </nav>
+
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-2">Reading Assessment</h1>
-          <p className="text-gray-600 mb-4">Year 10-13 / Grade 9-12</p>
+          <p className="text-gray-600 mb-4 font-medium uppercase tracking-wider text-xs">Year 10-13 / Grade 9-12</p>
           <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded space-y-2">
             <p className="text-sm text-gray-700"><strong>Instructions for assessor:</strong></p>
             <ul className="text-sm text-gray-700 space-y-1 ml-4">
@@ -269,9 +289,20 @@ export default function ReadingAssessmentSeniorForm() {
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 px-6 py-3 bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-600 hover:to-teal-700 text-white font-bold rounded-lg transition-all duration-200 transform hover:scale-105 disabled:opacity-50 shadow-lg"
+              className="flex-1 px-8 py-4 bg-gradient-to-r from-orange-500 to-red-600 text-white font-bold rounded-2xl hover:from-orange-600 hover:to-red-700 active:scale-[0.98] transition-all disabled:opacity-50 disabled:pointer-events-none shadow-xl shadow-orange-600/20 flex items-center justify-center gap-2 text-base"
             >
-              {loading ? 'Submitting...' : '📤 Submit Assessment'}
+              {loading ? (
+                <>
+                  <span className="spinner" /> Submitting...
+                </>
+              ) : (
+                <>
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Submit Assessment
+                </>
+              )}
             </button>
           </div>
         </form>

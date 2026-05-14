@@ -135,7 +135,7 @@ export default function ListeningAssessmentForm() {
           </nav>
           <div className="flex items-start justify-between gap-4">
             <div>
-              <h1 className="page-title">Listening Assessment — Part 1</h1>
+              <h1 className="page-title">Listening Assessment Part 1</h1>
               <p className="page-subtitle">Year 7–13 · Grade 6–12 · Max score: 26</p>
             </div>
             {cefrLevel && (
@@ -305,11 +305,33 @@ export default function ListeningAssessmentForm() {
 
           {/* Submit */}
           <div className="flex gap-3">
-            <button type="submit" disabled={loading} className="btn-primary btn-lg flex-1">
-              {loading ? <><span className="spinner" /> Submitting...</> : 'Submit Assessment'}
+            <button 
+              type="submit" 
+              disabled={loading} 
+              className="flex-1 px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold rounded-2xl hover:from-blue-700 hover:to-indigo-700 active:scale-[0.98] transition-all disabled:opacity-50 disabled:pointer-events-none shadow-xl shadow-blue-600/20 flex items-center justify-center gap-2 text-base"
+            >
+              {loading ? (
+                <>
+                  <span className="spinner" /> Submitting...
+                </>
+              ) : (
+                <>
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Submit Assessment
+                </>
+              )}
             </button>
-            <button type="button" onClick={() => window.location.reload()} className="btn-secondary btn-lg">
-              Clear
+            <button 
+              type="button" 
+              onClick={() => window.location.reload()} 
+              className="px-8 py-4 bg-white text-slate-600 font-bold rounded-2xl border-2 border-slate-200 hover:bg-slate-50 hover:border-slate-300 active:scale-[0.98] transition-all flex items-center justify-center gap-2 text-base shadow-sm"
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+              </svg>
+              Clear Form
             </button>
           </div>
         </form>

@@ -9,12 +9,12 @@ const NAV_LINKS = [
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" />
     </svg>
   )},
-  { to: '/assessments', label: 'Assessments', requireAuth: true, icon: (
+  { to: '/assessments', label: 'Assessments', requireAuth: true, requireTeacher: true, icon: (
     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 0 012 2" />
     </svg>
   )},
-  { to: '/records',    label: 'Records', requireAuth: true, icon: (
+  { to: '/records',    label: 'Records', requireAuth: true, requireTeacher: true, icon: (
     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 0 012 2v14a2 2 0 01-2 2h-2a2 0 01-2-2z" />
     </svg>
@@ -61,6 +61,7 @@ export default function Navbar() {
     const isAuth = authService.isAuthenticated();
     if (link.requireAuth && !isAuth) return false;
     if (link.hideOnAuth && isAuth) return false;
+    if (link.requireTeacher && !authService.isApprovedTeacher()) return false;
     return true;
   }).map(link => {
     if (link.dynamicRoute) {
@@ -110,17 +111,6 @@ export default function Navbar() {
               </Link>
             ))}
             
-            {authService.isAdmin() && (
-              <Link
-                to="/admin/dashboard"
-                className="ml-4 px-4 py-2 bg-indigo-600 text-white rounded-xl text-sm font-black shadow-lg shadow-indigo-600/20 hover:bg-indigo-500 transition-all flex items-center gap-2 active:scale-95"
-              >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                </svg>
-                Admin Panel
-              </Link>
-            )}
           </div>
 
           {/* Right actions */}
@@ -135,7 +125,9 @@ export default function Navbar() {
                     </div>
                     <div className="text-left">
                       <p className="text-xs font-bold text-white leading-none">{user.firstName}</p>
-                      <p className="text-[10px] text-slate-500 leading-none mt-1 uppercase font-black">Teacher</p>
+                      <p className="text-[10px] text-slate-500 leading-none mt-1 uppercase font-black">
+                        {authService.isAdmin() ? 'Admin' : 'Teacher'}
+                      </p>
                     </div>
                     <svg className="w-4 h-4 transition-transform group-hover:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />

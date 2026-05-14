@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { assessmentAPI } from '../services/api';
 
 export default function AssessmentForm() {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: '',
     studentName: '',
@@ -95,10 +97,22 @@ export default function AssessmentForm() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white py-8">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Breadcrumbs */}
+        <nav className="flex items-center gap-2 text-sm text-slate-500 mb-6 font-medium">
+          <button 
+            onClick={() => navigate('/assessments')}
+            className="hover:text-blue-600 transition-colors"
+          >
+            Assessments
+          </button>
+          <span className="text-slate-300">/</span>
+          <span className="text-slate-900">EAL & ELL</span>
+        </nav>
+
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-2">Secondary EAL & ELL Teacher Assessment</h1>
-          <p className="text-gray-600">Inclusion Team Assessment Form</p>
+          <p className="text-gray-600 font-medium uppercase tracking-wider text-xs">Inclusion Team Assessment Form</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-8">

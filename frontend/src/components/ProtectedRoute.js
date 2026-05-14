@@ -5,27 +5,31 @@ import { authService } from '../services/authService';
 export default function ProtectedRoute({ children, requireAdmin = false, requireApprovedTeacher = false }) {
   const location = useLocation();
   
-  // Check if user is authenticated
-  if (!authService.isAuthenticated()) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
+  // Determine target role for authentication check
+  const targetRole = requireAdmin ? 'admin' : (requireApprovedTeacher ? 'teacher' : null);
+  
+  // Check if user is authenticated for the required role
+  if (!authService.isAuthenticated(targetRole)) {
+    const loginPath = requireAdmin ? '/admin' : '/login';
+    return <Navigate to={loginPath} state={{ from: location }} replace />;
   }
 
-  const user = authService.getCurrentUser();
+  const user = authService.getCurrentUser(targetRole);
 
   // Check admin requirement
   if (requireAdmin && !authService.isAdmin()) {
     return <Navigate to="/unauthorized" replace />;
   }
 
-  // Check approved teacher requirement
-  if (requireApprovedTeacher && !authService.isApprovedTeacher() && !authService.isAdmin()) {
-    if (user.role === 'teacher' && user.status === 'pending') {
+  // Check approved teacher requirement - NO LONGER allows admin bypass for "total separation"
+  if (requireApprovedTeacher && !authService.isApprovedTeacher()) {
+    if (user?.role === 'teacher' && user?.status === 'pending') {
       return <Navigate to="/pending-approval" replace />;
     }
-    if (user.role === 'teacher' && user.status === 'rejected') {
+    if (user?.role === 'teacher' && user?.status === 'rejected') {
       return <Navigate to="/account-rejected" replace />;
     }
-    if (user.role === 'teacher' && user.status === 'suspended') {
+    if (user?.role === 'teacher' && user?.status === 'suspended') {
       return <Navigate to="/account-suspended" replace />;
     }
     return <Navigate to="/unauthorized" replace />;

@@ -172,7 +172,7 @@ export default function ListeningAssessmentPart2Form({ yearGroupProp }) {
           </nav>
           <div className="flex items-start justify-between gap-4">
             <div>
-              <h1 className="page-title">Listening Comprehension part 2</h1>
+              <h1 className="page-title">Listening Assessment Part 2</h1>
               <p className="page-subtitle">
                 {isJunior ? 'Year 7–9 · Grade 6–8' : 'Year 10–13 · Grade 9–12'} · Max score: {maxScore}
               </p>
@@ -352,10 +352,29 @@ export default function ListeningAssessmentPart2Form({ yearGroupProp }) {
 
           {/* Submit */}
           <div className="flex gap-3">
-            <button type="submit" disabled={loading} className="btn-primary btn-lg flex-1">
-              {loading ? <><span className="spinner" /> Submitting...</> : 'Submit Assessment'}
+            <button 
+              type="submit" 
+              disabled={loading} 
+              className={`flex-1 px-8 py-4 bg-gradient-to-r ${isJunior ? 'from-blue-600 to-indigo-600 shadow-blue-600/20' : 'from-orange-500 to-red-600 shadow-orange-600/20'} text-white font-bold rounded-2xl hover:brightness-110 active:scale-[0.98] transition-all disabled:opacity-50 disabled:pointer-events-none shadow-xl flex items-center justify-center gap-2 text-base`}
+            >
+              {loading ? (
+                <>
+                  <span className="spinner" /> Submitting...
+                </>
+              ) : (
+                <>
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Submit Assessment
+                </>
+              )}
             </button>
-            <button type="button" onClick={() => navigate('/assessment/listening-part2')} className="btn-secondary btn-lg">
+            <button 
+              type="button" 
+              onClick={() => navigate('/assessment/listening')} 
+              className="px-8 py-4 bg-white text-slate-600 font-bold rounded-2xl border-2 border-slate-200 hover:bg-slate-50 hover:border-slate-300 active:scale-[0.98] transition-all flex items-center justify-center gap-2 text-base shadow-sm"
+            >
               Cancel
             </button>
           </div>

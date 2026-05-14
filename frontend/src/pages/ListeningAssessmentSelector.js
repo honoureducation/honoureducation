@@ -18,11 +18,11 @@ const OPTIONS = [
     route: '/assessment/listening/part1',
   },
   {
-    id: 'part2-junior-standard',
+    id: 'part2-junior',
     subtitle: 'Part 2',
-    title: 'Listening Assessment (Junior)',
+    title: 'Listening Comprehension (Junior)',
     tag: 'Year 7–9 · Grade 6–8',
-    desc: 'Standard paragraph comprehension — 4 questions. Max score: 8.',
+    desc: 'Standard paragraph comprehension — 4 questions based on a short passage. Max score: 8.',
     color: 'bg-cyan-600',
     lightColor: 'bg-cyan-50 text-cyan-600 border-cyan-200',
     icon: (
@@ -33,43 +33,13 @@ const OPTIONS = [
     route: '/assessment/listening-part2/junior',
   },
   {
-    id: 'part2-senior-standard',
-    subtitle: 'Part 2',
-    title: 'Listening Assessment (Senior)',
-    tag: 'Year 10–13 · Grade 9–12',
-    desc: 'Standard paragraph comprehension — 10 questions. Max score: 20.',
-    color: 'bg-teal-600',
-    lightColor: 'bg-teal-50 text-teal-600 border-teal-200',
-    icon: (
-      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z" />
-      </svg>
-    ),
-    route: '/assessment/listening-part2/senior',
-  },
-  {
-    id: 'part2-junior-comp',
-    subtitle: 'Part 2',
-    title: 'Listening Comprehension (Junior)',
-    tag: 'Year 7–9 · Grade 6–8',
-    desc: 'Focused comprehension questions based on a short passage. Max score: 8.',
-    color: 'bg-indigo-600',
-    lightColor: 'bg-indigo-50 text-indigo-600 border-indigo-200',
-    icon: (
-      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z" />
-      </svg>
-    ),
-    route: '/assessment/listening-part2/junior',
-  },
-  {
-    id: 'part2-senior-comp',
+    id: 'part2-senior',
     subtitle: 'Part 2',
     title: 'Listening Comprehension (Senior)',
     tag: 'Year 10–13 · Grade 9–12',
-    desc: 'Extended comprehension questions based on a long passage. Max score: 20.',
-    color: 'bg-blue-800',
-    lightColor: 'bg-blue-50 text-blue-800 border-blue-200',
+    desc: 'Standard paragraph comprehension — 10 questions based on an extended passage. Max score: 20.',
+    color: 'bg-teal-600',
+    lightColor: 'bg-teal-50 text-teal-600 border-teal-200',
     icon: (
       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z" />
