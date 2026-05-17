@@ -30,9 +30,25 @@ const OPTIONS = [
     id: 'senior-assessor',
     title: 'Year 10–13 / Grade 9–12',
     subtitle: 'Assessor Form',
-    desc: 'Writing assessment with landmark picture prompts. A–E scoring rubric and teacher observations.',
+    desc: 'Writing assessment with sports picture prompts. A–E scoring rubric and teacher observations.',
     color: 'bg-pink-600',
     route: '/assessment/writing/senior',
+  },
+  {
+    id: 'senior-landmark-student',
+    title: 'Year 10–13 (Landmarks)',
+    subtitle: 'Student Writing Sheet',
+    desc: 'Student writing sheet with landmark picture prompts and lined writing space.',
+    color: 'bg-purple-600',
+    route: '/assessment/writing/senior-landmark-student',
+  },
+  {
+    id: 'senior-landmark-assessor',
+    title: 'Year 10–13 (Landmarks)',
+    subtitle: 'Assessor Form',
+    desc: 'Writing assessment with landmark picture prompts. New CEFR scoring rubric.',
+    color: 'bg-indigo-600',
+    route: '/assessment/writing/senior-landmark',
   },
 ];
 

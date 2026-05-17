@@ -19,26 +19,34 @@ Asha's brother often joined them, laughing as he chased the ball down the hill. 
 One evening, as the sun dipped behind the mountains, Asha scored a goal that echoed across the valley. She stood tall, imagining a stadium full of cheering fans. One day, she whispered, she would be a football hero. And with Rafi, her brother, and her father believing in her, the dream felt closer than ever.`;
 
 const SCORING = [
-  { level: 'A', desc: 'Very limited decoding and blending; frequent pauses; >15 errors per 100 words.' },
-  { level: 'B', desc: 'Many errors, often misreads common digraphs; choppy phrasing; 11–15 errors per 100 words.' },
-  { level: 'C', desc: 'Some errors; blends most words; occasional mistakes on longer words; 6–10 errors per 100 words.' },
-  { level: 'D', desc: 'Few errors; reads in phrases with steady pace; self-corrects; 1–5 errors per 100 words.' },
-  { level: 'E', desc: 'Accurate, fluent, and expressive; handles unfamiliar words; 0–1 errors per 100 words.' },
+  { level: 'A1 - Emerging', scoreRange: '1–4', descriptor: 'Very limited comprehension', capabilities: 'Recognises familiar words; understands extremely simple ideas with strong support; relies on visuals and prompts.', errorFreq: '25+ errors' },
+  { level: 'A2 - Developing', scoreRange: '5–8', descriptor: 'Basic comprehension of simple details', capabilities: 'Understands simple sentences; identifies characters, setting, main events; answers basic WH-questions.', errorFreq: '15–20 errors' },
+  { level: 'B1 - Secure', scoreRange: '9–12', descriptor: 'Understands main ideas and simple inferences', capabilities: 'Explains character motivations; identifies themes (perseverance, support); makes basic inferences using evidence.', errorFreq: '≈15 errors' },
+  { level: 'B2 - Proficient', scoreRange: '13–15', descriptor: 'Analyses deeper meaning and implied ideas', capabilities: 'Interprets relationships and social context; identifies themes with evidence; summarises accurately; explains symbolism.', errorFreq: '10–15 errors' },
+  { level: 'C1 - Advanced', scoreRange: '16–17', descriptor: 'Critical, analytical reading', capabilities: 'Evaluates themes, tone, author intention; analyses how language and setting create effect; connects ideas across text.', errorFreq: '≈10 errors' },
+  { level: 'C2 - Mastery', scoreRange: '18–20', descriptor: 'Near-native academic reading', capabilities: 'Interprets nuance, symbolism, implied meaning; critiques perspective, bias, representation; produces sophisticated analysis.', errorFreq: '0–5 errors' }
 ];
 
-const LEVEL_COLORS = { A: 'text-red-600 bg-red-50 border-red-200', B: 'text-orange-600 bg-orange-50 border-orange-200', C: 'text-amber-600 bg-amber-50 border-amber-200', D: 'text-blue-600 bg-blue-50 border-blue-200', E: 'text-emerald-600 bg-emerald-50 border-emerald-200' };
+const LEVEL_COLORS = {
+  'A1 - Emerging': 'text-red-600 bg-red-50 border-red-200',
+  'A2 - Developing': 'text-orange-600 bg-orange-50 border-orange-200',
+  'B1 - Secure': 'text-amber-600 bg-amber-50 border-amber-200',
+  'B2 - Proficient': 'text-lime-600 bg-lime-50 border-lime-200',
+  'C1 - Advanced': 'text-emerald-600 bg-emerald-50 border-emerald-200',
+  'C2 - Mastery': 'text-blue-600 bg-blue-50 border-blue-200'
+};
 
 export default function ReadingAssessmentForm() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const preSelectedTerm = searchParams.get('term') || 'T1';
 
-  const [formData, setFormData] = useState({ 
-    email: '', 
-    studentName: '', 
-    yearGroupAndClass: '', 
-    teacherName: '', 
-    term: preSelectedTerm 
+  const [formData, setFormData] = useState({
+    email: '',
+    studentName: '',
+    yearGroupAndClass: '',
+    teacherName: '',
+    term: preSelectedTerm
   });
   const [score, setScore] = useState(null);
   const [teacherNotes, setTeacherNotes] = useState('');
@@ -62,7 +70,7 @@ export default function ReadingAssessmentForm() {
       return;
     }
     if (!score) {
-      toast.error('Please select a reading accuracy score (A–E).');
+      toast.error('Please select a reading assessment score.');
       return;
     }
     setLoading(true);
@@ -77,16 +85,16 @@ export default function ReadingAssessmentForm() {
         readingScore: score,
         level: score,
         term: formData.term,
-        totalScore: ['A', 'B', 'C', 'D', 'E'].indexOf(score),
+        totalScore: SCORING.findIndex(s => s.level === score),
         readingNotes: teacherNotes,
       });
       toast.success('Assessment submitted successfully!');
-      setFormData({ 
-        email: '', 
-        studentName: '', 
-        yearGroupAndClass: '', 
-        teacherName: '', 
-        term: preSelectedTerm 
+      setFormData({
+        email: '',
+        studentName: '',
+        yearGroupAndClass: '',
+        teacherName: '',
+        term: preSelectedTerm
       });
       setScore(null);
       setTeacherNotes('');
@@ -112,11 +120,11 @@ export default function ReadingAssessmentForm() {
           <div className="flex items-start justify-between gap-4">
             <div>
               <h1 className="page-title">Reading Assessment</h1>
-              <p className="page-subtitle">Year 7–9 · Grade 6–8 · A–E Scoring</p>
+              <p className="page-subtitle">Year 7–9 · Grade 6–8 · Reading Assessment Scores</p>
             </div>
             {score && (
               <span className={`badge text-sm px-3 py-1.5 border ${LEVEL_COLORS[score]}`}>
-                Level {score}
+                {score}
               </span>
             )}
           </div>
@@ -205,32 +213,70 @@ export default function ReadingAssessmentForm() {
               <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" />
               </svg>
-              Reading Accuracy Score (A–E)
+              Reading Assessment Score
             </h2>
-            <div className="space-y-2">
-              {SCORING.map(({ level, desc }) => (
-                <label
-                  key={level}
-                  className={`flex items-start gap-4 p-4 rounded-xl border cursor-pointer transition-all duration-150 ${
-                    score === level
-                      ? `${LEVEL_COLORS[level]} border-2`
-                      : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="readingScore"
-                    value={level}
-                    checked={score === level}
-                    onChange={() => setScore(level)}
-                    className="mt-0.5 w-4 h-4 accent-blue-600 cursor-pointer flex-shrink-0"
-                  />
-                  <div>
-                    <span className="font-bold text-slate-900 text-sm">{level}</span>
-                    <p className="text-xs text-slate-500 mt-0.5">{desc}</p>
-                  </div>
-                </label>
-              ))}
+            <div className="space-y-3 md:space-y-0 md:bg-white md:border md:border-purple-500 md:rounded-xl md:overflow-hidden mt-4">
+              {/* Desktop Header */}
+              <div className="hidden md:grid md:grid-cols-12 gap-4 p-5 border-b border-purple-500 font-bold text-slate-900 text-[13px] bg-white items-end">
+                <div className="col-span-2">CEFR Level</div>
+                <div className="col-span-2">Score Range<br />(20 pts)</div>
+                <div className="col-span-3">Descriptor</div>
+                <div className="col-span-3">What the Student Can Do<br />(Reading)</div>
+                <div className="col-span-2">Error Frequency<br />(per 100 words)</div>
+              </div>
+
+              {/* Rows */}
+              <div className="flex flex-col gap-3 md:gap-0">
+                {SCORING.map(({ level, scoreRange, descriptor, capabilities, errorFreq }, idx) => (
+                  <label
+                    key={level}
+                    className={`block md:grid md:grid-cols-12 gap-4 p-5 border md:border-t-0 md:border-x-0 cursor-pointer transition-colors duration-150 items-center rounded-xl md:rounded-none ${
+                      idx === SCORING.length - 1 ? 'md:border-b-0' : 'md:border-b md:border-purple-300'
+                    } ${
+                      score === level
+                        ? 'bg-purple-50/50 shadow-sm md:shadow-none border-purple-500 md:border-purple-300'
+                        : 'border-slate-200 hover:bg-slate-50/50 bg-white'
+                    }`}
+                  >
+                    {/* CEFR Level & Radio */}
+                    <div className="col-span-2 flex items-center gap-3 font-bold text-slate-900 mb-3 md:mb-0">
+                      <input
+                        type="radio"
+                        name="readingScore"
+                        value={level}
+                        checked={score === level}
+                        onChange={() => setScore(level)}
+                        className="w-4 h-4 accent-purple-600 flex-shrink-0 cursor-pointer"
+                      />
+                      <span className="text-sm md:text-[13px] whitespace-nowrap">{level}</span>
+                    </div>
+
+                    {/* Score Range */}
+                    <div className="col-span-2 text-sm md:text-[13px] font-bold text-slate-900 mb-2 md:mb-0 flex justify-between md:block">
+                      <span className="md:hidden text-slate-500 font-normal">Score Range:</span>
+                      {scoreRange}
+                    </div>
+
+                    {/* Descriptor */}
+                    <div className="col-span-3 text-sm md:text-[13px] text-slate-700 mb-2 md:mb-0">
+                      <span className="md:hidden text-slate-500 font-normal block mb-1">Descriptor:</span>
+                      {descriptor}
+                    </div>
+
+                    {/* Capabilities */}
+                    <div className="col-span-3 text-sm md:text-[13px] text-slate-700 leading-relaxed mb-3 md:mb-0">
+                      <span className="md:hidden text-slate-500 font-normal block mb-1">Student can:</span>
+                      {capabilities}
+                    </div>
+
+                    {/* Error Freq */}
+                    <div className="col-span-2 text-sm md:text-[13px] font-bold text-slate-900 flex justify-between md:block pt-3 border-t border-slate-100 md:border-0 md:pt-0">
+                      <span className="md:hidden text-slate-500 font-normal">Error Freq:</span>
+                      {errorFreq}
+                    </div>
+                  </label>
+                ))}
+              </div>
             </div>
           </div>
 
@@ -246,9 +292,9 @@ export default function ReadingAssessmentForm() {
           </div>
 
           <div className="flex gap-3">
-            <button 
-              type="submit" 
-              disabled={loading} 
+            <button
+              type="submit"
+              disabled={loading}
               className="flex-1 px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold rounded-2xl hover:from-blue-700 hover:to-indigo-700 active:scale-[0.98] transition-all disabled:opacity-50 disabled:pointer-events-none shadow-xl shadow-blue-600/20 flex items-center justify-center gap-2 text-base"
             >
               {loading ? (

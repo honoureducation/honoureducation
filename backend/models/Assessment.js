@@ -151,8 +151,7 @@ const assessmentSchema = new mongoose.Schema({
   ],
   // Reading Assessment specific field
   readingScore: {
-    type: String,
-    enum: ['A', 'B', 'C', 'D', 'E']
+    type: String
   },
   readingNotes: {
     type: String,
@@ -160,8 +159,7 @@ const assessmentSchema = new mongoose.Schema({
   },
   // Writing Assessment specific field
   writingScore: {
-    type: String,
-    enum: ['A', 'B', 'C', 'D', 'E']
+    type: String
   },
   writingNotes: {
     type: String,
@@ -181,7 +179,6 @@ const assessmentSchema = new mongoose.Schema({
   },
   level: {
     type: String,
-    enum: ['Beginner', 'Developing', 'Competent', 'Advanced', 'A', 'B', 'C', 'D', 'E', 'A1', 'A2', 'B1', 'B2', 'C1', 'C2'],
     default: 'Developing'
   },
   createdAt: {

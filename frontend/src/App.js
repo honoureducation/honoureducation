@@ -30,6 +30,8 @@ import WritingAssessmentForm from './pages/WritingAssessmentForm';
 import WritingAssessmentJuniorStudentSheet from './pages/WritingAssessmentJuniorStudentSheet';
 import WritingAssessmentSeniorForm from './pages/WritingAssessmentSeniorForm';
 import WritingAssessmentSeniorStudentSheet from './pages/WritingAssessmentSeniorStudentSheet';
+import WritingAssessmentLandmarkForm from './pages/WritingAssessmentLandmarkForm';
+import WritingAssessmentLandmarkStudentSheet from './pages/WritingAssessmentLandmarkStudentSheet';
 import AssessmentList from './pages/AssessmentList';
 import Profile from './pages/Profile';
 import SetPassword from './pages/SetPassword';
@@ -213,6 +215,16 @@ function App() {
             <Route path="/assessment/writing/senior-student" element={
               <ProtectedRoute requireApprovedTeacher={true}>
                 <WritingAssessmentSeniorStudentSheet />
+              </ProtectedRoute>
+            } />
+            <Route path="/assessment/writing/senior-landmark" element={
+              <ProtectedRoute requireApprovedTeacher={true}>
+                <WritingAssessmentLandmarkForm />
+              </ProtectedRoute>
+            } />
+            <Route path="/assessment/writing/senior-landmark-student" element={
+              <ProtectedRoute requireApprovedTeacher={true}>
+                <WritingAssessmentLandmarkStudentSheet />
               </ProtectedRoute>
             } />
 

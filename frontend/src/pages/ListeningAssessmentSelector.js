@@ -5,7 +5,7 @@ const OPTIONS = [
   {
     id: 'part1',
     subtitle: 'Part 1',
-    title: 'Listening Assessment',
+    title: 'Listening Comprehension',
     tag: 'Year 7–13 · Grade 6–12',
     desc: '13 personal questions with CEFR level scoring (A1–C2). Max score: 26.',
     color: 'bg-blue-600',

@@ -2,35 +2,31 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { assessmentAPI } from '../services/api';
-import readin2nd1 from '../assets/readin2nd1.jpg.jpeg';
-import readin2nd2 from '../assets/readin2nd2.jpg.jpeg';
-import reading2nd3 from '../assets/reading2nd3.jpg.jpeg';
+import landmarkImg1 from '../assets/landmark_wall.png';
+import landmarkImg2 from '../assets/landmark_colosseum.png';
+import landmarkImg3 from '../assets/landmark_taj.png';
 
-const READING_STORY_SENIOR = `A World Between Worlds
-
-In a small international school nestled in the heart of Tokyo, a group of 17-year-old students gathered in the bustling cafeteria, their laughter and chatter a blend of various accents and languages. These students had grown up in a unique environment, navigating the complexities of living in a culture different from their parents' and the one they were born into.
-
-Ava, originally from Brazil, moved to Japan with her family when she was just eight. As she shared stories of her recent trip back to São Paulo, her classmates listened intently, fascinated by her tales of vibrant street festivals and tropical beaches. Meanwhile, Amir, whose parents came from Egypt but who spent his early years in London, nodded along, relating Ava's experiences to his own summer visits to Cairo, filled with bustling bazaars and aromatic spices. Despite their diverse backgrounds, the common thread of living in Japan tied them together.
-
-Their lives were a tapestry of cultural experiences, from celebrating Japanese festivals to observing Ramadan with their families. This multicultural environment had its challenges, too. Sometimes, Ava felt like she was living in a state of in-betweenness, not entirely fitting in with her Brazilian roots nor fully embracing Japanese customs. However, with each other's support, they found solace in their shared experiences, carving out a unique identity that was neither here nor there but entirely their own.
-
-These third culture students, had developed a profound understanding of the value of diversity. They learned to appreciate different perspectives and adapt to ever-changing environments, skills they knew would serve them well in life. As they prepared for university applications and life beyond their school, they carried with them not just academic knowledge but also a deeper wisdom that came from growing up between worlds.`;
-
-const READING_SCORING = [
-  { level: 'A1 - Emerging', scoreRange: '1–4', descriptor: 'Very limited comprehension', capabilities: 'Recognises isolated words; cannot follow narrative; relies entirely on teacher scaffolds; cannot interpret cultural references.', errorFreq: '25+ errors' },
-  { level: 'A2 - Developing', scoreRange: '5–8', descriptor: 'Basic comprehension of simple details', capabilities: 'Understands simple facts (characters, setting); struggles with abstract ideas; cannot explain identity themes; answers literal WH-questions only.', errorFreq: '15–20 errors' },
-  { level: 'B1 - Secure', scoreRange: '9–12', descriptor: 'Understands main ideas and simple inferences', capabilities: 'Explains basic motivations (e.g., why Ava feels “in-between”); identifies multicultural themes; makes simple inferences with partial evidence.', errorFreq: '15 errors' },
-  { level: 'B2 - Proficient', scoreRange: '13–15', descriptor: 'Analyses deeper meaning and implied ideas', capabilities: 'Interprets cultural identity conflict; explains “third culture” experiences; analyses relationships; identifies themes with textual evidence; summarises accurately.', errorFreq: '10–15 errors' },
-  { level: 'C1 - Advanced', scoreRange: '16–17', descriptor: 'Critical, analytical reading', capabilities: 'Evaluates author intention; analyses tone, perspective, and cultural nuance; synthesises ideas across paragraphs; critiques representation of identity.', errorFreq: '10 errors' },
-  { level: 'C2 - Mastery', scoreRange: '18–20', descriptor: 'Near-native academic reading', capabilities: 'Interprets subtle nuance, symbolism, and implied meaning; critiques cultural framing; evaluates bias; produces sophisticated, evidence-rich analysis.', errorFreq: '0–5 errors' }
+const WRITING_QUESTIONS = [
+  '1. Who can you see?',
+  '2. What are they doing?',
+  '3. Can you write a story for these pictures?'
 ];
 
-function getPictureUrlSenior(picNum) {
-  const pictures = [readin2nd1, readin2nd2, reading2nd3];
+const WRITING_SCORING = [
+  { level: 'A1 - Emerging Writer', scoreRange: '1–4', descriptor: 'A: Labels or single words only; no sentences; meaning unclear.', capabilities: 'Writes isolated words (e.g., “wall,” “building,” “India”). No sentence control. No link between ideas. Cannot describe or narrate.', errorFreq: '70–80% errors' },
+  { level: 'A2 - Developing Writer', scoreRange: '5–8', descriptor: 'B: Fragmented or very short sentences; many errors; little sequence or link to pictures.', capabilities: 'Writes broken sentences (“The wall big. People walk.”). Minimal detail. No cohesion. Very limited vocabulary.', errorFreq: '60–70% errors' },
+  { level: 'B1 - Competent Writer', scoreRange: '9–12', descriptor: 'C: Simple sentences with some sequence; basic vocabulary; capitals and full stops mostly correct.', capabilities: 'Writes a basic paragraph (4–6 sentences). Describes what they see. Attempts sequence (“First… then…”). Limited but clear meaning.', errorFreq: '60% errors' },
+  { level: 'B2 - Proficient Writer', scoreRange: '13–15', descriptor: 'D: Organised into short paragraphs; clear sequence; developing vocabulary; mostly correct tense and punctuation.', capabilities: 'Writes a structured paragraph (6–10 sentences). Describes setting, atmosphere, and cultural significance. Uses some descriptive vocabulary and cohesive devices.', errorFreq: '40–50% errors' },
+  { level: 'C1 - Advanced Writer', scoreRange: '16–17', descriptor: 'E: Fluent, cohesive narrative; varied sentences and precise vocabulary; accurate punctuation; minimal errors.', capabilities: 'Produces a well-developed descriptive or narrative piece. Uses imagery, tone, and advanced vocabulary. Shows cultural insight and perspective.', errorFreq: '30% errors' },
+  { level: 'C2 - Mastery Writer', scoreRange: '18–20', descriptor: 'E (Extended Mastery): Fluent, cohesive narrative; precise vocabulary; minimal errors; stylistic control.', capabilities: 'Writes a sophisticated, vivid, near-academic description or narrative. Demonstrates nuance, symbolism, and cultural interpretation. Excellent cohesion and style.', errorFreq: '10–20% errors' }
+];
+
+function getPictureUrl(picNum) {
+  const pictures = [landmarkImg1, landmarkImg2, landmarkImg3];
   return pictures[picNum % pictures.length];
 }
 
-export default function ReadingAssessmentSeniorForm() {
+export default function WritingAssessmentLandmarkForm() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const preSelectedTerm = searchParams.get('term') || 'T1';
@@ -44,8 +40,9 @@ export default function ReadingAssessmentSeniorForm() {
   });
 
   const [score, setScore] = useState(null);
-  const [teacherNotes, setTeacherNotes] = useState('');
+  const [notes, setNotes] = useState('');
   const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState({});
 
   useEffect(() => {
     if (preSelectedTerm) {
@@ -59,6 +56,7 @@ export default function ReadingAssessmentSeniorForm() {
       ...prev,
       [name]: value
     }));
+    if (errors[name]) setErrors(prev => ({ ...prev, [name]: '' }));
   };
 
   const handleSubmit = async (e) => {
@@ -74,28 +72,29 @@ export default function ReadingAssessmentSeniorForm() {
       return;
     }
 
-    if (score === null) {
-      toast.error('❌ Please select a reading assessment score', {
+    if (!score) {
+      toast.error('❌ Please select a writing assessment score', {
         position: 'top-right',
         autoClose: 4000,
       });
+      setErrors(p => ({ ...p, score: 'Score is required' }));
       setLoading(false);
       return;
     }
 
     try {
       const assessmentData = {
-        assessmentType: 'Reading Assessment',
+        assessmentType: 'Writing Assessment',
         yearGroupType: 'senior',
         email: formData.email,
         studentName: formData.studentName,
         yearGroupAndClass: formData.yearGroupAndClass,
         teacherName: formData.teacherName,
         term: formData.term,
-        readingScore: score,
+        writingScore: score,
         level: score,
-        totalScore: READING_SCORING.findIndex(s => s.level === score),
-        readingNotes: teacherNotes
+        totalScore: WRITING_SCORING.findIndex(s => s.level === score),
+        writingNotes: notes
       };
 
       await assessmentAPI.createAssessment(assessmentData);
@@ -112,7 +111,7 @@ export default function ReadingAssessmentSeniorForm() {
         term: preSelectedTerm
       });
       setScore(null);
-      setTeacherNotes('');
+      setNotes('');
     } catch (err) {
       toast.error(`❌ Error: ${err.message || 'Failed to submit assessment'}`, {
         position: 'top-right',
@@ -136,54 +135,55 @@ export default function ReadingAssessmentSeniorForm() {
           </button>
           <span className="text-slate-300">/</span>
           <button 
-            onClick={() => navigate('/assessment/reading')}
+            onClick={() => navigate('/assessment/writing')}
             className="hover:text-blue-600 transition-colors"
           >
-            Reading
+            Writing
           </button>
           <span className="text-slate-300">/</span>
-          <span className="text-slate-900">Senior</span>
+          <span className="text-slate-900">Senior (Landmarks)</span>
         </nav>
 
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">Reading Assessment</h1>
+          <h1 className="text-4xl font-bold text-gray-900 mb-2">Writing Assessment Score</h1>
           <p className="text-gray-600 mb-4 font-medium uppercase tracking-wider text-xs">Year 10-13 / Grade 9-12</p>
           <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded space-y-2">
             <p className="text-sm text-gray-700"><strong>Instructions for assessor:</strong></p>
             <ul className="text-sm text-gray-700 space-y-1 ml-4">
-              <li>• Present the story and ask the pupil to read aloud.</li>
-              <li>• Allow 10-15 seconds per line.</li>
-              <li>• Use the Teacher Notes box to mark accuracy, fluency, and comments.</li>
+              <li>• Sit with the pupil in a calm, distraction-free space.</li>
+              <li>• Ask the pupil to write paragraphs / sentences for this picture.</li>
+              <li>• Use the questions to prompt.</li>
             </ul>
           </div>
         </div>
 
-        {/* Story Section */}
-        <div className="bg-gray-100 rounded-lg p-8 mb-8">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">The Story</h2>
-          <div className="bg-white p-6 rounded-lg mb-6 text-gray-800 leading-relaxed border-l-4 border-teal-500">
-            {READING_STORY_SENIOR.split('\n\n').map((paragraph, idx) => (
-              <p key={idx} className="mb-4">{paragraph}</p>
+        {/* Pictures and Questions */}
+        <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+          <h2 className="text-lg font-bold text-gray-900 mb-4">Questions</h2>
+          <ol className="list-inside space-y-2 text-gray-700 mb-6">
+            {WRITING_QUESTIONS.map((q, idx) => (
+              <li key={idx} className="font-medium text-lg">{q}</li>
             ))}
-          </div>
+          </ol>
 
-          {/* Supporting Pictures */}
-          <div className="grid grid-cols-3 gap-4">
+          {/* Pictures */}
+          <div className="grid grid-cols-3 gap-4 mb-6">
             {[0, 1, 2].map((i) => (
               <div key={i} className="relative bg-gray-100 rounded-lg overflow-hidden">
                 <img
-                  src={getPictureUrlSenior(i)}
-                  alt={`Story scene ${i + 1}`}
-                  className="w-full h-48 object-cover rounded-lg shadow-md border-2 border-teal-300"
+                  src={getPictureUrl(i)}
+                  alt={`Writing prompt scene ${i + 1}`}
+                  className="w-full h-48 object-cover rounded-lg shadow-md border-4 border-purple-300"
                   onError={(e) => {
-                    e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="300"%3E%3Crect fill="%23e5e7eb" width="400" height="300"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="Arial" font-size="16" fill="%236b7280"%3EImage ' + (i + 1) + '%3C/text%3E%3C/svg%3E';
+                    e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="300"%3E%3Crect fill="%23e5e7eb" width="400" height="300"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="Arial" font-size="16" fill="%236b7280"%3EImage %23' + (i + 1) + '%3C/text%3E%3C/svg%3E';
                   }}
                 />
               </div>
             ))}
           </div>
         </div>
+
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-8">
@@ -251,32 +251,32 @@ export default function ReadingAssessmentSeniorForm() {
             </div>
           </div>
 
-          {/* Reading Assessment Score */}
+          {/* Writing Assessment Score */}
           <div className="mt-8">
             <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
               <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" />
               </svg>
-              Reading Assessment Score
+              Writing Assessment Score
             </h3>
             
-            <div className="space-y-3 md:space-y-0 md:bg-white md:border md:border-purple-500 md:rounded-xl md:overflow-hidden">
+            <div className="space-y-3 md:space-y-0 md:bg-white md:border md:border-purple-500 md:rounded-xl md:overflow-hidden mb-6">
               {/* Desktop Header */}
               <div className="hidden md:grid md:grid-cols-12 gap-4 p-5 border-b border-purple-500 font-bold text-slate-900 text-[13px] bg-white items-end">
                 <div className="col-span-2">CEFR Level</div>
                 <div className="col-span-2">Score Range<br />(20 pts)</div>
-                <div className="col-span-3">Descriptor<br />(Upper Secondary)</div>
-                <div className="col-span-3">What the Student Can Do<br />(Reading)</div>
-                <div className="col-span-2">Error Frequency<br />(per 100 words)</div>
+                <div className="col-span-3">Writing Descriptor<br />(Aligned to A–E)</div>
+                <div className="col-span-3">What the Student Can Do<br />(Upper-Secondary Writing)</div>
+                <div className="col-span-2">% Error Frequency</div>
               </div>
 
               {/* Rows */}
               <div className="flex flex-col gap-3 md:gap-0">
-                {READING_SCORING.map(({ level, scoreRange, descriptor, capabilities, errorFreq }, idx) => (
+                {WRITING_SCORING.map(({ level, scoreRange, descriptor, capabilities, errorFreq }, idx) => (
                   <label
                     key={level}
                     className={`block md:grid md:grid-cols-12 gap-4 p-5 border md:border-t-0 md:border-x-0 cursor-pointer transition-colors duration-150 items-center rounded-xl md:rounded-none ${
-                      idx === READING_SCORING.length - 1 ? 'md:border-b-0' : 'md:border-b md:border-purple-300'
+                      idx === WRITING_SCORING.length - 1 ? 'md:border-b-0' : 'md:border-b md:border-purple-300'
                     } ${
                       score === level
                         ? 'bg-purple-50/50 shadow-sm md:shadow-none border-purple-500 md:border-purple-300'
@@ -287,7 +287,7 @@ export default function ReadingAssessmentSeniorForm() {
                     <div className="col-span-2 flex items-center gap-3 font-bold text-slate-900 mb-3 md:mb-0">
                       <input
                         type="radio"
-                        name="readingScore"
+                        name="writingScore"
                         value={level}
                         checked={score === level}
                         onChange={() => setScore(level)}
@@ -323,15 +323,16 @@ export default function ReadingAssessmentSeniorForm() {
                 ))}
               </div>
             </div>
+            {errors.score && <p className="form-error mt-2 text-red-500">{errors.score}</p>}
           </div>
 
-          {/* Teacher Notes */}
+          {/* Teacher Observations */}
           <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-yellow-500">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">Teacher Notes</h3>
+            <h3 className="text-lg font-bold text-gray-900 mb-4">Teacher Observations</h3>
             <textarea
-              value={teacherNotes}
-              onChange={(e) => setTeacherNotes(e.target.value)}
-              placeholder="Mark accuracy, fluency errors, and additional comments..."
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="Record observations about sentence construction, vocabulary use, spelling, punctuation, and engagement..."
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 h-24 resize-none"
             />
           </div>
