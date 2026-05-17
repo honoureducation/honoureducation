@@ -9,7 +9,7 @@ const app = express();
 // Middleware
 app.use(cors({
   origin: process.env.NODE_ENV === 'production' 
-    ? ['https://academic-excellence-frontend.onrender.com', 'https://academic-excellence.onrender.com']
+    ? ['https://academic-excellence-frontend.onrender.com', 'https://academic-excellence.onrender.com', 'https://studentassessment-m8vs.onrender.com', process.env.FRONTEND_URL]
     : true, // Allow all origins in development
   credentials: true
 }));
