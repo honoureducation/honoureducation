@@ -181,10 +181,20 @@ const assessmentSchema = new mongoose.Schema({
     type: String,
     default: 'Developing'
   },
+  createdBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: false
+  },
   createdAt: {
     type: Date,
     default: Date.now
   }
 });
+
+// Index for efficient teacher-scoped queries
+assessmentSchema.index({ createdBy: 1, createdAt: -1 });
+assessmentSchema.index({ createdBy: 1, assessmentType: 1 });
+assessmentSchema.index({ email: 1, createdAt: -1 });
 
 module.exports = mongoose.model('Assessment', assessmentSchema);

@@ -25,8 +25,12 @@ const authenticateToken = async (req, res, next) => {
     }
 
     // Check if school is active (for non-platform admins)
-    if (user.role !== 'platform_admin' && user.school && user.school.status !== 'active') {
-      return res.status(403).json({ message: 'School account is inactive' });
+    // We must ensure user.school is an object with a status field before checking, 
+    // because legacy users might have a plain string as their school field.
+    if (user.role !== 'platform_admin' && user.school && typeof user.school === 'object' && user.school.status) {
+      if (user.school.status !== 'active') {
+        return res.status(403).json({ message: 'School account is inactive' });
+      }
     }
 
     req.userId = user._id;

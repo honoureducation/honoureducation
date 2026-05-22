@@ -283,10 +283,20 @@ const getDashboardStats = async (req, res) => {
   try {
     const user = await User.findById(req.userId);
     let schoolFilter = {};
+    let assessmentFilter = {};
     
     // School admins only see their school's data
     if (user.role === 'school_admin') {
       schoolFilter = { school: user.school };
+      
+      const schoolTeachers = await User.find({ 
+        school: user.school, 
+        role: 'teacher' 
+      }).select('_id');
+      const teacherIds = schoolTeachers.map(t => t._id);
+      teacherIds.push(req.userId);
+      
+      assessmentFilter = { createdBy: { $in: teacherIds } };
     }
 
     // Teacher statistics
@@ -303,8 +313,16 @@ const getDashboardStats = async (req, res) => {
 
     // Assessment statistics
     const assessmentStats = await Assessment.aggregate([
-      { $match: schoolFilter },
+      { $match: assessmentFilter },
       { $group: { _id: '$assessmentType', count: { $sum: 1 } } }
+    ]);
+
+    // Teacher Assessment Count Statistics (for Pie Chart)
+    const teacherPerformanceStats = await Assessment.aggregate([
+      { $match: assessmentFilter },
+      { $group: { _id: '$teacherName', count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+      { $limit: 10 }
     ]);
 
     // School statistics (Platform admin only)
@@ -317,7 +335,7 @@ const getDashboardStats = async (req, res) => {
 
     // Term-based progress statistics (for grouped bar charts)
     const progressStats = await Assessment.aggregate([
-      { $match: schoolFilter },
+      { $match: assessmentFilter },
       { 
         $group: { 
           _id: { type: '$assessmentType', term: '$term' }, 
@@ -344,7 +362,7 @@ const getDashboardStats = async (req, res) => {
       .sort({ createdAt: -1 })
       .limit(5);
 
-    const recentAssessments = await Assessment.find(schoolFilter)
+    const recentAssessments = await Assessment.find(assessmentFilter)
       .select('studentName assessmentType level createdAt')
       .sort({ createdAt: -1 })
       .limit(5);
@@ -383,6 +401,11 @@ const getDashboardStats = async (req, res) => {
       formattedAssessmentStats[stat._id] = stat.count;
     });
 
+    const formattedTeacherPerformance = teacherPerformanceStats.map(stat => ({
+      name: stat._id || 'Unknown Teacher',
+      value: stat.count
+    }));
+
     // Format school stats (Platform admin only)
     const formattedSchoolStats = schoolStats ? {
       active: 0,
@@ -402,6 +425,7 @@ const getDashboardStats = async (req, res) => {
       teachers: formattedTeacherStats,
       students: formattedStudentStats,
       assessments: formattedAssessmentStats,
+      teacherPerformance: formattedTeacherPerformance,
       recentActivity: {
         teachers: recentTeachers,
         assessments: recentAssessments
@@ -452,11 +476,10 @@ const getTeacherDetails = async (req, res) => {
       return res.status(403).json({ message: 'Cannot view teacher from different school' });
     }
 
-    // Get teacher's assessments
-    const assessments = await Assessment.find({ email: teacher.email })
+    // Get teacher's assessments (using createdBy for accurate ownership)
+    const assessments = await Assessment.find({ createdBy: teacher._id })
       .select('studentName assessmentType level totalScore createdAt')
-      .sort({ createdAt: -1 })
-      .limit(10);
+      .sort({ createdAt: -1 });
 
     res.json({
       teacher: {
@@ -560,7 +583,7 @@ const deleteTeacher = async (req, res) => {
     }
 
     // Check if teacher has assessments
-    const assessmentCount = await Assessment.countDocuments({ email: teacher.email });
+    const assessmentCount = await Assessment.countDocuments({ createdBy: teacher._id });
     if (assessmentCount > 0) {
       return res.status(400).json({ 
         message: 'Cannot delete teacher with existing assessments. Suspend them instead.',

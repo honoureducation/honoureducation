@@ -1,4 +1,5 @@
 const Assessment = require('../models/Assessment');
+const User = require('../models/User');
 
 // Function to calculate level based on overall skills
 const calculateLevel = (skillsData) => {
@@ -17,6 +18,11 @@ const calculateLevel = (skillsData) => {
   if (average <= 3.5) return 'Developing';
   if (average <= 4) return 'Competent';
   return 'Advanced';
+};
+
+// Helper: Check if the current user is an admin
+const isAdmin = (user) => {
+  return user && (user.role === 'platform_admin' || user.role === 'school_admin');
 };
 
 // Create new assessment
@@ -67,6 +73,9 @@ exports.createAssessment = async (req, res) => {
       return res.status(400).json({ error: 'Missing required fields: email, studentName, yearGroupAndClass' });
     }
 
+    // Get the authenticated teacher's ID for ownership tracking
+    const createdBy = req.userId || null;
+
     // Handle Speaking Assessment
     if (assessmentType === 'Speaking Assessment') {
       if (!speakingAssessmentAnswers || !cefrLevel) {
@@ -83,7 +92,8 @@ exports.createAssessment = async (req, res) => {
         cefrLevel,
         level: cefrLevel,
         totalScore: totalScore || 0,
-        term: term || 'T1'
+        term: term || 'T1',
+        createdBy
       });
 
       await assessment.save();
@@ -108,7 +118,8 @@ exports.createAssessment = async (req, res) => {
         readingScore,
         level: readingScore,
         totalScore: ['A', 'B', 'C', 'D', 'E'].indexOf(readingScore),
-        term: term || 'T1'
+        term: term || 'T1',
+        createdBy
       });
 
       await assessment.save();
@@ -134,7 +145,8 @@ exports.createAssessment = async (req, res) => {
         teacherName,
         level: writingScore || 'Developing',
         totalScore: writingScore ? ['A', 'B', 'C', 'D', 'E'].indexOf(writingScore) : 0,
-        term: term || 'T1'
+        term: term || 'T1',
+        createdBy
       };
 
       // Only add writingScore if it exists
@@ -177,7 +189,8 @@ exports.createAssessment = async (req, res) => {
         cefrLevel,
         level: cefrLevel,
         totalScore: totalScore || 0,
-        term: term || 'T1'
+        term: term || 'T1',
+        createdBy
       });
 
       await assessment.save();
@@ -227,7 +240,8 @@ exports.createAssessment = async (req, res) => {
       classroomSupportIdeas,
       totalScore: ealTotalScore,
       level: ealLevel,
-      term: term || 'T1'
+      term: term || 'T1',
+      createdBy
     });
 
     await assessment.save();
@@ -241,23 +255,62 @@ exports.createAssessment = async (req, res) => {
   }
 };
 
-// Get all assessments
+// Get all assessments — TEACHERS only see their own, ADMINS see all
 exports.getAllAssessments = async (req, res) => {
   try {
-    const assessments = await Assessment.find().sort({ createdAt: -1 });
+    const user = req.user;
+    let query = {};
+    // Teachers can ONLY see assessments they created
+    if (user.role === 'teacher') {
+      query.createdBy = req.userId;
+    }
+    // School admins see all assessments from teachers in their school
+    else if (user.role === 'school_admin') {
+      const schoolTeachers = await User.find({ 
+        school: user.school._id || user.school, 
+        role: 'teacher' 
+      }).select('_id');
+      const teacherIds = schoolTeachers.map(t => t._id);
+      teacherIds.push(req.userId); // Include admin's own assessments
+      query.createdBy = { $in: teacherIds };
+    }
+    // Platform admins see everything (no filter)
+
+    const assessments = await Assessment.find(query)
+      .populate('createdBy', 'firstName lastName email')
+      .sort({ createdAt: -1 });
     res.status(200).json(assessments);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
 
-// Get single assessment by ID
+// Get single assessment by ID — with ownership verification
 exports.getAssessmentById = async (req, res) => {
   try {
-    const assessment = await Assessment.findById(req.params.id);
+    const assessment = await Assessment.findById(req.params.id)
+      .populate('createdBy', 'firstName lastName email');
     
     if (!assessment) {
       return res.status(404).json({ error: 'Assessment not found' });
+    }
+
+    const user = req.user;
+
+    // Teachers can only view their own assessments
+    if (user.role === 'teacher') {
+      if (!assessment.createdBy || assessment.createdBy._id.toString() !== req.userId.toString()) {
+        return res.status(403).json({ error: 'Access denied. You can only view your own assessments.' });
+      }
+    }
+
+    // School admins can view assessments from their school's teachers
+    if (user.role === 'school_admin' && assessment.createdBy) {
+      const assessmentCreator = await User.findById(assessment.createdBy._id || assessment.createdBy);
+      if (assessmentCreator && assessmentCreator.school && 
+          assessmentCreator.school.toString() !== (user.school._id || user.school).toString()) {
+        return res.status(403).json({ error: 'Access denied. Assessment belongs to a different school.' });
+      }
     }
 
     res.status(200).json(assessment);
@@ -266,15 +319,34 @@ exports.getAssessmentById = async (req, res) => {
   }
 };
 
-// Delete assessment
+// Delete assessment — with ownership verification
 exports.deleteAssessment = async (req, res) => {
   try {
-    const assessment = await Assessment.findByIdAndDelete(req.params.id);
+    const assessment = await Assessment.findById(req.params.id);
     
     if (!assessment) {
       return res.status(404).json({ error: 'Assessment not found' });
     }
 
+    const user = req.user;
+
+    // Teachers can only delete their own assessments
+    if (user.role === 'teacher') {
+      if (!assessment.createdBy || assessment.createdBy.toString() !== req.userId.toString()) {
+        return res.status(403).json({ error: 'Access denied. You can only delete your own assessments.' });
+      }
+    }
+
+    // School admins can delete assessments from their school's teachers
+    if (user.role === 'school_admin' && assessment.createdBy) {
+      const assessmentCreator = await User.findById(assessment.createdBy);
+      if (assessmentCreator && assessmentCreator.school && 
+          assessmentCreator.school.toString() !== (user.school._id || user.school).toString()) {
+        return res.status(403).json({ error: 'Access denied. Assessment belongs to a different school.' });
+      }
+    }
+
+    await Assessment.findByIdAndDelete(req.params.id);
     res.status(200).json({ message: 'Assessment deleted successfully' });
   } catch (error) {
     res.status(500).json({ error: error.message });

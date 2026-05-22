@@ -26,25 +26,14 @@ export default function TeacherDashboard() {
       const currentUser = authService.getCurrentUser();
       setUser(currentUser);
 
+      // Backend now returns ONLY this teacher's assessments — no client-side filtering needed
       const assessments = await assessmentAPI.getAllAssessments();
-      const teacherAssessments = assessments.filter(assessment => {
-        const tName = (assessment.teacherName || '').toLowerCase();
-        const tEmail = (assessment.email || '').toLowerCase();
-        const curName = (currentUser.fullName || '').toLowerCase();
-        const curFirst = (currentUser.firstName || '').toLowerCase();
-        const curEmail = (currentUser.email || '').toLowerCase();
-
-        return tName === curName || 
-               tName === curFirst ||
-               tEmail === curEmail ||
-               (curFirst === 'demo' && assessments.length > 0);
-      });
       
-      setAllAssessments(teacherAssessments);
-      setRecentAssessments(teacherAssessments.slice(0, 10));
+      setAllAssessments(assessments);
+      setRecentAssessments(assessments.slice(0, 10));
       
       // Select first student by default if available
-      const uniqueStudents = Array.from(new Set(teacherAssessments.map(a => a.studentName))).filter(Boolean);
+      const uniqueStudents = Array.from(new Set(assessments.map(a => a.studentName))).filter(Boolean);
       if (uniqueStudents.length > 0 && !selectedStudent) {
         setSelectedStudent(uniqueStudents[0]);
       }

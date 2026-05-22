@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { adminService, authService } from '../services/authService';
-import StudentDashboard from './StudentDashboard';
+import TeacherAnalytics from './TeacherAnalytics';
+import AssessmentList from './AssessmentList';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend
@@ -230,10 +231,9 @@ export default function AdminDashboard() {
           <nav className="space-y-1">
             {[
               { id: 'overview', label: 'Dashboard', icon: 'M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z' },
-              { id: 'students', label: 'Student View', icon: 'M9 12h6m-6 4h6' },
-              { id: 'teachers', label: 'Manage Teachers', icon: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 01-9-5.497' },
-              { id: 'schools', label: 'Schools & Depts', icon: 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4' },
-              { id: 'settings', label: 'Platform Config', icon: 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37a1.724 1.724 0 002.572-1.065z' },
+              { id: 'assessments', label: 'All Records', icon: 'M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2' },
+              { id: 'students', label: 'Teacher View', icon: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 01-9-5.497' },
+              { id: 'teachers', label: 'Manage Teachers', icon: 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37a1.724 1.724 0 002.572-1.065z' },
             ].map(item => (
               <button
                 key={item.id}
@@ -242,8 +242,8 @@ export default function AdminDashboard() {
                   setIsMobileMenuOpen(false);
                 }}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${activeTab === item.id
-                    ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20'
-                    : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                  ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-800'
                   }`}
               >
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -370,19 +370,19 @@ export default function AdminDashboard() {
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={getAssessmentChartData()}>
                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                        <XAxis 
-                          dataKey="name" 
-                          axisLine={false} 
-                          tickLine={false} 
-                          tick={{ fill: '#64748b', fontSize: 10, fontWeight: 600 }} 
+                        <XAxis
+                          dataKey="name"
+                          axisLine={false}
+                          tickLine={false}
+                          tick={{ fill: '#64748b', fontSize: 10, fontWeight: 600 }}
                           dy={10}
                         />
-                        <YAxis 
-                          axisLine={false} 
-                          tickLine={false} 
-                          tick={{ fill: '#64748b', fontSize: 10, fontWeight: 600 }} 
+                        <YAxis
+                          axisLine={false}
+                          tickLine={false}
+                          tick={{ fill: '#64748b', fontSize: 10, fontWeight: 600 }}
                         />
-                        <Tooltip 
+                        <Tooltip
                           cursor={{ fill: '#f8fafc' }}
                           contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
                         />
@@ -394,27 +394,31 @@ export default function AdminDashboard() {
                   </div>
                 </div>
 
-                {/* Pie Chart: Overall Progress Distribution */}
+                {/* Pie Chart: Overall Teacher Performance */}
                 <div className="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm">
-                  <h3 className="text-lg font-bold text-slate-800 mb-2">Total Student Progress</h3>
-                  <p className="text-xs text-slate-400 mb-8">Reading, Writing, Speaking & Listening</p>
+                  <h3 className="text-lg font-bold text-slate-800 mb-2">Teacher Assessment Contributions</h3>
+                  <p className="text-xs text-slate-400 mb-8">Total assessments submitted per teacher</p>
                   <div className="h-[300px] w-full">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
                         <Pie
-                          data={getCompositionData()}
+                          data={stats?.teacherPerformance?.length > 0 ? stats.teacherPerformance : [{ name: 'No Data', value: 1 }]}
                           innerRadius={60}
                           outerRadius={80}
                           paddingAngle={8}
                           dataKey="value"
+                          nameKey="name"
                         >
-                          <Cell fill="#3b82f6" />
-                          <Cell fill="#ef4444" />
-                          <Cell fill="#f59e0b" />
+                          {
+                            (stats?.teacherPerformance || [1, 2, 3, 4]).map((entry, index) => {
+                              const colors = ['#3b82f6', '#ef4444', '#f59e0b', '#10b981', '#8b5cf6'];
+                              return <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />;
+                            })
+                          }
                         </Pie>
                         <Tooltip />
-                        <Legend 
-                          verticalAlign="bottom" 
+                        <Legend
+                          verticalAlign="bottom"
                           height={36}
                           formatter={(value) => <span className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">{value}</span>}
                         />
@@ -491,8 +495,12 @@ export default function AdminDashboard() {
               </div>
             </>
           )}
+          {activeTab === 'assessments' && (
+            <AssessmentList />
+          )}
+
           {activeTab === 'students' && (
-            <StudentDashboard />
+            <TeacherAnalytics />
           )}
 
           {activeTab === 'teachers' && (
@@ -542,12 +550,11 @@ export default function AdminDashboard() {
                           <p className="text-sm text-slate-700">{teacher.school?.name || teacher.school || 'N/A'}</p>
                         </td>
                         <td className="px-8 py-6 text-center">
-                          <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                            teacher.status === 'approved' ? 'bg-emerald-100 text-emerald-700' :
-                            teacher.status === 'pending' ? 'bg-amber-100 text-amber-700' :
-                            teacher.status === 'suspended' ? 'bg-orange-100 text-orange-700' :
-                            'bg-red-100 text-red-700'
-                          }`}>
+                          <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${teacher.status === 'approved' ? 'bg-emerald-100 text-emerald-700' :
+                              teacher.status === 'pending' ? 'bg-amber-100 text-amber-700' :
+                                teacher.status === 'suspended' ? 'bg-orange-100 text-orange-700' :
+                                  'bg-red-100 text-red-700'
+                            }`}>
                             {teacher.status}
                           </span>
                         </td>
@@ -575,7 +582,7 @@ export default function AdminDashboard() {
                               </>
                             )}
                             {/* View */}
-                            <button 
+                            <button
                               onClick={() => handleViewTeacher(teacher._id)}
                               className="p-2 text-slate-400 hover:text-indigo-600 transition-colors"
                               title="View Profile"
@@ -586,7 +593,7 @@ export default function AdminDashboard() {
                               </svg>
                             </button>
                             {/* Edit */}
-                            <button 
+                            <button
                               onClick={() => handleEditTeacher(teacher)}
                               className="p-2 text-slate-400 hover:text-indigo-600 transition-colors"
                               title="Edit Teacher"
@@ -597,7 +604,7 @@ export default function AdminDashboard() {
                             </button>
                             {/* Suspend / Revoke (temporary) */}
                             {teacher.status === 'approved' && (
-                              <button 
+                              <button
                                 onClick={() => handleSuspendTeacher(teacher._id, true)}
                                 disabled={actionLoading[teacher._id]}
                                 className="p-2 text-slate-400 hover:text-orange-600 transition-colors"
@@ -609,7 +616,7 @@ export default function AdminDashboard() {
                               </button>
                             )}
                             {teacher.status === 'suspended' && (
-                              <button 
+                              <button
                                 onClick={() => handleSuspendTeacher(teacher._id, false)}
                                 disabled={actionLoading[teacher._id]}
                                 className="p-2 text-slate-400 hover:text-emerald-600 transition-colors"
@@ -621,7 +628,7 @@ export default function AdminDashboard() {
                               </button>
                             )}
                             {/* Permanent Delete */}
-                            <button 
+                            <button
                               onClick={() => confirmDeleteTeacher(teacher)}
                               className="p-2 text-slate-400 hover:text-rose-600 transition-colors"
                               title="Permanently Delete (Cannot be undone)"
@@ -680,12 +687,11 @@ export default function AdminDashboard() {
                   </div>
                   <div className="flex gap-4">
                     <span className="px-3 py-1 bg-white/10 rounded-full text-xs font-bold uppercase tracking-widest">{selectedTeacher.role}</span>
-                    <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest ${
-                      selectedTeacher.status === 'approved' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400'
-                    }`}>{selectedTeacher.status}</span>
+                    <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest ${selectedTeacher.status === 'approved' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400'
+                      }`}>{selectedTeacher.status}</span>
                   </div>
                 </div>
-                
+
                 <div className="p-8 space-y-8">
                   <div className="grid grid-cols-2 gap-8">
                     <div>
@@ -714,11 +720,16 @@ export default function AdminDashboard() {
                   )}
 
                   <div>
-                    <h4 className="font-bold text-slate-900 mb-4 flex items-center gap-2">
-                      <svg className="w-5 h-5 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                      </svg>
-                      Recent Assessments
+                    <h4 className="font-bold text-slate-900 mb-4 flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <svg className="w-5 h-5 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        All Filled Assessments
+                      </div>
+                      <span className="text-xs font-bold bg-slate-100 text-slate-500 px-3 py-1 rounded-full border border-slate-200">
+                        {teacherAssessments.length} Records
+                      </span>
                     </h4>
                     <div className="bg-slate-50 rounded-2xl overflow-hidden border border-slate-100">
                       {teacherAssessments.length === 0 ? (
@@ -776,7 +787,7 @@ export default function AdminDashboard() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">First Name</label>
-                  <input 
+                  <input
                     name="firstName"
                     defaultValue={selectedTeacher?.firstName}
                     className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all outline-none"
@@ -785,7 +796,7 @@ export default function AdminDashboard() {
                 </div>
                 <div className="space-y-1">
                   <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Last Name</label>
-                  <input 
+                  <input
                     name="lastName"
                     defaultValue={selectedTeacher?.lastName}
                     className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all outline-none"
@@ -795,7 +806,7 @@ export default function AdminDashboard() {
               </div>
               <div className="space-y-1">
                 <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Department</label>
-                <input 
+                <input
                   name="department"
                   defaultValue={selectedTeacher?.department}
                   className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all outline-none"
@@ -803,7 +814,7 @@ export default function AdminDashboard() {
               </div>
               <div className="space-y-1">
                 <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Status</label>
-                <select 
+                <select
                   name="status"
                   defaultValue={selectedTeacher?.status}
                   className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all outline-none bg-white"
@@ -815,14 +826,14 @@ export default function AdminDashboard() {
                 </select>
               </div>
               <div className="pt-4 flex gap-3">
-                <button 
+                <button
                   type="button"
                   onClick={() => setIsEditModalOpen(false)}
                   className="flex-1 py-3 border border-slate-200 rounded-xl text-slate-600 font-bold hover:bg-slate-50 transition-colors"
                 >
                   Cancel
                 </button>
-                <button 
+                <button
                   type="submit"
                   disabled={actionLoading[selectedTeacher?._id] === 'updating'}
                   className="flex-1 py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-600/20 disabled:opacity-50"
@@ -849,13 +860,13 @@ export default function AdminDashboard() {
             <p className="text-slate-500 text-sm mb-4">Are you sure you want to <strong className="text-rose-600">permanently delete</strong> <strong>{selectedTeacher?.firstName} {selectedTeacher?.lastName}</strong>?</p>
             <p className="text-rose-500 text-xs font-bold mb-6 bg-rose-50 rounded-xl px-4 py-3">⚠️ This will remove ALL data from the database. This action cannot be undone. Use <strong>Suspend</strong> instead to temporarily revoke access.</p>
             <div className="flex gap-3">
-              <button 
+              <button
                 onClick={() => setIsDeleteModalOpen(false)}
                 className="flex-1 py-3 border border-slate-200 rounded-xl text-slate-600 font-bold hover:bg-slate-50 transition-colors"
               >
                 Cancel
               </button>
-              <button 
+              <button
                 onClick={handleDeleteTeacher}
                 disabled={actionLoading[selectedTeacher?._id] === 'deleting'}
                 className="flex-1 py-3 bg-rose-600 text-white rounded-xl font-bold hover:bg-rose-700 transition-all shadow-lg shadow-rose-600/20 disabled:opacity-50"

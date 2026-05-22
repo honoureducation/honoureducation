@@ -15,7 +15,7 @@ const COLORS = ['#3b82f6', '#ef4444', '#f59e0b', '#10b981', '#6366f1'];
 export default function StudentDashboard() {
   const [assessments, setAssessments] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedStudent, setSelectedStudent] = useState(null);
+  const [selectedTeacher, setSelectedTeacher] = useState(null);
 
   useEffect(() => {
     fetchAssessments();
@@ -33,14 +33,14 @@ export default function StudentDashboard() {
     }
   };
 
-  const studentsMap = assessments.reduce((acc, a) => {
-    const key = a.studentName || 'Unknown';
+  const teachersMap = assessments.reduce((acc, a) => {
+    const key = a.teacherName || 'Unknown Teacher';
     if (!acc[key]) acc[key] = [];
     acc[key].push(a);
     return acc;
   }, {});
 
-  const studentList = Object.entries(studentsMap).map(([name, list]) => ({ 
+  const teacherList = Object.entries(teachersMap).map(([name, list]) => ({ 
     name, 
     assessments: list,
     email: list[0]?.email || 'N/A'
@@ -58,7 +58,7 @@ export default function StudentDashboard() {
     return scores;
   };
 
-  const overallData = studentList.map(s => {
+  const overallData = teacherList.map(s => {
     const ts = termScores(s.assessments);
     return { name: s.name, ...ts };
   });
@@ -69,7 +69,7 @@ export default function StudentDashboard() {
     { name: 'T3 Assessments', value: assessments.filter(a => (a.term || 'T1').toUpperCase() === 'T3').length },
   ].filter(d => d.value > 0);
 
-  const getStudentProgressData = (list) => {
+  const getTeacherProgressData = (list) => {
     const ts = termScores(list);
     return [
       { name: 'T1', score: ts.T1 },
@@ -83,8 +83,8 @@ export default function StudentDashboard() {
       {/* Top Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-slate-800">Student Performance Analytics</h2>
-          <p className="text-slate-500 text-sm">Detailed overview of student assessments across all terms.</p>
+          <h2 className="text-2xl font-bold text-slate-800">Teacher Performance Analytics</h2>
+          <p className="text-slate-500 text-sm">Detailed overview of teacher assessment submissions across all terms.</p>
         </div>
         <button 
           onClick={fetchAssessments}
@@ -100,42 +100,42 @@ export default function StudentDashboard() {
       {loading ? (
         <div className="flex flex-col items-center justify-center py-20 bg-white rounded-3xl border border-slate-100 shadow-sm">
           <div className="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
-          <p className="mt-4 text-slate-500 font-medium">Analyzing student data...</p>
+          <p className="mt-4 text-slate-500 font-medium">Analyzing teacher data...</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           
-          {/* Student List Sidebar */}
+          {/* Teacher List Sidebar */}
           <div className="lg:col-span-4 space-y-4">
             <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden flex flex-col h-[600px]">
               <div className="p-6 border-b border-slate-100 bg-slate-50/50">
-                <h3 className="font-bold text-slate-800">Students</h3>
+                <h3 className="font-bold text-slate-800">Teachers</h3>
                 <p className="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Select to view detailed records</p>
               </div>
               <div className="flex-1 overflow-y-auto p-4 space-y-2">
-                {studentList.length === 0 ? (
-                  <p className="text-center text-slate-400 text-sm py-10 italic">No students found.</p>
-                ) : studentList.map(s => (
+                {teacherList.length === 0 ? (
+                  <p className="text-center text-slate-400 text-sm py-10 italic">No teachers found.</p>
+                ) : teacherList.map(s => (
                   <button 
                     key={s.name} 
-                    onClick={() => setSelectedStudent(s)}
+                    onClick={() => setSelectedTeacher(s)}
                     className={`w-full flex items-center justify-between p-3 rounded-2xl transition-all group ${
-                      selectedStudent?.name === s.name ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200' : 'hover:bg-slate-50 text-slate-600'
+                      selectedTeacher?.name === s.name ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200' : 'hover:bg-slate-50 text-slate-600'
                     }`}
                   >
                     <div className="flex items-center gap-3 text-left">
                       <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm ${
-                        selectedStudent?.name === s.name ? 'bg-white/20' : 'bg-indigo-50 text-indigo-600'
+                        selectedTeacher?.name === s.name ? 'bg-white/20' : 'bg-indigo-50 text-indigo-600'
                       }`}>
                         {getInitials(s.name)}
                       </div>
                       <div>
                         <p className="text-sm font-bold truncate max-w-[120px]">{s.name}</p>
-                        <p className={`text-[10px] ${selectedStudent?.name === s.name ? 'text-indigo-100' : 'text-slate-400'}`}>{s.email}</p>
+                        <p className={`text-[10px] ${selectedTeacher?.name === s.name ? 'text-indigo-100' : 'text-slate-400'}`}>{s.email}</p>
                       </div>
                     </div>
                     <div className={`px-2 py-1 rounded-lg text-[10px] font-bold ${
-                      selectedStudent?.name === s.name ? 'bg-white/20' : 'bg-slate-100 text-slate-500'
+                      selectedTeacher?.name === s.name ? 'bg-white/20' : 'bg-slate-100 text-slate-500'
                     }`}>
                       {s.assessments.length}
                     </div>
@@ -195,21 +195,21 @@ export default function StudentDashboard() {
 
             {/* Individual Selection Detail */}
             <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden min-h-[300px]">
-              {selectedStudent ? (
+              {selectedTeacher ? (
                 <div className="p-8 space-y-8 animate-fade-in">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
                       <div className="w-14 h-14 rounded-2xl bg-indigo-600 text-white flex items-center justify-center text-xl font-bold">
-                        {getInitials(selectedStudent.name)}
+                        {getInitials(selectedTeacher.name)}
                       </div>
                       <div>
-                        <h3 className="text-xl font-bold text-slate-800">{selectedStudent.name}</h3>
-                        <p className="text-sm text-slate-500">{selectedStudent.email}</p>
+                        <h3 className="text-xl font-bold text-slate-800">{selectedTeacher.name}</h3>
+                        <p className="text-sm text-slate-500">{selectedTeacher.email}</p>
                       </div>
                     </div>
                     <div className="text-right">
                       <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total Assessments</p>
-                      <p className="text-2xl font-bold text-indigo-600">{selectedStudent.assessments.length}</p>
+                      <p className="text-2xl font-bold text-indigo-600">{selectedTeacher.assessments.length}</p>
                     </div>
                   </div>
 
@@ -217,7 +217,7 @@ export default function StudentDashboard() {
                     <div>
                       <h4 className="text-sm font-bold text-slate-700 mb-4">Assessment History</h4>
                       <div className="space-y-3">
-                        {selectedStudent.assessments.map((a, i) => (
+                        {selectedTeacher.assessments.map((a, i) => (
                           <div key={i} className="flex items-center justify-between p-3 rounded-2xl bg-slate-50 border border-slate-100 group hover:border-indigo-200 transition-colors">
                             <div>
                               <p className="text-xs font-bold text-slate-800">{a.assessmentType}</p>
@@ -239,7 +239,7 @@ export default function StudentDashboard() {
                       <h4 className="text-sm font-bold text-slate-700 mb-4">Progress Trend</h4>
                       <div className="h-[200px] bg-slate-50 rounded-3xl p-4 border border-slate-100">
                         <ResponsiveContainer width="100%" height="100%">
-                          <AreaChart data={getStudentProgressData(selectedStudent.assessments)}>
+                          <AreaChart data={getTeacherProgressData(selectedTeacher.assessments)}>
                             <defs>
                               <linearGradient id="colorScore" x1="0" y1="0" x2="0" y2="1">
                                 <stop offset="5%" stopColor="#6366f1" stopOpacity={0.1}/>
@@ -264,8 +264,8 @@ export default function StudentDashboard() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                     </svg>
                   </div>
-                  <h3 className="text-slate-800 font-bold">No Student Selected</h3>
-                  <p className="text-slate-500 text-sm max-w-[200px]">Select a student from the list to view their detailed performance analytics.</p>
+                  <h3 className="text-slate-800 font-bold">No Teacher Selected</h3>
+                  <p className="text-slate-500 text-sm max-w-[200px]">Select a teacher from the list to view their detailed performance analytics.</p>
                 </div>
               )}
             </div>
