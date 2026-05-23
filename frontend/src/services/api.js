@@ -76,5 +76,36 @@ export const assessmentAPI = {
   deleteAssessment
 };
 
+export const contactAPI = {
+  submitMessage: async (data) => {
+    try {
+      const response = await axios.post(`${API_BASE_URL}/contact`, data);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error.message;
+    }
+  },
+  getMessages: async () => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/contact`, {
+        headers: getAuthHeaders()
+      });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error.message;
+    }
+  },
+  markAsRead: async (id) => {
+    try {
+      const response = await axios.put(`${API_BASE_URL}/contact/${id}/read`, {}, {
+        headers: getAuthHeaders()
+      });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error.message;
+    }
+  }
+};
+
 // Also export individual functions for backwards compatibility
 export { createAssessment, getAllAssessments, getAssessmentById, deleteAssessment };

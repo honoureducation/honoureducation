@@ -4,24 +4,30 @@ import { authService } from '../services/authService';
 import logo from '../assets/logonew.PNG';
 
 const NAV_LINKS = [
-  { to: '/',           label: 'Home' },
-  { to: '/dashboard',   label: 'Dashboard', requireAuth: true, dynamicRoute: true, icon: (
-    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" />
-    </svg>
-  )},
-  { to: '/assessments', label: 'Assessments', requireAuth: true, requireTeacher: true, icon: (
-    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 0 012 2" />
-    </svg>
-  )},
-  { to: '/records',    label: 'Records', requireAuth: true, requireTeacher: true, icon: (
-    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 0 012 2v14a2 2 0 01-2 2h-2a2 0 01-2-2z" />
-    </svg>
-  )},
-  { to: '/about',      label: 'About' },
-  { to: '/contact',    label: 'Contact' },
+  { to: '/', label: 'Home' },
+  {
+    to: '/dashboard', label: 'Dashboard', requireAuth: true, dynamicRoute: true, icon: (
+      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" />
+      </svg>
+    )
+  },
+  {
+    to: '/assessments', label: 'Assessments', requireAuth: true, requireTeacher: true, icon: (
+      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 0 012 2" />
+      </svg>
+    )
+  },
+  {
+    to: '/records', label: 'Records', requireAuth: true, requireTeacher: true, icon: (
+      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 0 012 2v14a2 2 0 01-2 2h-2a2 0 01-2-2z" />
+      </svg>
+    )
+  },
+  { to: '/about', label: 'About' },
+  { to: '/contact', label: 'Contact' },
 ];
 
 export default function Navbar() {
@@ -73,11 +79,10 @@ export default function Navbar() {
 
   return (
     <nav
-      className={`sticky top-0 z-50 transition-all duration-300 ${
-        scrolled
+      className={`sticky top-0 z-50 transition-all duration-300 ${scrolled
           ? 'bg-slate-900/95 backdrop-blur-md shadow-xl border-b border-white/5'
           : 'bg-slate-900 border-b border-transparent'
-      }`}
+        }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
@@ -99,17 +104,16 @@ export default function Navbar() {
               <Link
                 key={to}
                 to={to}
-                className={`px-4 py-2 rounded-xl text-sm font-bold transition-all duration-200 flex items-center gap-2 group ${
-                  isActive(to)
+                className={`px-4 py-2 rounded-xl text-sm font-bold transition-all duration-200 flex items-center gap-2 group ${isActive(to)
                     ? 'bg-blue-600/10 text-blue-400 border border-blue-500/20'
                     : 'text-slate-400 hover:text-white hover:bg-slate-800'
-                }`}
+                  }`}
               >
                 {icon && <span className={`transition-colors ${isActive(to) ? 'text-blue-400' : 'text-slate-500 group-hover:text-white'}`}>{icon}</span>}
                 {label}
               </Link>
             ))}
-            
+
           </div>
 
           {/* Right actions */}
@@ -125,14 +129,14 @@ export default function Navbar() {
                     <div className="text-left">
                       <p className="text-xs font-bold text-white leading-none">{user.firstName}</p>
                       <p className="text-[10px] text-slate-500 leading-none mt-1 uppercase font-black">
-                        {authService.isAdmin() ? 'Admin' : 'Teacher'}
+                        {['admin', 'platform_admin', 'school_admin'].includes(user?.role) ? 'Admin' : 'Teacher'}
                       </p>
                     </div>
                     <svg className="w-4 h-4 transition-transform group-hover:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
                     </svg>
                   </button>
-                  
+
                   {/* Dropdown Menu */}
                   <div className="absolute right-0 mt-3 w-64 bg-white rounded-2xl shadow-2xl border border-slate-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform translate-y-4 group-hover:translate-y-0 z-50">
                     <div className="py-2">
@@ -140,7 +144,7 @@ export default function Navbar() {
                         <p className="text-sm font-black text-slate-900 truncate">{user.fullName}</p>
                         <p className="text-xs text-slate-500 truncate mt-0.5">{user.email}</p>
                       </div>
-                      
+
                       <div className="p-2">
                         <Link
                           to={getDashboardRoute()}
@@ -226,17 +230,16 @@ export default function Navbar() {
               <Link
                 key={to}
                 to={to}
-                className={`flex items-center gap-3 px-4 py-4 rounded-2xl text-sm font-bold transition-colors ${
-                  isActive(to)
+                className={`flex items-center gap-3 px-4 py-4 rounded-2xl text-sm font-bold transition-colors ${isActive(to)
                     ? 'bg-blue-600/10 text-blue-400 border border-blue-500/20 shadow-lg shadow-blue-900/20'
                     : 'text-slate-300 hover:text-white hover:bg-slate-800'
-                }`}
+                  }`}
               >
                 {icon && <span className={isActive(to) ? 'text-blue-400' : 'text-slate-500'}>{icon}</span>}
                 {label}
               </Link>
             ))}
-            
+
             {user ? (
               <div className="pt-6 border-t border-slate-800 mt-6">
                 <div className="flex items-center gap-4 px-4 py-4 bg-slate-800/50 rounded-2xl mb-6">

@@ -2,11 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { adminService, authService } from '../services/authService';
 import TeacherAnalytics from './TeacherAnalytics';
+import AdminContactMessages from './AdminContactMessages';
 import AssessmentList from './AssessmentList';
+
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  PieChart, Pie, Cell, Legend
 } from 'recharts';
+import Chart from 'react-apexcharts';
+
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState(null);
@@ -162,28 +165,6 @@ export default function AdminDashboard() {
     return realData;
   };
 
-  const getCompositionData = () => {
-    // Total progress scores across terms
-    const t1Total = stats?.termProgress?.reduce((acc, curr) => acc + (curr.T1 || 0), 0) || 0;
-    const t2Total = stats?.termProgress?.reduce((acc, curr) => acc + (curr.T2 || 0), 0) || 0;
-    const t3Total = stats?.termProgress?.reduce((acc, curr) => acc + (curr.T3 || 0), 0) || 0;
-
-    const data = [
-      { name: 'Term 1', value: t1Total },
-      { name: 'Term 2', value: t2Total },
-      { name: 'Term 3', value: t3Total },
-    ];
-
-    // Add static relatable data if all are zero
-    if (data.every(d => d.value === 0)) {
-      return [
-        { name: 'Term 1', value: 28.1 },
-        { name: 'Term 2', value: 33.7 },
-        { name: 'Term 3', value: 38.2 }
-      ];
-    }
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center">
@@ -232,6 +213,7 @@ export default function AdminDashboard() {
             {[
               { id: 'overview', label: 'Dashboard', icon: 'M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z' },
               { id: 'assessments', label: 'All Records', icon: 'M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2' },
+              { id: 'messages', label: 'Messages', icon: 'M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z' },
               { id: 'students', label: 'Teacher View', icon: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 01-9-5.497' },
               { id: 'teachers', label: 'Manage Teachers', icon: 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37a1.724 1.724 0 002.572-1.065z' },
             ].map(item => (
@@ -399,31 +381,21 @@ export default function AdminDashboard() {
                   <h3 className="text-lg font-bold text-slate-800 mb-2">Teacher Assessment Contributions</h3>
                   <p className="text-xs text-slate-400 mb-8">Total assessments submitted per teacher</p>
                   <div className="h-[300px] w-full">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie
-                          data={stats?.teacherPerformance?.length > 0 ? stats.teacherPerformance : [{ name: 'No Data', value: 1 }]}
-                          innerRadius={60}
-                          outerRadius={80}
-                          paddingAngle={8}
-                          dataKey="value"
-                          nameKey="name"
-                        >
-                          {
-                            (stats?.teacherPerformance || [1, 2, 3, 4]).map((entry, index) => {
-                              const colors = ['#3b82f6', '#ef4444', '#f59e0b', '#10b981', '#8b5cf6'];
-                              return <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />;
-                            })
-                          }
-                        </Pie>
-                        <Tooltip />
-                        <Legend
-                          verticalAlign="bottom"
-                          height={36}
-                          formatter={(value) => <span className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">{value}</span>}
-                        />
-                      </PieChart>
-                    </ResponsiveContainer>
+                    <Chart
+                      options={{
+                        chart: { type: 'pie', height: 300 },
+                        labels: (stats?.teacherPerformance?.map(entry => entry.name) || ['No Data']),
+                        legend: { position: 'bottom', fontSize: '11px', formatter: (val, opts) => `${val}: ${opts.w.globals.series[opts.seriesIndex]}` },
+                        tooltip: { enabled: true },
+                        responsive: [{
+                          breakpoint: 480,
+                          options: { chart: { width: '100%' } }
+                        }]
+                      }}
+                      series={stats?.teacherPerformance?.map(entry => entry.value) || [1]}
+                      type="pie"
+                      width="100%"
+                    />
                   </div>
                 </div>
               </div>
@@ -503,6 +475,8 @@ export default function AdminDashboard() {
             <TeacherAnalytics />
           )}
 
+          {activeTab === 'messages' && <AdminContactMessages />}
+
           {activeTab === 'teachers' && (
             <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
               <div className="p-8 border-b border-slate-100 flex items-center justify-between">
@@ -551,9 +525,9 @@ export default function AdminDashboard() {
                         </td>
                         <td className="px-8 py-6 text-center">
                           <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${teacher.status === 'approved' ? 'bg-emerald-100 text-emerald-700' :
-                              teacher.status === 'pending' ? 'bg-amber-100 text-amber-700' :
-                                teacher.status === 'suspended' ? 'bg-orange-100 text-orange-700' :
-                                  'bg-red-100 text-red-700'
+                            teacher.status === 'pending' ? 'bg-amber-100 text-amber-700' :
+                              teacher.status === 'suspended' ? 'bg-orange-100 text-orange-700' :
+                                'bg-red-100 text-red-700'
                             }`}>
                             {teacher.status}
                           </span>

@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { contactAPI } from '../services/api';
+import { toast } from 'react-toastify';
 
 const INFO_CARDS = [
   {
@@ -54,15 +56,20 @@ export default function Contact() {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setTimeout(() => {
+    try {
+      await contactAPI.submitMessage(formData);
       setSubmitted(true);
-      setLoading(false);
       setFormData({ name: '', email: '', subject: '', message: '' });
+      toast.success('Message sent successfully!');
       setTimeout(() => setSubmitted(false), 5000);
-    }, 800);
+    } catch (error) {
+      toast.error('Failed to send message. Please try again later.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

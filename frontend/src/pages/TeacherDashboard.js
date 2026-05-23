@@ -3,10 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { authService } from '../services/authService';
 import { assessmentAPI } from '../services/api';
-import { 
+import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
-  PieChart, Pie, Cell
 } from 'recharts';
+import Chart from 'react-apexcharts';
+
+// ... (rest of the file remains unchanged)
 
 export default function TeacherDashboard() {
   const navigate = useNavigate();
@@ -18,6 +20,7 @@ export default function TeacherDashboard() {
 
   useEffect(() => {
     loadDashboardData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadDashboardData = async () => {
@@ -28,10 +31,10 @@ export default function TeacherDashboard() {
 
       // Backend now returns ONLY this teacher's assessments — no client-side filtering needed
       const assessments = await assessmentAPI.getAllAssessments();
-      
+
       setAllAssessments(assessments);
       setRecentAssessments(assessments.slice(0, 10));
-      
+
       // Select first student by default if available
       const uniqueStudents = Array.from(new Set(assessments.map(a => a.studentName))).filter(Boolean);
       if (uniqueStudents.length > 0 && !selectedStudent) {
@@ -124,9 +127,9 @@ export default function TeacherDashboard() {
     dataToProcess.forEach(a => {
       const term = (a.term || 'T1').toUpperCase();
       const type = a.assessmentType.toLowerCase();
-      
-      const score = a.totalScore || (a.cefrLevel ? (['A1','A2','B1','B2','C1','C2'].indexOf(a.cefrLevel) + 1) * 4 : 5);
-      
+
+      const score = a.totalScore || (a.cefrLevel ? (['A1', 'A2', 'B1', 'B2', 'C1', 'C2'].indexOf(a.cefrLevel) + 1) * 4 : 5);
+
       if (termScores[term] !== undefined) termScores[term] += score;
 
       let index = -1;
@@ -161,14 +164,24 @@ export default function TeacherDashboard() {
       count: levelCounts[level]
     }));
 
-    // Term Pie Data (Based on Scores)
-    const termPieData = [
-      { name: 'Progress Score T1', value: termScores.T1 },
-      { name: 'Progress Score T2', value: termScores.T2 },
-      { name: 'Progress Score T3', value: termScores.T3 },
-    ].filter(d => d.value > 0);
+    // FIXED: Overall Assessment Distribution by Student Name (Pie Chart Data)
+    // Count total assessments per student to show overall progress
+    const studentCounts = {};
+    dataToProcess.forEach(a => {
+      const studentName = a.studentName || 'Unknown';
+      studentCounts[studentName] = (studentCounts[studentName] || 0) + 1;
+    });
 
-    return { termlyData: finalTermlyData, distributionData, termPieData };
+    const overallDistributionData = Object.keys(studentCounts).map(student => ({
+      name: student,
+      count: studentCounts[student]
+    }));
+
+    return {
+      termlyData: finalTermlyData,
+      distributionData,
+      overallDistributionData // NEW: Overall assessment count by student
+    };
   };
 
   if (loading) {
@@ -187,6 +200,11 @@ export default function TeacherDashboard() {
   const selectedStudentData = allAssessments.filter(a => a.studentName === selectedStudent);
   const studentChartData = getChartData(selectedStudentData);
   const overallChartData = getChartData(allAssessments);
+  // Data for overall student assessments per type
+  const overallAssessmentsData = assessmentTypes.map(t => ({
+    name: t.title,
+    count: stats.byType[t.title] || 0,
+  }));
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -290,7 +308,7 @@ export default function TeacherDashboard() {
                 <p className="text-slate-500 text-sm">Select a student to view their detailed progress report.</p>
               </div>
               <div className="w-full md:w-72">
-                <select 
+                <select
                   value={selectedStudent}
                   onChange={(e) => setSelectedStudent(e.target.value)}
                   className="w-full px-4 py-3 rounded-2xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50 text-slate-700 font-bold shadow-inner transition-all"
@@ -310,13 +328,13 @@ export default function TeacherDashboard() {
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={studentChartData.termlyData}>
                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                        <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 12, fontWeight: 600}} />
-                        <YAxis axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 12, fontWeight: 600}} />
-                        <Tooltip 
+                        <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12, fontWeight: 600 }} />
+                        <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12, fontWeight: 600 }} />
+                        <Tooltip
                           contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }}
-                          cursor={{fill: '#f1f5f9'}}
+                          cursor={{ fill: '#f1f5f9' }}
                         />
-                        <Legend iconType="circle" wrapperStyle={{paddingTop: '20px'}} />
+                        <Legend iconType="circle" wrapperStyle={{ paddingTop: '20px' }} />
                         <Bar dataKey="T1" name="Term 1" fill="#4f46e5" radius={[6, 6, 0, 0]} barSize={20} />
                         <Bar dataKey="T2" name="Term 2" fill="#ef4444" radius={[6, 6, 0, 0]} barSize={20} />
                         <Bar dataKey="T3" name="Term 3" fill="#f59e0b" radius={[6, 6, 0, 0]} barSize={20} />
@@ -330,7 +348,7 @@ export default function TeacherDashboard() {
                     <div className="space-y-3 max-h-[280px] overflow-y-auto pr-2 custom-scrollbar">
                       {selectedStudentData.length === 0 ? (
                         <p className="text-slate-400 text-sm italic py-10 text-center">No records found.</p>
-                      ) : selectedStudentData.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt)).map((a, i) => (
+                      ) : selectedStudentData.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).map((a, i) => (
                         <div key={i} className="bg-white p-4 rounded-xl border border-indigo-100 flex justify-between items-center shadow-sm hover:border-indigo-300 transition-colors">
                           <div>
                             <p className="text-sm font-bold text-slate-900">{a.assessmentType}</p>
@@ -370,12 +388,12 @@ export default function TeacherDashboard() {
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={overallChartData.termlyData}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 10, fontWeight: 600}} />
-                    <YAxis axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 10, fontWeight: 600}} />
-                    <Tooltip 
+                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 10, fontWeight: 600 }} />
+                    <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 10, fontWeight: 600 }} />
+                    <Tooltip
                       contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }}
                     />
-                    <Legend iconType="circle" wrapperStyle={{fontSize: '10px'}} />
+                    <Legend iconType="circle" wrapperStyle={{ fontSize: '10px' }} />
                     <Bar dataKey="T1" name="T1" fill="#3b82f6" radius={[4, 4, 0, 0]} />
                     <Bar dataKey="T2" name="T2" fill="#ef4444" radius={[4, 4, 0, 0]} />
                     <Bar dataKey="T3" name="T3" fill="#eab308" radius={[4, 4, 0, 0]} />
@@ -386,31 +404,50 @@ export default function TeacherDashboard() {
 
             <div className="card-section bg-white p-8 rounded-3xl border border-slate-100 shadow-sm">
               <h2 className="text-sm font-bold text-slate-400 mb-6 uppercase tracking-widest">
-                Total student progress - Reading, Writing, Speaking & Listening
+                Total Student Progress - All Assessments
               </h2>
               <div className="h-[250px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={overallChartData.termPieData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={0}
-                      outerRadius={80}
-                      paddingAngle={0}
-                      dataKey="value"
-                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(1)}%`}
-                    >
-                      {overallChartData.termPieData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={['#3b82f6', '#ef4444', '#f59e0b'][index % 3]} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
-                </ResponsiveContainer>
+                <Chart
+                  options={{
+                    labels: overallChartData.overallDistributionData.map(d => d.name),
+                    colors: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'],
+                    legend: { position: 'bottom', fontSize: '11px', fontWeight: 'bold' },
+                    dataLabels: {
+                      enabled: true,
+                      formatter: (val) => `${val.toFixed(1)}%`
+                    },
+                    tooltip: {
+                      y: {
+                        formatter: (val) => `${val} assessments`
+                      }
+                    }
+                  }}
+                  series={overallChartData.overallDistributionData.map(d => d.count)}
+                  type="pie"
+                  height={250}
+                />
               </div>
             </div>
 
+            <div className="card-section bg-white p-8 rounded-3xl border border-slate-100 shadow-sm">
+
+              <h2 className="text-sm font-bold text-slate-400 mb-6 uppercase tracking-widest">
+                Overall Student Assessments by Type
+              </h2>
+              <div className="h-[250px]">
+                <Chart
+                  options={{
+                    chart: { type: 'bar', height: 250, toolbar: { show: false } },
+                    xaxis: { categories: overallAssessmentsData.map(d => d.name.replace(' Assessment', '')) },
+                    colors: ['#6b7280'],
+                    plotOptions: { bar: { distributed: true, borderRadius: 4 } },
+                    dataLabels: { enabled: false },
+                    legend: { show: false },
+                  }}
+                  series={[{ name: 'Count', data: overallAssessmentsData.map(d => d.count) }]}
+                />
+              </div>
+            </div>
             <div className="card-section bg-white p-8 rounded-3xl border border-slate-100 shadow-sm">
               <h2 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
                 <svg className="w-6 h-6 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -422,8 +459,8 @@ export default function TeacherDashboard() {
                 <ResponsiveContainer width="100%" height="80%">
                   <BarChart layout="vertical" data={overallChartData.distributionData}>
                     <XAxis type="number" hide />
-                    <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 10, fontWeight: 700}} />
-                    <Tooltip cursor={{fill: 'transparent'}} />
+                    <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 10, fontWeight: 700 }} />
+                    <Tooltip cursor={{ fill: 'transparent' }} />
                     <Bar dataKey="count" fill="#8b5cf6" radius={[0, 6, 6, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
@@ -531,14 +568,13 @@ export default function TeacherDashboard() {
                       </td>
                       <td className="py-4 px-4">
                         <div className="flex items-center gap-2">
-                          <span className={`px-2 py-0.5 rounded-md text-[10px] font-black ${
-                            assessment.level === 'A1' || assessment.level === 'A' ? 'bg-red-50 text-red-600' :
+                          <span className={`px-2 py-0.5 rounded-md text-[10px] font-black ${assessment.level === 'A1' || assessment.level === 'A' ? 'bg-red-50 text-red-600' :
                             assessment.level === 'A2' || assessment.level === 'B' ? 'bg-orange-50 text-orange-600' :
-                            assessment.level === 'B1' || assessment.level === 'C' ? 'bg-amber-50 text-amber-600' :
-                            assessment.level === 'B2' || assessment.level === 'D' ? 'bg-blue-50 text-blue-600' :
-                            assessment.level === 'C1' || assessment.level === 'E' ? 'bg-emerald-50 text-emerald-600' :
-                            assessment.level === 'C2' ? 'bg-purple-50 text-purple-600' : 'bg-slate-50 text-slate-600'
-                          }`}>
+                              assessment.level === 'B1' || assessment.level === 'C' ? 'bg-amber-50 text-amber-600' :
+                                assessment.level === 'B2' || assessment.level === 'D' ? 'bg-blue-50 text-blue-600' :
+                                  assessment.level === 'C1' || assessment.level === 'E' ? 'bg-emerald-50 text-emerald-600' :
+                                    assessment.level === 'C2' ? 'bg-purple-50 text-purple-600' : 'bg-slate-50 text-slate-600'
+                            }`}>
                             {assessment.level}
                           </span>
                         </div>
@@ -564,19 +600,19 @@ export default function TeacherDashboard() {
 
         {/* Support Section */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-12">
-           <div className="bg-gradient-to-br from-indigo-600 to-blue-700 rounded-3xl p-8 text-white shadow-xl shadow-blue-200 overflow-hidden relative group">
-              <div className="relative z-10">
-                <h3 className="text-2xl font-bold mb-2">Need Assistance?</h3>
-                <p className="text-blue-100 mb-6 text-sm">Our support team is here to help you with any questions about the assessment platform.</p>
-                <button onClick={() => navigate('/contact')} className="px-6 py-3 bg-white text-indigo-600 rounded-2xl font-black text-xs uppercase tracking-widest hover:shadow-lg transition-all active:scale-95">Contact Support</button>
-              </div>
-              <div className="absolute -right-8 -bottom-8 w-40 h-40 bg-white/10 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-700"></div>
-           </div>
-           <div className="bg-white rounded-3xl p-8 border border-slate-100 shadow-sm flex flex-col justify-center">
-              <h3 className="text-xl font-bold text-slate-800 mb-2">Documentation</h3>
-              <p className="text-slate-500 mb-6 text-sm">Learn more about how to use the assessment tools and interpret the proficiency levels.</p>
-              <button onClick={() => navigate('/about')} className="text-blue-600 font-black text-xs uppercase tracking-widest flex items-center gap-2 hover:gap-4 transition-all">View Guide <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7-7 7" /></svg></button>
-           </div>
+          <div className="bg-gradient-to-br from-indigo-600 to-blue-700 rounded-3xl p-8 text-white shadow-xl shadow-blue-200 overflow-hidden relative group">
+            <div className="relative z-10">
+              <h3 className="text-2xl font-bold mb-2">Need Assistance?</h3>
+              <p className="text-blue-100 mb-6 text-sm">Our support team is here to help you with any questions about the assessment platform.</p>
+              <button onClick={() => navigate('/contact')} className="px-6 py-3 bg-white text-indigo-600 rounded-2xl font-black text-xs uppercase tracking-widest hover:shadow-lg transition-all active:scale-95">Contact Support</button>
+            </div>
+            <div className="absolute -right-8 -bottom-8 w-40 h-40 bg-white/10 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-700"></div>
+          </div>
+          <div className="bg-white rounded-3xl p-8 border border-slate-100 shadow-sm flex flex-col justify-center">
+            <h3 className="text-xl font-bold text-slate-800 mb-2">Documentation</h3>
+            <p className="text-slate-500 mb-6 text-sm">Learn more about how to use the assessment tools and interpret the proficiency levels.</p>
+            <button onClick={() => navigate('/about')} className="text-blue-600 font-black text-xs uppercase tracking-widest flex items-center gap-2 hover:gap-4 transition-all">View Guide <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7-7 7" /></svg></button>
+          </div>
         </div>
       </div>
     </div>

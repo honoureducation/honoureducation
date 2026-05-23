@@ -170,7 +170,16 @@ export const authService = {
     }
   },
 
-  // Set password (after approval)
+  async forgotPassword(email) {
+    try {
+      const response = await authAPI.post('/auth/forgot-password', { email });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { message: 'Failed to request password reset' };
+    }
+  },
+
+  // Set password (after approval or reset)
   async setPassword(token, password) {
     try {
       const response = await authAPI.post('/auth/set-password', {

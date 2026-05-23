@@ -1,4 +1,6 @@
-const nodemailer = require('nodemailer');
+const fs = require('fs');
+
+const content = `const nodemailer = require('nodemailer');
 
 // Create transporter
 let transporter;
@@ -16,8 +18,8 @@ const createTransporter = () => {
 
 // Base Email Template
 const getEmailTemplate = (title, content) => {
-  const logoUrl = process.env.FRONTEND_URL ? `${process.env.FRONTEND_URL}/favicon.ico` : 'https://academic-excellence-frontend.onrender.com/favicon.ico';
-  return `
+  const logoUrl = process.env.FRONTEND_URL ? \`\${process.env.FRONTEND_URL}/favicon.ico\` : 'https://academic-excellence-frontend.onrender.com/favicon.ico';
+  return \`
     <!DOCTYPE html>
     <html>
     <head>
@@ -40,17 +42,17 @@ const getEmailTemplate = (title, content) => {
           <h1>Honour Education</h1>
         </div>
         <div class="content">
-          <h2>${title}</h2>
-          ${content}
+          <h2>\${title}</h2>
+          \${content}
         </div>
         <div class="footer">
-          <p>© ${new Date().getFullYear()} Honour Education. All rights reserved.</p>
+          <p>© \${new Date().getFullYear()} Honour Education. All rights reserved.</p>
           <p>This is an automated message, please do not reply.</p>
         </div>
       </div>
     </body>
     </html>
-  `;
+  \`;
 };
 
 const sendEmail = async (options) => {
@@ -58,7 +60,7 @@ const sendEmail = async (options) => {
     const t = createTransporter();
     if (!t) return null;
     const mailOptions = {
-      from: `"Honour Education" <${process.env.EMAIL_FROM || process.env.EMAIL_USER}>`,
+      from: \`"Honour Education" <\${process.env.EMAIL_FROM || process.env.EMAIL_USER}>\`,
       to: options.to,
       subject: options.subject,
       html: getEmailTemplate(options.title || options.subject, options.html)
@@ -72,54 +74,56 @@ const sendEmail = async (options) => {
 };
 
 const sendRegistrationEmail = async (user) => {
-  const content = `
-    <p>Dear <strong>${user.firstName} ${user.lastName}</strong>,</p>
+  const content = \`
+    <p>Dear <strong>\${user.firstName} \${user.lastName}</strong>,</p>
     <p>Thank you for registering on our platform! Your account is currently <strong>pending approval</strong> by our administrators.</p>
     <p>Once approved, you will receive another email with instructions to set your password and access your dashboard.</p>
-  `;
+  \`;
   return sendEmail({ to: user.email, subject: 'Welcome to Honour Education', title: 'Registration Received', html: content });
 };
 
 const sendApprovalEmail = async (user, setupToken) => {
-  const setupUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/set-password/${setupToken}`;
-  const content = `
-    <p>Dear <strong>${user.firstName}</strong>,</p>
+  const setupUrl = \`\${process.env.FRONTEND_URL || 'http://localhost:3000'}/set-password/\${setupToken}\`;
+  const content = \`
+    <p>Dear <strong>\${user.firstName}</strong>,</p>
     <p>Great news! Your teacher account has been officially <strong>approved</strong>.</p>
     <p>To finalize your setup and access your assessment dashboard, please set your password by clicking the secure button below:</p>
     <div style="text-align: center;">
-      <a href="${setupUrl}" class="button">Set Your Password</a>
+      <a href="\${setupUrl}" class="button">Set Your Password</a>
     </div>
-    <p style="font-size: 14px; color: #64748b; margin-top: 20px;">Or copy and paste this link into your browser: <br>${setupUrl}</p>
+    <p style="font-size: 14px; color: #64748b; margin-top: 20px;">Or copy and paste this link into your browser: <br>\${setupUrl}</p>
     <p style="font-size: 14px; color: #ef4444;"><em>Note: This link will expire in 24 hours.</em></p>
-  `;
+  \`;
   return sendEmail({ to: user.email, subject: 'Account Approved - Action Required', title: 'Account Approved!', html: content });
 };
 
 const sendPasswordResetEmail = async (user, resetToken) => {
-  const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/set-password/${resetToken}`;
-  const content = `
-    <p>Dear <strong>${user.firstName}</strong>,</p>
+  const resetUrl = \`\${process.env.FRONTEND_URL || 'http://localhost:3000'}/set-password/\${resetToken}\`;
+  const content = \`
+    <p>Dear <strong>\${user.firstName}</strong>,</p>
     <p>We received a request to reset your password. If you didn't make this request, please ignore this email.</p>
     <p>To reset your password, click the secure button below:</p>
     <div style="text-align: center;">
-      <a href="${resetUrl}" class="button">Reset Password</a>
+      <a href="\${resetUrl}" class="button">Reset Password</a>
     </div>
-  `;
+  \`;
   return sendEmail({ to: user.email, subject: 'Password Reset Request', title: 'Reset Your Password', html: content });
 };
 
 const sendContactEmail = async (contactData) => {
-  const content = `
+  const content = \`
     <p><strong>New Contact Request Submitted</strong></p>
     <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
-      <tr><td style="padding: 10px; border-bottom: 1px solid #e2e8f0; width: 100px;"><strong>Name:</strong></td><td style="padding: 10px; border-bottom: 1px solid #e2e8f0;">${contactData.name}</td></tr>
-      <tr><td style="padding: 10px; border-bottom: 1px solid #e2e8f0;"><strong>Email:</strong></td><td style="padding: 10px; border-bottom: 1px solid #e2e8f0;">${contactData.email}</td></tr>
-      <tr><td style="padding: 10px; border-bottom: 1px solid #e2e8f0;"><strong>Subject:</strong></td><td style="padding: 10px; border-bottom: 1px solid #e2e8f0;">${contactData.subject}</td></tr>
+      <tr><td style="padding: 10px; border-bottom: 1px solid #e2e8f0; width: 100px;"><strong>Name:</strong></td><td style="padding: 10px; border-bottom: 1px solid #e2e8f0;">\${contactData.name}</td></tr>
+      <tr><td style="padding: 10px; border-bottom: 1px solid #e2e8f0;"><strong>Email:</strong></td><td style="padding: 10px; border-bottom: 1px solid #e2e8f0;">\${contactData.email}</td></tr>
+      <tr><td style="padding: 10px; border-bottom: 1px solid #e2e8f0;"><strong>Subject:</strong></td><td style="padding: 10px; border-bottom: 1px solid #e2e8f0;">\${contactData.subject}</td></tr>
     </table>
     <p style="margin-top: 20px;"><strong>Message:</strong></p>
-    <div style="background-color: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; white-space: pre-wrap;">${contactData.message}</div>
-  `;
+    <div style="background-color: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; white-space: pre-wrap;">\${contactData.message}</div>
+  \`;
   return sendEmail({ to: process.env.ADMIN_EMAIL || process.env.EMAIL_USER, subject: 'New Contact Request: ' + contactData.subject, title: 'Contact Request', html: content });
 };
 
 module.exports = { sendRegistrationEmail, sendApprovalEmail, sendPasswordResetEmail, sendContactEmail };
+`;
+fs.writeFileSync('utils/emailService.js', content);
