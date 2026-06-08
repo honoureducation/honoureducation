@@ -122,4 +122,16 @@ const sendContactEmail = async (contactData) => {
   return sendEmail({ to: process.env.ADMIN_EMAIL || process.env.EMAIL_USER, subject: 'New Contact Request: ' + contactData.subject, title: 'Contact Request', html: content });
 };
 
-module.exports = { sendRegistrationEmail, sendApprovalEmail, sendPasswordResetEmail, sendContactEmail };
+const sendAdminOtpEmail = async (user, otp) => {
+  const content = `
+    <p>Dear <strong>${user.firstName}</strong>,</p>
+    <p>Use the following One-Time Password (OTP) to access your Admin Dashboard. This OTP is valid for 10 minutes:</p>
+    <div style="text-align: center; margin: 30px 0;">
+      <span style="font-size: 36px; font-weight: 800; letter-spacing: 6px; background-color: #f1f5f9; padding: 12px 24px; border-radius: 8px; color: #4f46e5; border: 1px solid #e2e8f0;">${otp}</span>
+    </div>
+    <p style="color: #ef4444; font-size: 14px;"><strong>Please do not share this OTP with anyone.</strong></p>
+  `;
+  return sendEmail({ to: user.email, subject: 'Admin Login OTP - Action Required', title: 'Admin Verification Code', html: content });
+};
+
+module.exports = { sendRegistrationEmail, sendApprovalEmail, sendPasswordResetEmail, sendContactEmail, sendAdminOtpEmail };

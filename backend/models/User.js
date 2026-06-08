@@ -116,6 +116,12 @@ const userSchema = new mongoose.Schema({
   resetPasswordExpires: {
     type: Date
   },
+  adminOtp: {
+    type: String
+  },
+  adminOtpExpires: {
+    type: Date
+  },
   
   // Activity Tracking
   totalStudentsAssessed: {

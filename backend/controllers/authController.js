@@ -85,6 +85,11 @@ const login = async (req, res) => {
       return res.status(401).json({ message: 'Invalid email or password' });
     }
 
+    // Block admin logins from standard password flow
+    if (user.role === 'platform_admin' || user.role === 'school_admin') {
+      return res.status(403).json({ message: 'Administrators must sign in via the Admin OTP page.' });
+    }
+
     // Check if account is locked
     if (user.isLocked) {
       return res.status(423).json({ message: 'Account is temporarily locked. Please try again later.' });
@@ -311,6 +316,103 @@ const forgotPassword = async (req, res) => {
   }
 };
 
+// Send OTP to Admin Email
+const sendAdminOtp = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ message: 'Email is required' });
+    }
+
+    // Find user
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: 'Admin account not found' });
+    }
+
+    // Make sure user is an admin
+    if (user.role !== 'platform_admin' && user.role !== 'school_admin') {
+      return res.status(403).json({ message: 'Access denied. Only administrators can use this login method.' });
+    }
+
+    // Generate a 6-digit numeric OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+    // Save OTP to user (expires in 10 minutes)
+    user.adminOtp = otp;
+    user.adminOtpExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
+    await user.save();
+
+    // Send OTP email
+    const emailResult = await emailService.sendAdminOtpEmail(user, otp);
+    if (!emailResult) {
+      return res.status(500).json({ message: 'Failed to send OTP email. Please verify mail configuration.' });
+    }
+
+    res.json({ message: 'OTP sent successfully to your email.' });
+  } catch (error) {
+    console.error('Send OTP error:', error);
+    res.status(500).json({ message: 'Failed to send OTP', error: error.message });
+  }
+};
+
+// Verify Admin OTP
+const verifyAdminOtp = async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+
+    if (!email || !otp) {
+      return res.status(400).json({ message: 'Email and OTP are required' });
+    }
+
+    // Find user
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: 'Admin account not found' });
+    }
+
+    // Make sure user is an admin
+    if (user.role !== 'platform_admin' && user.role !== 'school_admin') {
+      return res.status(403).json({ message: 'Access denied. Only administrators can verify OTP.' });
+    }
+
+    // Check if OTP matches and is not expired
+    if (!user.adminOtp || user.adminOtp !== otp || !user.adminOtpExpires || user.adminOtpExpires < Date.now()) {
+      return res.status(401).json({ message: 'Invalid or expired OTP' });
+    }
+
+    // Clear OTP fields upon successful verification
+    user.adminOtp = undefined;
+    user.adminOtpExpires = undefined;
+    user.lastLogin = new Date();
+    await user.save();
+
+    // Generate token
+    const token = generateToken(user._id);
+
+    res.json({
+      message: 'Admin login successful',
+      token,
+      user: {
+        id: user._id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        fullName: user.fullName,
+        email: user.email,
+        role: user.role,
+        status: user.status,
+        school: user.school,
+        department: user.department,
+        lastLogin: user.lastLogin
+      }
+    });
+  } catch (error) {
+    console.error('Verify OTP error:', error);
+    res.status(500).json({ message: 'Verification failed', error: error.message });
+  }
+};
+
 module.exports = {
   forgotPassword,
   registerTeacher,
@@ -318,5 +420,7 @@ module.exports = {
   getProfile,
   updateProfile,
   changePassword,
-  setPassword
+  setPassword,
+  sendAdminOtp,
+  verifyAdminOtp
 };
