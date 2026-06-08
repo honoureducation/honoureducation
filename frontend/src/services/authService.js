@@ -6,7 +6,7 @@ const API_BASE_URL = process.env.REACT_APP_API_URL
   : 'http://localhost:5002/api';
 
 // Create axios instance with default config
-const authAPI = axios.create({
+export const authAPI = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json'
@@ -82,6 +82,34 @@ export const authService = {
       return response.data;
     } catch (error) {
       console.error('Login error:', error);
+      throw error.response?.data || { message: error.message };
+    }
+  },
+
+  // Send admin OTP
+  async sendAdminOtp(email) {
+    try {
+      const response = await authAPI.post('/auth/admin/send-otp', { email });
+      return response.data;
+    } catch (error) {
+      console.error('Send OTP error:', error);
+      throw error.response?.data || { message: error.message };
+    }
+  },
+
+  // Verify admin OTP and login
+  async verifyAdminOtp(email, otp) {
+    try {
+      const response = await authAPI.post('/auth/admin/verify-otp', { email, otp });
+      const { token, user } = response.data;
+
+      // Store token and user data with role-specific keys
+      localStorage.setItem('admin_token', token);
+      localStorage.setItem('admin_user', JSON.stringify(user));
+
+      return response.data;
+    } catch (error) {
+      console.error('Verify OTP error:', error);
       throw error.response?.data || { message: error.message };
     }
   },

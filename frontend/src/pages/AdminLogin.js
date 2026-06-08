@@ -5,12 +5,11 @@ import { authService } from '../services/authService';
 
 export default function AdminLogin() {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({
-    email: '',
-    password: ''
-  });
+  const [email, setEmail] = useState('');
+  const [otp, setOtp] = useState('');
+  const [otpSent, setOtpSent] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
 
   useEffect(() => {
     if (authService.isAuthenticated()) {
@@ -20,36 +19,49 @@ export default function AdminLogin() {
     }
   }, [navigate]);
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+  const handleSendOtp = async (e) => {
+    e.preventDefault();
+    if (!email) {
+      toast.error('Please enter your email address');
+      return;
+    }
+    setLoading(true);
+    try {
+      await authService.sendAdminOtp(email);
+      setOtpSent(true);
+      toast.success('OTP sent successfully to your email');
+    } catch (error) {
+      toast.error(error.message || 'Failed to send OTP');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-
+  const handleResendOtp = async () => {
+    setResendLoading(true);
     try {
-      const response = await authService.login(formData.email, formData.password, 'admin');
-      
-      if (response.user.role === 'teacher') {
-        toast.error('Teacher accounts must use the standard Teacher Login page.');
-        authService.logout('admin'); // Explicitly logout admin session
-        return;
-      }
-      
-      if (!authService.isAdmin()) {
-        toast.error('This page is for admin access only');
-        authService.logout('admin');
-        return;
-      }
+      await authService.sendAdminOtp(email);
+      toast.success('OTP resent successfully');
+    } catch (error) {
+      toast.error(error.message || 'Failed to resend OTP');
+    } finally {
+      setResendLoading(false);
+    }
+  };
+
+  const handleVerifyOtp = async (e) => {
+    e.preventDefault();
+    if (!otp) {
+      toast.error('Please enter the OTP');
+      return;
+    }
+    setLoading(true);
+    try {
+      const response = await authService.verifyAdminOtp(email, otp);
       toast.success(`Welcome back, ${response.user.firstName}!`);
       navigate('/admin/dashboard');
     } catch (error) {
-      toast.error(error.message || 'Login failed');
+      toast.error(error.message || 'Verification failed');
     } finally {
       setLoading(false);
     }
@@ -71,59 +83,82 @@ export default function AdminLogin() {
         </div>
 
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <label className="form-label">Admin Email</label>
-              <input
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleInputChange}
-                className="form-input"
-                placeholder="Enter your admin email"
-                required
-              />
-            </div>
-
-            <div>
-              <label className="form-label">Password</label>
-              <div className="relative">
+          {!otpSent ? (
+            <form onSubmit={handleSendOtp} className="space-y-6">
+              <div>
+                <label className="form-label">Admin Email</label>
                 <input
-                  type={showPassword ? 'text' : 'password'}
-                  name="password"
-                  value={formData.password}
-                  onChange={handleInputChange}
-                  className="form-input pr-12"
-                  placeholder="Enter your password"
+                  type="email"
+                  name="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="form-input"
+                  placeholder="Enter your admin email"
                   required
+                  disabled={loading}
                 />
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="btn-primary w-full btn-lg"
+              >
+                {loading ? 'Sending OTP...' : 'Send OTP'}
+              </button>
+            </form>
+          ) : (
+            <form onSubmit={handleVerifyOtp} className="space-y-6">
+              <div className="bg-blue-50 border border-blue-200 text-blue-800 rounded-lg p-3 text-sm flex justify-between items-center">
+                <div>
+                  An OTP has been sent to <strong>{email}</strong>
+                </div>
                 <button
                   type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                  onClick={() => setOtpSent(false)}
+                  className="text-blue-600 hover:text-blue-800 text-xs font-semibold underline ml-2"
                 >
-                  {showPassword ? (
-                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21" />
-                    </svg>
-                  ) : (
-                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                    </svg>
-                  )}
+                  Change
                 </button>
               </div>
-            </div>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="btn-primary w-full btn-lg"
-            >
-              {loading ? 'Signing in...' : 'Sign in as Admin'}
-            </button>
-          </form>
+              <div>
+                <label className="form-label text-center block w-full">Enter One-Time Password (OTP)</label>
+                <input
+                  type="text"
+                  pattern="[0-9]*"
+                  inputMode="numeric"
+                  maxLength={6}
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value)}
+                  className="form-input tracking-widest text-center text-2xl font-bold"
+                  placeholder="------"
+                  required
+                  disabled={loading}
+                />
+              </div>
+
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-slate-500">Didn't receive the email?</span>
+                <button
+                  type="button"
+                  onClick={handleResendOtp}
+                  disabled={resendLoading || loading}
+                  className="text-purple-600 hover:text-purple-800 font-semibold underline disabled:opacity-50"
+                >
+                  {resendLoading ? 'Resending...' : 'Resend OTP'}
+                </button>
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="btn-primary w-full btn-lg"
+              >
+                {loading ? 'Verifying...' : 'Verify & Sign In'}
+              </button>
+            </form>
+          )}
 
           <div className="mt-6 text-center space-y-2">
             <p className="text-sm text-slate-600">
