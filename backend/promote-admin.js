@@ -10,25 +10,31 @@ const mongoURI = process.env.MONGODB_URI;
 
 mongoose.connect(mongoURI)
   .then(async () => {
-    console.log('Connected to MongoDB. Promoting shakirayoubbhat@gmail.com...');
+    console.log('Connected to MongoDB. Creating/Promoting info@honoureducation.com...');
     const result = await User.findOneAndUpdate(
-      { email: 'shakirayoubbhat@gmail.com' },
-      { 
-        role: 'platform_admin',
-        status: 'approved',
-        adminLevel: 'platform',
-        permissions: [
-          'manage_schools', 'manage_teachers', 'manage_students', 
-          'view_reports', 'export_data', 'manage_assessments',
-          'view_analytics', 'manage_settings'
-        ]
+      { email: 'info@honoureducation.com' },
+      {
+        $set: {
+          firstName: 'Admin',
+          lastName: 'Honour',
+          email: 'info@honoureducation.com',
+          password: 'dummyPassword123!',
+          role: 'platform_admin',
+          status: 'approved',
+          adminLevel: 'platform',
+          permissions: [
+            'manage_schools', 'manage_teachers', 'manage_students',
+            'view_reports', 'export_data', 'manage_assessments',
+            'view_analytics', 'manage_settings'
+          ]
+        }
       },
-      { new: true }
+      { new: true, upsert: true }
     );
     if (result) {
-      console.log('✅ User successfully promoted to platform_admin:', result);
+      console.log('✅ User successfully created/promoted to platform_admin:', result.email);
     } else {
-      console.log('❌ User not found with email shakirayoubbhat@gmail.com');
+      console.log('❌ Failed to create/promote user.');
     }
     process.exit(0);
   })
