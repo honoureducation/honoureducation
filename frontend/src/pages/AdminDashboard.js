@@ -149,20 +149,7 @@ export default function AdminDashboard() {
   };
 
   const getAssessmentChartData = () => {
-    const realData = stats?.termProgress || [];
-
-    // Add static relatable data if no real data exists to match client request style
-    if (realData.length === 0) {
-      return [
-        { name: 'Reading', T1: 10, T2: 15, T3: 17 },
-        { name: 'Writing', T1: 5, T2: 6, T3: 12 },
-        { name: 'Speaking', T1: 5, T2: 8, T3: 10 },
-        { name: 'Listening P1', T1: 15, T2: 18, T3: 20 },
-        { name: 'Listening P2', T1: 5, T2: 5, T3: 7 },
-        { name: 'Listening Comp', T1: 4, T2: 6, T3: 6 }
-      ];
-    }
-    return realData;
+    return stats?.termProgress || [];
   };
 
   if (loading) {
@@ -306,10 +293,10 @@ export default function AdminDashboard() {
               {/* Summary Stats */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {[
-                  { label: 'Total Teachers', value: stats?.teachers?.total || 12, color: 'indigo', icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z' },
-                  { label: 'Pending Approval', value: stats?.teachers?.pending || 4, color: 'amber', icon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' },
-                  { label: 'Assessments', value: Object.values(stats?.assessments || {}).reduce((s, c) => s + c, 0) || 128, color: 'emerald', icon: 'M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2' },
-                  { label: 'Avg Proficiency', value: 'B1+', color: 'rose', icon: 'M13 7h8m0 0v8m0-8l-8 8-4-4-6 6' },
+                  { label: 'Total Teachers', value: stats?.teachers?.total || 0, color: 'indigo', icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z' },
+                  { label: 'Pending Approval', value: stats?.teachers?.pending || 0, color: 'amber', icon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' },
+                  { label: 'Assessments', value: Object.values(stats?.assessments || {}).reduce((s, c) => s + c, 0) || 0, color: 'emerald', icon: 'M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2' },
+                  { label: 'Avg Proficiency', value: stats?.avgProficiency || 'N/A', color: 'rose', icon: 'M13 7h8m0 0v8m0-8l-8 8-4-4-6 6' },
                 ].map((item, idx) => (
                   <div key={idx} className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm hover:shadow-md transition-all group">
                     <div className="flex items-center gap-4">
@@ -384,15 +371,16 @@ export default function AdminDashboard() {
                     <Chart
                       options={{
                         chart: { type: 'pie', height: 300 },
-                        labels: (stats?.teacherPerformance?.map(entry => entry.name) || ['No Data']),
+                        labels: (stats?.teacherPerformance?.length > 0 ? stats.teacherPerformance.map(entry => entry.name) : []),
                         legend: { position: 'bottom', fontSize: '11px', formatter: (val, opts) => `${val}: ${opts.w.globals.series[opts.seriesIndex]}` },
                         tooltip: { enabled: true },
+                        noData: { text: "No Assessments Recorded", align: 'center', verticalAlign: 'middle' },
                         responsive: [{
                           breakpoint: 480,
                           options: { chart: { width: '100%' } }
                         }]
                       }}
-                      series={stats?.teacherPerformance?.map(entry => entry.value) || [1]}
+                      series={stats?.teacherPerformance?.length > 0 ? stats.teacherPerformance.map(entry => entry.value) : []}
                       type="pie"
                       width="100%"
                     />
