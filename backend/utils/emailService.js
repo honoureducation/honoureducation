@@ -81,7 +81,10 @@ const sendRegistrationEmail = async (user) => {
 };
 
 const sendApprovalEmail = async (user, setupToken) => {
-  const setupUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/set-password/${setupToken}`;
+  const baseUrl = process.env.NODE_ENV === 'production'
+    ? 'https://assessment.honoureducation.online'
+    : (process.env.FRONTEND_URL || 'http://localhost:3000');
+  const setupUrl = `${baseUrl}/set-password/${setupToken}`;
   const content = `
     <p>Dear <strong>${user.firstName}</strong>,</p>
     <p>Great news! Your teacher account has been officially <strong>approved</strong>.</p>
@@ -96,7 +99,10 @@ const sendApprovalEmail = async (user, setupToken) => {
 };
 
 const sendPasswordResetEmail = async (user, resetToken) => {
-  const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/set-password/${resetToken}`;
+  const baseUrl = process.env.NODE_ENV === 'production'
+    ? 'https://assessment.honoureducation.online'
+    : (process.env.FRONTEND_URL || 'http://localhost:3000');
+  const resetUrl = `${baseUrl}/set-password/${resetToken}`;
   const content = `
     <p>Dear <strong>${user.firstName}</strong>,</p>
     <p>We received a request to reset your password. If you didn't make this request, please ignore this email.</p>
