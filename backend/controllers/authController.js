@@ -336,23 +336,21 @@ const sendAdminOtp = async (req, res) => {
       return res.status(403).json({ message: 'Access denied. Only administrators can use this login method.' });
     }
 
-    // Bypass Render Free Tier SMTP Block!
-    const otp = '123456';
+    // Generate a 6-digit numeric OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
     // Save OTP to user (expires in 10 minutes)
     user.adminOtp = otp;
     user.adminOtpExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
     await user.save();
 
-    // Fake success since Render Free Tier blocks outbound SMTP automatically
-    const emailResult = true;
-    console.log("Bypassing Email due to Render free tier! OTP is hardcoded to:", otp);
-
+    // Send OTP email
+    const emailResult = await emailService.sendAdminOtpEmail(user, otp);
     if (!emailResult) {
       return res.status(500).json({ message: 'Failed to send OTP email. Please verify mail configuration.' });
     }
 
-    res.json({ message: 'OTP bypassed on free tier. Use 123456 to Login!' });
+    res.json({ message: 'OTP sent successfully to your email.' });
   } catch (error) {
     console.error('Send OTP error:', error);
     res.status(500).json({ message: 'Failed to send OTP', error: error.message });
