@@ -4,7 +4,7 @@ import axios from 'axios';
 const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 const API_BASE_URL = isLocalhost
   ? 'http://localhost:5002/api'
-  : 'https://academic-excellence-api.onrender.com/api';
+  : 'https://honoureducation.onrender.com/api';
 
 // Create axios instance with default config
 export const authAPI = axios.create({

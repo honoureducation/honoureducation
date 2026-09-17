@@ -21,4 +21,4 @@ services:
     staticPublishPath: frontend/build
     envVars:
       - key: REACT_APP_API_URL
-        value: https://academic-excellence-api.onrender.com
+        value: https://honoureducation.onrender.com
