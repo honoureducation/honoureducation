@@ -11,7 +11,7 @@ services:
       - key: PORT
         value: 10000
       - key: MONGODB_URI
-        value: mongodb+srv://shakirayoub0198_db_user:Vz3lYq1s6hRQghN7@cluster0.rv2n8gd.mongodb.net/student_assessment?retryWrites=true&w=majority&appName=Cluster0
+        value: mongodb+srv://future_db_user:aJUNXbMMaU37P43D@cluster0.mw1hrof.mongodb.net/student_assessment?retryWrites=true&w=majority&appName=Cluster0
 
   # Frontend Static Site
   - type: web

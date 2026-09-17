@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { assessmentAPI } from '../services/api';
-import car1 from '../assets/car1.png';
+import car1 from '../assets/car2.png'; // Using car2 as a temporary placeholder since car1 is missing
 import car2 from '../assets/car2.png';
 import car3 from '../assets/car3.png';
 
@@ -148,14 +148,14 @@ export default function SpeakingAssessmentForm() {
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Breadcrumbs */}
           <nav className="flex items-center gap-2 text-sm text-slate-500 mb-4 font-medium">
-            <button 
+            <button
               onClick={() => navigate('/assessments')}
               className="hover:text-blue-600 transition-colors"
             >
               Assessments
             </button>
             <span className="text-slate-300">/</span>
-            <button 
+            <button
               onClick={() => navigate('/assessment/speaking')}
               className="hover:text-blue-600 transition-colors"
             >
@@ -164,7 +164,7 @@ export default function SpeakingAssessmentForm() {
             <span className="text-slate-300">/</span>
             <span className="text-slate-900 font-semibold">Junior</span>
           </nav>
-          
+
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
             <div>
               <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Speaking Assessment</h1>
@@ -375,22 +375,22 @@ export default function SpeakingAssessmentForm() {
                 ))}
               </div>
             </div>
-            
+
             <div className="bg-slate-900 rounded-2xl shadow-xl p-6 flex flex-col justify-between text-white relative overflow-hidden group">
               <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-16 -mt-16 blur-2xl group-hover:bg-white/10 transition-colors" />
               <div>
                 <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Assessment Summary</h3>
                 <p className="text-slate-300 text-[10px]">Auto-calculated based on scores</p>
               </div>
-              
+
               <div className="space-y-4 my-6">
                 <div className="flex items-end justify-between">
                   <span className="text-xs font-medium text-slate-400 uppercase tracking-widest">Total Points</span>
                   <span className="text-3xl font-black text-white">{totalScore}<span className="text-xs font-bold text-slate-500 ml-1">/ 12</span></span>
                 </div>
                 <div className="h-2 w-full bg-slate-800 rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 transition-all duration-500" 
+                  <div
+                    className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 transition-all duration-500"
                     style={{ width: `${(totalScore / 12) * 100}%` }}
                   />
                 </div>
