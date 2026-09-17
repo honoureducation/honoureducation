@@ -1,9 +1,10 @@
 import axios from 'axios';
 
-// Use environment variable for API URL, fallback to localhost for development
-const API_BASE_URL = process.env.REACT_APP_API_URL 
-  ? `${process.env.REACT_APP_API_URL}/api`
-  : 'http://localhost:5002/api';
+// Automatically detect whether we are running on localhost or production
+const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+const API_BASE_URL = isLocalhost
+  ? 'http://localhost:5002/api'
+  : 'https://academic-excellence-api.onrender.com/api';
 
 // Create axios instance with default config
 export const authAPI = axios.create({
@@ -17,10 +18,10 @@ export const authAPI = axios.create({
 authAPI.interceptors.request.use((config) => {
   // Use admin token for admin routes, otherwise teacher token
   const isAdminPath = window.location.pathname.startsWith('/admin');
-  const token = isAdminPath 
-    ? localStorage.getItem('admin_token') 
+  const token = isAdminPath
+    ? localStorage.getItem('admin_token')
     : localStorage.getItem('teacher_token');
-    
+
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -65,11 +66,11 @@ export const authService = {
       console.log('Attempting login for:', email);
       const response = await authAPI.post('/auth/login', { email, password });
       const { token, user } = response.data;
-      
+
       console.log('Login successful for:', user.email);
-      
+
       const role = forceRole || (user.role.includes('admin') ? 'admin' : 'teacher');
-      
+
       // Store token and user data with role-specific keys
       if (role === 'admin') {
         localStorage.setItem('admin_token', token);
@@ -78,7 +79,7 @@ export const authService = {
         localStorage.setItem('teacher_token', token);
         localStorage.setItem('teacher_user', JSON.stringify(user));
       }
-      
+
       return response.data;
     } catch (error) {
       console.error('Login error:', error);
@@ -134,7 +135,7 @@ export const authService = {
   getCurrentUser(role = null) {
     const isAdminPath = window.location.pathname.startsWith('/admin');
     const targetRole = role || (isAdminPath ? 'admin' : 'teacher');
-    
+
     const key = targetRole === 'admin' ? 'admin_user' : 'teacher_user';
     const user = localStorage.getItem(key);
     return user ? JSON.parse(user) : null;
@@ -144,7 +145,7 @@ export const authService = {
   isAuthenticated(role = null) {
     const isAdminPath = window.location.pathname.startsWith('/admin');
     const targetRole = role || (isAdminPath ? 'admin' : 'teacher');
-    
+
     const key = targetRole === 'admin' ? 'admin_token' : 'teacher_token';
     return !!localStorage.getItem(key);
   },
@@ -176,7 +177,7 @@ export const authService = {
     try {
       const isAdminPath = window.location.pathname.startsWith('/admin');
       const userKey = isAdminPath ? 'admin_user' : 'teacher_user';
-      
+
       const response = await authAPI.put('/auth/profile', userData);
       localStorage.setItem(userKey, JSON.stringify(response.data.user));
       return response.data;
@@ -302,7 +303,7 @@ export const adminService = {
       throw error.response?.data || { message: error.message };
     }
   },
-  
+
   // Delete teacher
   async deleteTeacher(teacherId) {
     try {
