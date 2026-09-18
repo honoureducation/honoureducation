@@ -3,20 +3,20 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 
 const OPTIONS = [
   {
+    id: 'junior-student',
+    title: 'Year 7–9 / Grade 6–8',
+    subtitle: 'Student Writing Sheet',
+    desc: 'Student writing sheet with sports picture prompts and lined writing space.',
+    color: 'bg-orange-600',
+    route: '/assessment/writing/junior-student',
+  },
+  {
     id: 'junior-assessor',
     title: 'Year 7–9 / Grade 6–8',
     subtitle: 'Assessor Form',
     desc: 'Writing assessment with sports picture prompts. A–E scoring rubric and teacher observations.',
     color: 'bg-amber-600',
     route: '/assessment/writing/junior',
-  },
-  {
-    id: 'junior-student',
-    title: 'Year 7–9',
-    subtitle: 'Student Writing Sheet',
-    desc: 'Student writing sheet with sports picture prompts and lined writing space.',
-    color: 'bg-orange-600',
-    route: '/assessment/writing/junior-student',
   },
   {
     id: 'senior-student',
@@ -36,7 +36,7 @@ const OPTIONS = [
   },
   {
     id: 'senior-landmark-student',
-    title: 'Year 10–13 (Landmarks)',
+    title: 'Year 10–13 / Grade 9-12',
     subtitle: 'Student Writing Sheet',
     desc: 'Student writing sheet with landmark picture prompts and lined writing space.',
     color: 'bg-purple-600',
@@ -44,7 +44,7 @@ const OPTIONS = [
   },
   {
     id: 'senior-landmark-assessor',
-    title: 'Year 10–13 (Landmarks)',
+    title: 'Year 10–13 / Grade 9-12',
     subtitle: 'Assessor Form',
     desc: 'Writing assessment with landmark picture prompts. New CEFR scoring rubric.',
     color: 'bg-indigo-600',
@@ -88,7 +88,7 @@ export default function WritingAssessmentSelector() {
               <div className={`h-1 ${o.color}`} />
               <div className="p-6">
                 <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">{o.subtitle}</span>
-                <h3 className="text-base font-bold text-slate-900 group-hover:text-blue-600 transition-colors mb-2">{o.title}</h3>
+                <h3 className="text-base font-bold text-slate-900 mb-2">{o.title}</h3>
                 <p className="text-xs text-slate-500 leading-relaxed mb-5">{o.desc}</p>
                 <div className="flex items-center gap-1.5 text-xs font-semibold text-blue-600">
                   Start {selectedTerm} Assessment

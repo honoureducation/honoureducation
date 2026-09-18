@@ -16,38 +16,73 @@ const createTransporter = () => {
 
 // Base Email Template
 const getEmailTemplate = (title, content) => {
-  const logoUrl = process.env.FRONTEND_URL ? `${process.env.FRONTEND_URL}/favicon.ico` : 'https://academic-excellence-frontend.onrender.com/favicon.ico';
+  const baseUrl = process.env.NODE_ENV === 'production'
+    ? 'https://assessment.honoureducation.online'
+    : (process.env.FRONTEND_URL || 'http://localhost:3000');
+  const logoUrl = `${baseUrl}/logo.png`;
+
   return `
     <!DOCTYPE html>
-    <html>
+    <html lang="en">
     <head>
       <meta charset="utf-8">
-      <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8fafc; margin: 0; padding: 40px 20px; }
-        .container { max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
-        .header { background: linear-gradient(135deg, #2563eb, #4f46e5); padding: 30px; text-align: center; }
-        .header img { max-height: 50px; margin-bottom: 15px; }
-        .header h1 { color: #ffffff; margin: 0; font-size: 24px; font-weight: 700; letter-spacing: 0.5px; }
-        .content { padding: 40px 30px; color: #334155; line-height: 1.6; font-size: 16px; }
-        .content h2 { color: #1e293b; margin-top: 0; }
-        .button { display: inline-block; background-color: #4f46e5; color: #ffffff !important; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: bold; margin: 25px 0; text-align: center; }
-        .footer { background-color: #f1f5f9; padding: 20px; text-align: center; color: #64748b; font-size: 13px; }
-      </style>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>${title}</title>
     </head>
-    <body>
-      <div class="container">
-        <div class="header">
-          <h1>Honour Education</h1>
-        </div>
-        <div class="content">
-          <h2>${title}</h2>
-          ${content}
-        </div>
-        <div class="footer">
-          <p>© ${new Date().getFullYear()} Honour Education. All rights reserved.</p>
-          <p>This is an automated message, please do not reply.</p>
-        </div>
-      </div>
+    <body style="margin: 0; padding: 0; background-color: #f0f4f8; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f0f4f8; padding: 40px 20px;">
+        <tr>
+          <td align="center">
+            <table width="600" cellpadding="0" cellspacing="0" border="0" style="max-width: 600px; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 8px 30px rgba(0,0,0,0.10);">
+
+              <!-- HEADER -->
+              <tr>
+                <td style="background: linear-gradient(135deg, #2b6c8a 0%, #1a4f6e 100%); padding: 36px 30px; text-align: center;">
+                  <img src="${logoUrl}" alt="Honour Education Logo" width="90" height="90"
+                    style="border-radius: 50%; display: block; margin: 0 auto 16px auto; border: 3px solid rgba(255,255,255,0.3);"
+                    onerror="this.style.display='none'">
+                  <h1 style="color: #ffffff; margin: 0; font-size: 22px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;">Honour Education</h1>
+                  <p style="color: rgba(255,255,255,0.75); margin: 6px 0 0 0; font-size: 13px; letter-spacing: 0.5px;">Academic Excellence Platform</p>
+                </td>
+              </tr>
+
+              <!-- TITLE BAR -->
+              <tr>
+                <td style="background-color: #e8f4f8; padding: 18px 30px; border-bottom: 2px solid #c8e4ee;">
+                  <h2 style="margin: 0; color: #1a4f6e; font-size: 20px; font-weight: 700;">${title}</h2>
+                </td>
+              </tr>
+
+              <!-- BODY CONTENT -->
+              <tr>
+                <td style="padding: 36px 30px; color: #334155; font-size: 16px; line-height: 1.75;">
+                  ${content}
+                </td>
+              </tr>
+
+              <!-- DIVIDER -->
+              <tr>
+                <td style="padding: 0 30px;">
+                  <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 0;">
+                </td>
+              </tr>
+
+              <!-- FOOTER -->
+              <tr>
+                <td style="background-color: #f8fafc; padding: 24px 30px; text-align: center;">
+                  <p style="margin: 0 0 6px 0; color: #64748b; font-size: 13px;">
+                    © ${new Date().getFullYear()} <strong style="color: #1a4f6e;">Honour Education</strong>. All rights reserved.
+                  </p>
+                  <p style="margin: 0; color: #94a3b8; font-size: 12px;">
+                    This is an automated message — please do not reply directly to this email.
+                  </p>
+                </td>
+              </tr>
+
+            </table>
+          </td>
+        </tr>
+      </table>
     </body>
     </html>
   `;
@@ -81,35 +116,41 @@ const sendRegistrationEmail = async (user) => {
 };
 
 const sendApprovalEmail = async (user, setupToken) => {
-  const baseUrl = process.env.NODE_ENV === 'production'
-    ? 'https://assessment.honoureducation.online'
-    : (process.env.FRONTEND_URL || 'http://localhost:3000');
+  const baseUrl = process.env.FRONTEND_URL || 'https://assessment.honoureducation.online';
   const setupUrl = `${baseUrl}/set-password/${setupToken}`;
   const content = `
-    <p>Dear <strong>${user.firstName}</strong>,</p>
-    <p>Great news! Your teacher account has been officially <strong>approved</strong>.</p>
-    <p>To finalize your setup and access your assessment dashboard, please set your password by clicking the secure button below:</p>
-    <div style="text-align: center;">
-      <a href="${setupUrl}" class="button">Set Your Password</a>
+    <div style="text-align: center; margin-bottom: 28px;">
+      <div style="display: inline-block; background-color: #d1fae5; border-radius: 50%; width: 60px; height: 60px; line-height: 60px; font-size: 30px;">✅</div>
     </div>
-    <p style="font-size: 14px; color: #64748b; margin-top: 20px;">Or copy and paste this link into your browser: <br>${setupUrl}</p>
-    <p style="font-size: 14px; color: #ef4444;"><em>Note: This link will expire in 24 hours.</em></p>
+    <p style="margin-top: 0;">Dear <strong>${user.firstName}</strong>,</p>
+    <p>Great news! Your teacher account on the <strong>Honour Education</strong> platform has been officially <strong style="color: #1a4f6e;">approved</strong>.</p>
+    <p>To finalize your setup and access your assessment dashboard, please create your password by clicking the secure button below:</p>
+    <div style="text-align: center; margin: 28px 0;">
+      <a href="${setupUrl}" style="display: inline-block; background: linear-gradient(135deg, #2b6c8a, #1a4f6e); color: #ffffff; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-weight: 700; font-size: 16px; letter-spacing: 0.5px;">Set Your Password</a>
+    </div>
+    <p style="font-size: 13px; color: #64748b; text-align: center;">Or copy and paste this link into your browser:<br>
+      <span style="color: #2b6c8a; word-break: break-all;">${setupUrl}</span>
+    </p>
+    <div style="background-color: #fff7ed; border-left: 4px solid #f97316; padding: 12px 16px; border-radius: 4px; margin-top: 20px;">
+      <p style="margin: 0; font-size: 13px; color: #9a3412;"><strong>⚠️ Important:</strong> This link will expire in <strong>24 hours</strong>. Please set your password before it expires.</p>
+    </div>
   `;
-  return sendEmail({ to: user.email, subject: 'Account Approved - Action Required', title: 'Account Approved!', html: content });
+  return sendEmail({ to: user.email, subject: 'Account Approved - Action Required', title: 'Account Approved! 🎉', html: content });
 };
 
 const sendPasswordResetEmail = async (user, resetToken) => {
-  const baseUrl = process.env.NODE_ENV === 'production'
-    ? 'https://assessment.honoureducation.online'
-    : (process.env.FRONTEND_URL || 'http://localhost:3000');
+  const baseUrl = process.env.FRONTEND_URL || 'https://assessment.honoureducation.online';
   const resetUrl = `${baseUrl}/set-password/${resetToken}`;
   const content = `
     <p>Dear <strong>${user.firstName}</strong>,</p>
-    <p>We received a request to reset your password. If you didn't make this request, please ignore this email.</p>
+    <p>We received a request to reset your password. If you didn't make this request, you can safely ignore this email — no changes will be made.</p>
     <p>To reset your password, click the secure button below:</p>
-    <div style="text-align: center;">
-      <a href="${resetUrl}" class="button">Reset Password</a>
+    <div style="text-align: center; margin: 28px 0;">
+      <a href="${resetUrl}" style="display: inline-block; background: linear-gradient(135deg, #2b6c8a, #1a4f6e); color: #ffffff; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-weight: 700; font-size: 16px;">Reset Password</a>
     </div>
+    <p style="font-size: 13px; color: #64748b; text-align: center;">Or copy and paste this link:<br>
+      <span style="color: #2b6c8a; word-break: break-all;">${resetUrl}</span>
+    </p>
   `;
   return sendEmail({ to: user.email, subject: 'Password Reset Request', title: 'Reset Your Password', html: content });
 };

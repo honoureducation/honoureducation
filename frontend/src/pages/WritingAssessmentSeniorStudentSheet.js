@@ -2,14 +2,15 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { assessmentAPI } from '../services/api';
-import writingImg1 from '../assets/writing1.jpg.jpeg';
-import writingImg2 from '../assets/writing2.jpg.jpeg';
-import writingImg3 from '../assets/writing3.jpg.jpeg';
+// Landmark images served from /public
+const writingImg1 = '/img1.png';
+const writingImg2 = '/img2.png';
+const writingImg3 = '/img3.png';
 
 const WRITING_QUESTIONS = [
-  'Who can you see?',
-  'What are they doing?',
-  'Can you write a story for these pictures?'
+  'What can you see and where?',
+  'What significance do these buildings have?',
+  'Can you write a story using these landmarks?'
 ];
 
 // Local writing images
@@ -74,14 +75,14 @@ export default function WritingAssessmentSeniorStudentSheet() {
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Breadcrumbs */}
         <nav className="flex items-center gap-2 text-sm text-slate-500 mb-6 font-medium">
-          <button 
+          <button
             onClick={() => navigate('/assessments')}
             className="hover:text-blue-600 transition-colors"
           >
             Assessments
           </button>
           <span className="text-slate-300">/</span>
-          <button 
+          <button
             onClick={() => navigate('/assessment/writing')}
             className="hover:text-blue-600 transition-colors"
           >
@@ -94,7 +95,7 @@ export default function WritingAssessmentSeniorStudentSheet() {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-1">Writing Assessment</h1>
-          <p className="text-gray-600 mb-6 font-medium uppercase tracking-wider text-xs">Year 10-13 / Grade 9-12</p>
+          <p className="text-gray-600 mb-6 font-medium uppercase tracking-wider text-xs">Year 10–13 / Grade 9–12</p>
         </div>
 
         {/* Questions + Pictures */}
@@ -167,8 +168,8 @@ export default function WritingAssessmentSeniorStudentSheet() {
             </div>
           </div>
 
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             disabled={loading}
             className="w-full px-8 py-4 bg-gradient-to-r from-orange-500 to-red-600 text-white font-bold rounded-2xl hover:from-orange-600 hover:to-red-700 active:scale-[0.98] transition-all disabled:opacity-50 disabled:pointer-events-none shadow-xl shadow-orange-600/20 flex items-center justify-center gap-2 text-lg"
           >

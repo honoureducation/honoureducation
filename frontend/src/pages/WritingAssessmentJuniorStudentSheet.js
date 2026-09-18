@@ -74,14 +74,14 @@ export default function WritingAssessmentJuniorStudentSheet() {
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Breadcrumbs */}
         <nav className="flex items-center gap-2 text-sm text-slate-500 mb-6 font-medium">
-          <button 
+          <button
             onClick={() => navigate('/assessments')}
             className="hover:text-blue-600 transition-colors"
           >
             Assessments
           </button>
           <span className="text-slate-300">/</span>
-          <button 
+          <button
             onClick={() => navigate('/assessment/writing')}
             className="hover:text-blue-600 transition-colors"
           >
@@ -167,8 +167,8 @@ export default function WritingAssessmentJuniorStudentSheet() {
             </div>
           </div>
 
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             disabled={loading}
             className="w-full px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold rounded-2xl hover:from-blue-700 hover:to-indigo-700 active:scale-[0.98] transition-all disabled:opacity-50 disabled:pointer-events-none shadow-xl shadow-blue-600/20 flex items-center justify-center gap-2 text-lg"
           >

@@ -125,14 +125,14 @@ export default function WritingAssessmentSeniorForm() {
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Breadcrumbs */}
         <nav className="flex items-center gap-2 text-sm text-slate-500 mb-6 font-medium">
-          <button 
+          <button
             onClick={() => navigate('/assessments')}
             className="hover:text-blue-600 transition-colors"
           >
             Assessments
           </button>
           <span className="text-slate-300">/</span>
-          <button 
+          <button
             onClick={() => navigate('/assessment/writing')}
             className="hover:text-blue-600 transition-colors"
           >
