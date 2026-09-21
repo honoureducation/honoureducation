@@ -37,7 +37,7 @@ const ASSESSMENTS = [
     title: 'Reading Assessment',
     subtitle: 'Junior & Senior',
     tag: 'Year 7–13 · Grade 6–12',
-    desc: 'Reading accuracy with story passages. A–E scoring based on decoding, blending, and fluency.',
+    desc: 'Reading accuracy with story passages. CEFR scoring based on decoding, blending, and fluency.',
     icon: (
       <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
@@ -52,7 +52,7 @@ const ASSESSMENTS = [
     title: 'Writing Assessment',
     subtitle: 'Junior & Senior',
     tag: 'Year 7–13 · Grade 6–12',
-    desc: 'Writing quality with picture prompts. A–E scoring for narrative and sentence structure.',
+    desc: 'Writing quality with picture prompts. CEFR scoring for narrative and sentence structure.',
     icon: (
       <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
@@ -92,8 +92,8 @@ export default function AssessmentSelector() {
                   key={term}
                   onClick={() => setSelectedTerm(term)}
                   className={`px-8 py-3 rounded-xl text-sm font-black transition-all duration-300 ${selectedTerm === term
-                      ? 'bg-white text-blue-600 shadow-lg scale-105'
-                      : 'text-slate-400 hover:text-slate-600 hover:bg-slate-200'
+                    ? 'bg-white text-blue-600 shadow-lg scale-105'
+                    : 'text-slate-400 hover:text-slate-600 hover:bg-slate-200'
                     }`}
                 >
                   {term === 'T1' ? 'Term 1' : term === 'T2' ? 'Term 2' : 'Term 3'}

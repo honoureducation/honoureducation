@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { assessmentAPI } from '../services/api';
-import writingImg1 from '../assets/writing1.jpg.jpeg';
-import writingImg2 from '../assets/writing2.jpg.jpeg';
-import writingImg3 from '../assets/writing3.jpg.jpeg';
+const writingImg1 = '/img1.png';
+const writingImg2 = '/img2.png';
+const writingImg3 = '/img3.png';
 
 const WRITING_QUESTIONS = [
   'What can you see and where?',

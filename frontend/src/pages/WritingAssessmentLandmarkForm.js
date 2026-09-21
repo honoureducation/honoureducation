@@ -127,14 +127,14 @@ export default function WritingAssessmentLandmarkForm() {
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Breadcrumbs */}
         <nav className="flex items-center gap-2 text-sm text-slate-500 mb-6 font-medium">
-          <button 
+          <button
             onClick={() => navigate('/assessments')}
             className="hover:text-blue-600 transition-colors"
           >
             Assessments
           </button>
           <span className="text-slate-300">/</span>
-          <button 
+          <button
             onClick={() => navigate('/assessment/writing')}
             className="hover:text-blue-600 transition-colors"
           >
@@ -151,7 +151,7 @@ export default function WritingAssessmentLandmarkForm() {
           <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded space-y-2">
             <p className="text-sm text-gray-700"><strong>Instructions for assessor:</strong></p>
             <ul className="text-sm text-gray-700 space-y-1 ml-4">
-              <li>• Sit with the pupil in a calm, distraction-free space.</li>
+              <li>• Sit with the pupil in a calm, distraction-free spaceSSSS</li>
               <li>• Ask the pupil to write paragraphs / sentences for this picture.</li>
               <li>• Use the questions to prompt.</li>
             </ul>
@@ -259,7 +259,7 @@ export default function WritingAssessmentLandmarkForm() {
               </svg>
               Writing Assessment Score
             </h3>
-            
+
             <div className="space-y-3 md:space-y-0 md:bg-white md:border md:border-purple-500 md:rounded-xl md:overflow-hidden mb-6">
               {/* Desktop Header */}
               <div className="hidden md:grid md:grid-cols-12 gap-4 p-5 border-b border-purple-500 font-bold text-slate-900 text-[13px] bg-white items-end">
@@ -275,13 +275,11 @@ export default function WritingAssessmentLandmarkForm() {
                 {WRITING_SCORING.map(({ level, scoreRange, descriptor, capabilities, errorFreq }, idx) => (
                   <label
                     key={level}
-                    className={`block md:grid md:grid-cols-12 gap-4 p-5 border md:border-t-0 md:border-x-0 cursor-pointer transition-colors duration-150 items-center rounded-xl md:rounded-none ${
-                      idx === WRITING_SCORING.length - 1 ? 'md:border-b-0' : 'md:border-b md:border-purple-300'
-                    } ${
-                      score === level
+                    className={`block md:grid md:grid-cols-12 gap-4 p-5 border md:border-t-0 md:border-x-0 cursor-pointer transition-colors duration-150 items-center rounded-xl md:rounded-none ${idx === WRITING_SCORING.length - 1 ? 'md:border-b-0' : 'md:border-b md:border-purple-300'
+                      } ${score === level
                         ? 'bg-purple-50/50 shadow-sm md:shadow-none border-purple-500 md:border-purple-300'
                         : 'border-slate-200 hover:bg-slate-50/50 bg-white'
-                    }`}
+                      }`}
                   >
                     {/* CEFR Level & Radio */}
                     <div className="col-span-2 flex items-center gap-3 font-bold text-slate-900 mb-3 md:mb-0">
