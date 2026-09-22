@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { assessmentAPI } from '../services/api';
-import car1 from '../assets/car2.png'; // Using car2 as a temporary placeholder since car1 is missing
+import car1 from '../assets/car1.png'; // Using car2 as a temporary placeholder since car1 is missing
 import car2 from '../assets/car2.png';
 import car3 from '../assets/car3.png';
 
