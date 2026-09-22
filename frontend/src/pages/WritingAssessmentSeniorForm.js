@@ -12,13 +12,14 @@ const WRITING_QUESTIONS = [
   'Can you write a story using these landmarks?'
 ];
 
-const WRITING_SCORING = {
-  'A': 'Labels or single words only; no sentences; meaning unclear.',
-  'B': 'Fragmented or very short sentences; many errors; little sequence or link to pictures.',
-  'C': 'Simple sentences with some sequence; basic vocabulary; capitals and full stops mostly correct.',
-  'D': 'Organised into short paragraphs; clear sequence; developing vocabulary; mostly correct tense and punctuation.',
-  'E': 'Fluent, cohesive narrative; varied sentences and precise vocabulary; accurate punctuation; minimal errors.'
-};
+const WRITING_SCORING = [
+  { level: 'A1 - Emerging Writer', scoreRange: '1–4', descriptor: 'Labels or single words only; no sentences; meaning unclear.', capabilities: 'Writes isolated words (e.g., “ball,” “court,” “burger bar”). No sentence structure. Cannot describe sequence or action.', errorFreq: '70–80% errors' },
+  { level: 'A2 - Developing Writer', scoreRange: '5–8', descriptor: 'Fragmented or very short sentences; many errors; little sequence or link to pictures.', capabilities: 'Writes simple, broken sentences (“The boy play basketball.”). Limited detail. Attempts to describe picture but lacks flow.', errorFreq: '60–70% errors' },
+  { level: 'B1 - Secure Writer', scoreRange: '9–12', descriptor: 'Simple sentences with some sequence; basic vocabulary; capitals and full stops mostly correct.', capabilities: 'Writes a short paragraph (3–5 sentences). Describes who/what/where. Attempts sequence (“First… then…”). Meaning clear despite errors.', errorFreq: '60% errors' },
+  { level: 'B2 - Proficient Writer', scoreRange: '13–15', descriptor: 'Organised into short paragraphs; clear sequence; developing vocabulary; mostly correct tense and punctuation.', capabilities: 'Writes a connected paragraph (6–8 sentences). Describes action, setting, and mood. Uses some descriptive vocabulary.', errorFreq: '40–50% errors' },
+  { level: 'C1 - Advanced Writer', scoreRange: '16–17', descriptor: 'Fluent, cohesive narrative; varied sentences and precise vocabulary; accurate punctuation; minimal errors.', capabilities: 'Writes a well-developed descriptive or narrative piece. Uses imagery, transitions, and varied sentence structures.', errorFreq: '≈30% errors' },
+  { level: 'C2 - Mastery Writer', scoreRange: '18–20', descriptor: 'Fluent, cohesive narrative; varied sentences and precise vocabulary; accurate punctuation; minimal errors. (Extended mastery)', capabilities: 'Produces a vivid, sophisticated description or short story. Excellent cohesion, tone, and vocabulary control.', errorFreq: '<10% errors' }
+];
 
 // Local writing images
 function getPictureUrl(picNum) {
@@ -42,6 +43,7 @@ export default function WritingAssessmentSeniorForm() {
   const [score, setScore] = useState(null);
   const [notes, setNotes] = useState('');
   const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState({});
 
   useEffect(() => {
     // If the term changes in the URL, update the form
@@ -56,6 +58,7 @@ export default function WritingAssessmentSeniorForm() {
       ...prev,
       [name]: value
     }));
+    if (errors[name]) setErrors(prev => ({ ...prev, [name]: '' }));
   };
 
   const handleSubmit = async (e) => {
@@ -72,10 +75,11 @@ export default function WritingAssessmentSeniorForm() {
     }
 
     if (score === null) {
-      toast.error('❌ Please select a writing quality score (A-E)', {
+      toast.error('❌ Please select a writing assessment score', {
         position: 'top-right',
         autoClose: 4000,
       });
+      setErrors(p => ({ ...p, score: 'Score is required' }));
       setLoading(false);
       return;
     }
@@ -91,7 +95,7 @@ export default function WritingAssessmentSeniorForm() {
         term: formData.term,
         writingScore: score,
         level: score,
-        totalScore: ['A', 'B', 'C', 'D', 'E'].indexOf(score),
+        totalScore: WRITING_SCORING.findIndex(s => s.level === score),
         writingNotes: notes
       };
 
@@ -249,37 +253,77 @@ export default function WritingAssessmentSeniorForm() {
             </div>
           </div>
 
-          {/* Writing Quality Scoring Table */}
-          <div className="bg-white rounded-lg shadow-md overflow-hidden mb-2">
-            <table className="w-full border border-gray-300">
-              <thead>
-                <tr className="bg-blue-50">
-                  <th className="px-6 py-3 text-left font-bold text-gray-800 border-b border-r border-gray-300 w-24">Score</th>
-                  <th className="px-6 py-3 text-left font-bold text-gray-800 border-b border-gray-300">Description</th>
-                </tr>
-              </thead>
-              <tbody>
-                {Object.entries(WRITING_SCORING).map(([level, description], idx) => (
-                  <tr
-                    key={level}
-                    onClick={() => setScore(level)}
-                    className="cursor-pointer transition-colors duration-150"
-                    style={{
-                      backgroundColor: score === level ? '#dbeafe' : idx % 2 === 0 ? '#ffffff' : '#f9fafb',
-                      borderLeft: score === level ? '4px solid #6366f1' : '4px solid transparent'
-                    }}
-                  >
-                    <td className="px-6 py-4 font-bold text-gray-900 border-b border-r border-gray-200 align-top">{level}</td>
-                    <td className="px-6 py-4 text-gray-700 border-b border-gray-200 text-sm leading-relaxed">{description}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            {score && (
-              <div className="px-6 py-3 bg-indigo-50 border-t border-indigo-200">
-                <p className="text-indigo-700 font-semibold text-sm">✅ Selected Score: <span className="text-lg font-bold">{score}</span></p>
+          {/* Writing Assessment Score */}
+          <div className="mt-8">
+            <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+              <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" />
+              </svg>
+              Writing Assessment Score
+            </h3>
+
+            <div className="space-y-3 md:space-y-0 md:bg-white md:border md:border-purple-500 md:rounded-xl md:overflow-hidden mb-6">
+              {/* Desktop Header */}
+              <div className="hidden md:grid md:grid-cols-12 gap-4 p-5 border-b border-purple-500 font-bold text-slate-900 text-[13px] bg-white items-end">
+                <div className="col-span-2">CEFR Level</div>
+                <div className="col-span-2">Score Range<br />(20 pts)</div>
+                <div className="col-span-3">Writing Descriptor<br />(Aligned to A–E)</div>
+                <div className="col-span-3">What the Student Can Do<br />(Writing)</div>
+                <div className="col-span-2">% Error Frequency</div>
               </div>
-            )}
+
+              {/* Rows */}
+              <div className="flex flex-col gap-3 md:gap-0">
+                {WRITING_SCORING.map(({ level, scoreRange, descriptor, capabilities, errorFreq }, idx) => (
+                  <label
+                    key={level}
+                    className={`block md:grid md:grid-cols-12 gap-4 p-5 border md:border-t-0 md:border-x-0 cursor-pointer transition-colors duration-150 items-center rounded-xl md:rounded-none ${idx === WRITING_SCORING.length - 1 ? 'md:border-b-0' : 'md:border-b md:border-purple-300'
+                      } ${score === level
+                        ? 'bg-purple-50/50 shadow-sm md:shadow-none border-purple-500 md:border-purple-300'
+                        : 'border-slate-200 hover:bg-slate-50/50 bg-white'
+                      }`}
+                  >
+                    {/* CEFR Level & Radio */}
+                    <div className="col-span-2 flex items-center gap-3 font-bold text-slate-900 mb-3 md:mb-0">
+                      <input
+                        type="radio"
+                        name="writingScore"
+                        value={level}
+                        checked={score === level}
+                        onChange={() => { setScore(level); setErrors(p => ({ ...p, score: '' })); }}
+                        className="w-4 h-4 accent-purple-600 flex-shrink-0 cursor-pointer"
+                      />
+                      <span className="text-sm md:text-[13px] break-words whitespace-normal">{level}</span>
+                    </div>
+
+                    {/* Score Range */}
+                    <div className="col-span-2 text-sm md:text-[13px] font-bold text-slate-900 mb-2 md:mb-0 flex justify-between md:block">
+                      <span className="md:hidden text-slate-500 font-normal">Score Range:</span>
+                      {scoreRange}
+                    </div>
+
+                    {/* Descriptor */}
+                    <div className="col-span-3 text-sm md:text-[13px] text-slate-700 mb-2 md:mb-0">
+                      <span className="md:hidden text-slate-500 font-normal block mb-1">Descriptor:</span>
+                      {descriptor}
+                    </div>
+
+                    {/* Capabilities */}
+                    <div className="col-span-3 text-sm md:text-[13px] text-slate-700 leading-relaxed mb-3 md:mb-0">
+                      <span className="md:hidden text-slate-500 font-normal block mb-1">Student can:</span>
+                      {capabilities}
+                    </div>
+
+                    {/* Error Freq */}
+                    <div className="col-span-2 text-sm md:text-[13px] font-bold text-slate-900 flex justify-between md:block pt-3 border-t border-slate-100 md:border-0 md:pt-0">
+                      <span className="md:hidden text-slate-500 font-normal">Error Freq:</span>
+                      {errorFreq}
+                    </div>
+                  </label>
+                ))}
+              </div>
+            </div>
+            {errors.score && <p className="form-error mt-2 text-red-500">{errors.score}</p>}
           </div>
 
           {/* Teacher Observations */}

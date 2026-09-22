@@ -4,7 +4,7 @@ import { toast } from 'react-toastify';
 import { authService } from '../services/authService';
 import { assessmentAPI } from '../services/api';
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LabelList
 } from 'recharts';
 import Chart from 'react-apexcharts';
 
@@ -25,6 +25,62 @@ const getDisplayScore = (a) => {
   const baseLvl = lvl.substring(0, 2);
   const idx = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'].indexOf(baseLvl);
   return idx >= 0 ? WRITING_SCORES[idx] : 5;
+};
+
+// Custom tooltip for Recharts to show CEFR level
+const CustomTooltip = ({ active, payload, label }) => {
+  if (active && payload && payload.length) {
+    const getCefrStr = (score) => {
+      if (score === 0) return 'N/A';
+      if (score >= 18) return 'C2';
+      if (score >= 16) return 'C1';
+      if (score >= 13) return 'B2';
+      if (score >= 9) return 'B1';
+      if (score >= 5) return 'A2';
+      return 'A1';
+    };
+    return (
+      <div className="bg-white p-3 border border-slate-100 shadow-xl rounded-xl shadow-blue-500/10 min-w-[150px]">
+        <p className="font-bold text-slate-800 mb-2 uppercase tracking-wide text-[10px]">{label}</p>
+        <div className="space-y-1.5">
+          {payload.map((entry, index) => (
+            <div key={index} className="flex items-center justify-between gap-4 text-[11px] font-bold pb-1 border-b border-slate-50 last:border-b-0 last:pb-0">
+              <span className="flex items-center gap-1.5" style={{ color: entry.color }}>
+                <span className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }}></span>
+                {entry.name}: {entry.value}
+              </span>
+              {entry.value > 0 && (
+                <span className="px-1.5 py-0.5 bg-slate-100 text-slate-400 rounded">
+                  {getCefrStr(entry.value)}
+                </span>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+  return null;
+};
+
+// Custom label for putting CEFR on top of Recharts bars
+const renderCustomBarLabel = (props) => {
+  const { x, y, width, value } = props;
+  if (!value || value === 0) return null;
+  const cx = x + width / 2;
+
+  let cefr = 'A1';
+  if (value >= 18) cefr = 'C2';
+  else if (value >= 16) cefr = 'C1';
+  else if (value >= 13) cefr = 'B2';
+  else if (value >= 9) cefr = 'B1';
+  else if (value >= 5) cefr = 'A2';
+
+  return (
+    <text x={cx} y={y - 6} fill="#64748b" textAnchor="middle" fontSize="10" fontWeight="bold">
+      {cefr}
+    </text>
+  );
 };
 
 
@@ -170,35 +226,79 @@ export default function TeacherDashboard() {
       T3: item.count.T3 > 0 ? parseFloat((item.T3 / item.count.T3).toFixed(1)) : 0,
     }));
 
-    // CEFR Level Distribution
-    const levelCounts = { A1: 0, A2: 0, B1: 0, B2: 0, C1: 0, C2: 0 };
+    // CEFR Level Distribution By Skill (Stacked Bar Chart)
+    const levelSkillCounts = {
+      A1: { name: 'A1', Reading: 0, Writing: 0, Speaking: 0, Listening: 0 },
+      A2: { name: 'A2', Reading: 0, Writing: 0, Speaking: 0, Listening: 0 },
+      B1: { name: 'B1', Reading: 0, Writing: 0, Speaking: 0, Listening: 0 },
+      B2: { name: 'B2', Reading: 0, Writing: 0, Speaking: 0, Listening: 0 },
+      C1: { name: 'C1', Reading: 0, Writing: 0, Speaking: 0, Listening: 0 },
+      C2: { name: 'C2', Reading: 0, Writing: 0, Speaking: 0, Listening: 0 },
+    };
+
     dataToProcess.forEach(a => {
-      const level = a.cefrLevel || a.level;
-      if (levelCounts[level] !== undefined) levelCounts[level]++;
+      let baseLvl = (a.cefrLevel || a.level || 'A1').substring(0, 2);
+
+      // Strict fallback logic for generic levels
+      if (baseLvl === 'A ') baseLvl = 'A1';
+      if (!levelSkillCounts[baseLvl]) {
+        const grades = { 'A': 'A1', 'B': 'A2', 'C': 'B1', 'D': 'B2', 'E': 'C1' };
+        baseLvl = grades[a.level?.substring(0, 1)] || 'A1';
+      }
+
+      if (levelSkillCounts[baseLvl]) {
+        const type = (a.assessmentType || '').toLowerCase();
+        if (type.includes('reading')) levelSkillCounts[baseLvl].Reading++;
+        else if (type.includes('writing')) levelSkillCounts[baseLvl].Writing++;
+        else if (type.includes('speaking')) levelSkillCounts[baseLvl].Speaking++;
+        else if (type.includes('listening')) levelSkillCounts[baseLvl].Listening++;
+      }
     });
 
-    const distributionData = Object.keys(levelCounts).map(level => ({
-      name: level,
-      count: levelCounts[level]
-    }));
+    const distributionData = Object.values(levelSkillCounts);
 
-    // FIXED: Overall Assessment Distribution by Student Name (Pie Chart Data)
-    // Count total assessments per student to show overall progress
-    const studentCounts = {};
+    // FIXED: Overall Assessment Progress Distribution (CEFR Breakdown for Pie Chart Data)
+    const cefrDonutCounts = { A1: 0, A2: 0, B1: 0, B2: 0, C1: 0, C2: 0 };
     dataToProcess.forEach(a => {
+      let baseLvl = (a.cefrLevel || a.level || 'A1').substring(0, 2);
+      if (baseLvl === 'A ') baseLvl = 'A1';
+      if (cefrDonutCounts[baseLvl] === undefined) {
+        const grades = { 'A': 'A1', 'B': 'A2', 'C': 'B1', 'D': 'B2', 'E': 'C1' };
+        baseLvl = grades[a.level?.substring(0, 1)] || 'A1';
+      }
+      if (cefrDonutCounts[baseLvl] !== undefined) cefrDonutCounts[baseLvl]++;
+    });
+
+    const overallDistributionData = Object.keys(cefrDonutCounts)
+      .map(key => ({ name: key, count: cefrDonutCounts[key] }))
+      .filter(d => d.count > 0);
+
+    // NEW: Student Termly Averages
+    const studentStats = {};
+    dataToProcess.forEach(a => {
+      const term = (a.term || 'T1').toUpperCase();
       const studentName = a.studentName || 'Unknown';
-      studentCounts[studentName] = (studentCounts[studentName] || 0) + 1;
+      let score = getDisplayScore(a);
+
+      if (!studentStats[studentName]) {
+        studentStats[studentName] = { name: studentName, T1: 0, T2: 0, T3: 0, count: { T1: 0, T2: 0, T3: 0 } };
+      }
+      studentStats[studentName][term] += score;
+      studentStats[studentName].count[term] += 1;
     });
 
-    const overallDistributionData = Object.keys(studentCounts).map(student => ({
-      name: student,
-      count: studentCounts[student]
+    const studentTermlyData = Object.values(studentStats).map(item => ({
+      name: item.name,
+      T1: item.count.T1 > 0 ? parseFloat((item.T1 / item.count.T1).toFixed(1)) : 0,
+      T2: item.count.T2 > 0 ? parseFloat((item.T2 / item.count.T2).toFixed(1)) : 0,
+      T3: item.count.T3 > 0 ? parseFloat((item.T3 / item.count.T3).toFixed(1)) : 0,
     }));
 
     return {
       termlyData: finalTermlyData,
       distributionData,
-      overallDistributionData // NEW: Overall assessment count by student
+      overallDistributionData,
+      studentTermlyData
     };
   };
 
@@ -271,7 +371,18 @@ export default function TeacherDashboard() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
         {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <div className="stat-card bg-indigo-50 border-indigo-200">
+            <div className="stat-icon bg-indigo-100 text-indigo-600">
+              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+              </svg>
+            </div>
+            <div>
+              <div className="stat-value text-indigo-600">{students.length}</div>
+              <div className="stat-label">Total Students</div>
+            </div>
+          </div>
           <div className="stat-card bg-blue-50 border-blue-200">
             <div className="stat-icon bg-blue-100 text-blue-600">
               <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -312,7 +423,8 @@ export default function TeacherDashboard() {
         </div>
 
         {/* Analytics Section */}
-        <div className="space-y-8">
+        <div className="space-y-8 mt-8">
+
           {/* Individual Student Report */}
           <div className="card-section bg-white p-8 rounded-3xl border border-slate-100 shadow-sm">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
@@ -348,14 +460,17 @@ export default function TeacherDashboard() {
                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
                         <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12, fontWeight: 600 }} />
                         <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12, fontWeight: 600 }} />
-                        <Tooltip
-                          contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }}
-                          cursor={{ fill: '#f1f5f9' }}
-                        />
+                        <Tooltip content={<CustomTooltip />} cursor={{ fill: '#f1f5f9' }} />
                         <Legend iconType="circle" wrapperStyle={{ paddingTop: '20px' }} />
-                        <Bar dataKey="T1" name="Term 1" fill="#4f46e5" radius={[6, 6, 0, 0]} barSize={20} />
-                        <Bar dataKey="T2" name="Term 2" fill="#ef4444" radius={[6, 6, 0, 0]} barSize={20} />
-                        <Bar dataKey="T3" name="Term 3" fill="#f59e0b" radius={[6, 6, 0, 0]} barSize={20} />
+                        <Bar dataKey="T1" name="Term 1" fill="#4f46e5" radius={[6, 6, 0, 0]} barSize={20}>
+                          <LabelList dataKey="T1" content={renderCustomBarLabel} />
+                        </Bar>
+                        <Bar dataKey="T2" name="Term 2" fill="#ef4444" radius={[6, 6, 0, 0]} barSize={20}>
+                          <LabelList dataKey="T2" content={renderCustomBarLabel} />
+                        </Bar>
+                        <Bar dataKey="T3" name="Term 3" fill="#f59e0b" radius={[6, 6, 0, 0]} barSize={20}>
+                          <LabelList dataKey="T3" content={renderCustomBarLabel} />
+                        </Bar>
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
@@ -393,43 +508,79 @@ export default function TeacherDashboard() {
             )}
           </div>
 
-          {/* Overall Performance */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div className="card-section bg-white p-8 rounded-3xl border border-slate-100 shadow-sm">
-              <h2 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
-                <svg className="w-6 h-6 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                </svg>
-                Class Average
-              </h2>
-              <div className="h-[250px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={overallChartData.termlyData}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 10, fontWeight: 600 }} />
-                    <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 10, fontWeight: 600 }} />
-                    <Tooltip
-                      contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }}
-                    />
-                    <Legend iconType="circle" wrapperStyle={{ fontSize: '10px' }} />
-                    <Bar dataKey="T1" name="T1" fill="#3b82f6" radius={[4, 4, 0, 0]} />
-                    <Bar dataKey="T2" name="T2" fill="#ef4444" radius={[4, 4, 0, 0]} />
-                    <Bar dataKey="T3" name="T3" fill="#eab308" radius={[4, 4, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
+          {/* GLOBAL CLASS PERFORMANCE (NEW) */}
+          <div className="card-section bg-white p-8 rounded-3xl border border-slate-100 shadow-sm">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+              <div>
+                <h2 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
+                  <svg className="w-7 h-7 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Total Class Performance
+                </h2>
+                <p className="text-slate-500 text-sm">Overall class progression across all skills and cohort proficiency breakdown.</p>
               </div>
             </div>
 
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+              <div className="lg:col-span-8">
+                <div className="h-[350px] w-full bg-slate-50/50 p-4 rounded-2xl border border-slate-100">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={overallChartData.studentTermlyData}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                      <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 11, fontWeight: 700 }} />
+                      <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12, fontWeight: 600 }} />
+                      <Tooltip content={<CustomTooltip />} cursor={{ fill: '#f1f5f9' }} />
+                      <Legend iconType="circle" wrapperStyle={{ paddingTop: '20px' }} />
+                      <Bar dataKey="T1" name="Term 1" fill="#4f46e5" radius={[6, 6, 0, 0]} barSize={20}>
+                        <LabelList dataKey="T1" content={renderCustomBarLabel} />
+                      </Bar>
+                      <Bar dataKey="T2" name="Term 2" fill="#ef4444" radius={[6, 6, 0, 0]} barSize={20}>
+                        <LabelList dataKey="T2" content={renderCustomBarLabel} />
+                      </Bar>
+                      <Bar dataKey="T3" name="Term 3" fill="#f59e0b" radius={[6, 6, 0, 0]} barSize={20}>
+                        <LabelList dataKey="T3" content={renderCustomBarLabel} />
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+              <div className="lg:col-span-4">
+                <div className="bg-indigo-50/50 rounded-2xl p-6 border border-indigo-100 h-full">
+                  <h3 className="text-xs font-black text-indigo-900 mb-4 uppercase tracking-widest">Total Proficiency Mapping</h3>
+                  <div className="h-[280px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart layout="vertical" data={overallChartData.distributionData}>
+                        <XAxis type="number" hide />
+                        <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 11, fontWeight: 800 }} />
+                        <Tooltip cursor={{ fill: 'transparent' }} contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }} />
+                        <Legend iconType="circle" wrapperStyle={{ fontSize: '11px', bottom: -5 }} />
+                        <Bar dataKey="Reading" stackId="a" fill="#10b981" />
+                        <Bar dataKey="Writing" stackId="a" fill="#f59e0b" />
+                        <Bar dataKey="Speaking" stackId="a" fill="#8b5cf6" />
+                        <Bar dataKey="Listening" stackId="a" fill="#3b82f6" radius={[0, 4, 4, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+
+          {/* Aggregate Distribution and Types */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <div className="card-section bg-white p-8 rounded-3xl border border-slate-100 shadow-sm">
-              <h2 className="text-sm font-bold text-slate-400 mb-6 uppercase tracking-widest">
-                Total Student Progress - All Assessments
+              <h2 className="text-sm font-bold text-slate-400 mb-6 uppercase tracking-widest flex items-center justify-between">
+                <span>Class Proficiency Distribution</span>
+                <span className="text-xs font-medium bg-slate-100 px-2 py-1 rounded-md">CEFR Snapshot</span>
               </h2>
               <div className="h-[250px]">
                 <Chart
                   options={{
                     labels: overallChartData.overallDistributionData.map(d => d.name),
-                    colors: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'],
-                    legend: { position: 'bottom', fontSize: '11px', fontWeight: 'bold' },
+                    colors: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f43f5e'],
+                    legend: { position: 'right', fontSize: '11px', fontWeight: 'bold' },
                     dataLabels: {
                       enabled: true,
                       formatter: (val) => `${val.toFixed(1)}%`
@@ -441,47 +592,29 @@ export default function TeacherDashboard() {
                     }
                   }}
                   series={overallChartData.overallDistributionData.map(d => d.count)}
-                  type="pie"
+                  type="donut"
                   height={250}
                 />
               </div>
             </div>
 
             <div className="card-section bg-white p-8 rounded-3xl border border-slate-100 shadow-sm">
-
-              <h2 className="text-sm font-bold text-slate-400 mb-6 uppercase tracking-widest">
-                Overall Student Assessments by Type
+              <h2 className="text-sm font-bold text-slate-400 mb-6 uppercase tracking-widest flex items-center justify-between">
+                <span>Assessment Distribution</span>
+                <span className="text-xs font-medium bg-slate-100 px-2 py-1 rounded-md">By Type</span>
               </h2>
               <div className="h-[250px]">
                 <Chart
                   options={{
                     chart: { type: 'bar', height: 250, toolbar: { show: false } },
-                    xaxis: { categories: overallAssessmentsData.map(d => d.name.replace(' Assessment', '')) },
-                    colors: ['#6b7280'],
-                    plotOptions: { bar: { distributed: true, borderRadius: 4 } },
-                    dataLabels: { enabled: false },
+                    xaxis: { categories: overallAssessmentsData.map(d => d.name.replace(' Assessment', '')), labels: { style: { fontWeight: 'bold', colors: '#64748b' } } },
+                    colors: ['#8b5cf6'],
+                    plotOptions: { bar: { distributed: true, borderRadius: 6 } },
+                    dataLabels: { enabled: true, style: { fontSize: '10px' } },
                     legend: { show: false },
                   }}
                   series={[{ name: 'Count', data: overallAssessmentsData.map(d => d.count) }]}
                 />
-              </div>
-            </div>
-            <div className="card-section bg-white p-8 rounded-3xl border border-slate-100 shadow-sm">
-              <h2 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
-                <svg className="w-6 h-6 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                </svg>
-                Proficiency
-              </h2>
-              <div className="h-[250px] flex items-center">
-                <ResponsiveContainer width="100%" height="80%">
-                  <BarChart layout="vertical" data={overallChartData.distributionData}>
-                    <XAxis type="number" hide />
-                    <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 10, fontWeight: 700 }} />
-                    <Tooltip cursor={{ fill: 'transparent' }} />
-                    <Bar dataKey="count" fill="#8b5cf6" radius={[0, 6, 6, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
               </div>
             </div>
           </div>
