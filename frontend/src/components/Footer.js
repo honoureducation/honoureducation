@@ -22,9 +22,8 @@ export default function Footer() {
           <div>
             <h4 className="text-white text-xs font-semibold mb-3">Contact</h4>
             <div className="space-y-2">
-              <p className="text-slate-400 text-xs">info@honoureducation.edu</p>
-              <p className="text-slate-400 text-xs">+1 (555) 123-4567</p>
-              <p className="text-slate-400 text-xs">123 Education Street<br />Learning City, LC 12345</p>
+              <p className="text-slate-400 text-xs">Info@honoureducation.com</p>
+              <p className="text-slate-400 text-xs">+971 506629149</p>
             </div>
           </div>
 

@@ -16,9 +16,7 @@ const createTransporter = () => {
 
 // Base Email Template
 const getEmailTemplate = (title, content) => {
-  const baseUrl = process.env.NODE_ENV === 'production'
-    ? 'https://assessment.honoureducation.online'
-    : (process.env.FRONTEND_URL || 'http://localhost:3000');
+  const baseUrl = process.env.FRONTEND_URL || 'https://assessment.honoureducation.online';
   const logoUrl = `${baseUrl}/logo.png`;
 
   return `

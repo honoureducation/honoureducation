@@ -291,7 +291,7 @@ export default function WritingAssessmentLandmarkForm() {
                         onChange={() => setScore(level)}
                         className="w-4 h-4 accent-purple-600 flex-shrink-0 cursor-pointer"
                       />
-                      <span className="text-sm md:text-[13px] whitespace-nowrap">{level}</span>
+                      <span className="text-sm md:text-[13px] break-words whitespace-normal">{level}</span>
                     </div>
 
                     {/* Score Range */}

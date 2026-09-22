@@ -230,13 +230,11 @@ export default function WritingAssessmentForm() {
                 {SCORING.map(({ level, scoreRange, descriptor, capabilities, errorFreq }, idx) => (
                   <label
                     key={level}
-                    className={`block md:grid md:grid-cols-12 gap-4 p-5 border md:border-t-0 md:border-x-0 cursor-pointer transition-colors duration-150 items-center rounded-xl md:rounded-none ${
-                      idx === SCORING.length - 1 ? 'md:border-b-0' : 'md:border-b md:border-purple-300'
-                    } ${
-                      score === level
+                    className={`block md:grid md:grid-cols-12 gap-4 p-5 border md:border-t-0 md:border-x-0 cursor-pointer transition-colors duration-150 items-center rounded-xl md:rounded-none ${idx === SCORING.length - 1 ? 'md:border-b-0' : 'md:border-b md:border-purple-300'
+                      } ${score === level
                         ? 'bg-purple-50/50 shadow-sm md:shadow-none border-purple-500 md:border-purple-300'
                         : 'border-slate-200 hover:bg-slate-50/50 bg-white'
-                    }`}
+                      }`}
                   >
                     {/* CEFR Level & Radio */}
                     <div className="col-span-2 flex items-center gap-3 font-bold text-slate-900 mb-3 md:mb-0">
@@ -248,7 +246,7 @@ export default function WritingAssessmentForm() {
                         onChange={() => { setScore(level); setErrors(p => ({ ...p, score: '' })); }}
                         className="w-4 h-4 accent-purple-600 flex-shrink-0 cursor-pointer"
                       />
-                      <span className="text-sm md:text-[13px] whitespace-nowrap">{level}</span>
+                      <span className="text-sm md:text-[13px] break-words whitespace-normal">{level}</span>
                     </div>
 
                     {/* Score Range */}

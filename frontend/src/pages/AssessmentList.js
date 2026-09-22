@@ -21,12 +21,12 @@ const SPEAKING_QUESTIONS_JUNIOR = [
 ];
 
 const TYPE_META = {
-  'EAL & ELL':       { label: 'EAL & ELL',      color: 'bg-purple-100 text-purple-700' },
-  'Listening Part 1':{ label: 'Listening P1',    color: 'bg-blue-100 text-blue-700' },
-  'Listening Part 2':{ label: 'Listening P2',    color: 'bg-cyan-100 text-cyan-700' },
-  'Speaking Assessment':{ label: 'Speaking',     color: 'bg-violet-100 text-violet-700' },
-  'Reading Assessment': { label: 'Reading',      color: 'bg-emerald-100 text-emerald-700' },
-  'Writing Assessment': { label: 'Writing',      color: 'bg-amber-100 text-amber-700' },
+  'EAL & ELL': { label: 'EAL & ELL', color: 'bg-purple-100 text-purple-700' },
+  'Listening Part 1': { label: 'Listening P1', color: 'bg-blue-100 text-blue-700' },
+  'Listening Part 2': { label: 'Listening P2', color: 'bg-cyan-100 text-cyan-700' },
+  'Speaking Assessment': { label: 'Speaking', color: 'bg-violet-100 text-violet-700' },
+  'Reading Assessment': { label: 'Reading', color: 'bg-emerald-100 text-emerald-700' },
+  'Writing Assessment': { label: 'Writing', color: 'bg-amber-100 text-amber-700' },
 };
 
 const CEFR_COLORS = {
@@ -57,7 +57,26 @@ function getScoreMax(a) {
   if (a.assessmentType === 'Listening Part 1') return '/26';
   if (a.assessmentType === 'Listening Part 2') return a.yearGroupType === 'junior' ? '/8' : '/20';
   if (a.assessmentType === 'Speaking Assessment') return '/12';
+  if (a.assessmentType === 'Writing Assessment') return '/20';
   return '';
+}
+
+function getDisplayScore(a) {
+  let score = a.totalScore;
+  const type = (a.assessmentType || '').toLowerCase();
+  const WRITING_SCORES = [4, 8, 12, 15, 17, 20];
+
+  if (score !== undefined && score !== null && score >= 0) {
+    if (score <= 5 && type.includes('writing')) {
+      return WRITING_SCORES[score] || 0;
+    }
+    return score;
+  }
+
+  const lvl = a.cefrLevel || a.level || 'A1';
+  const baseLvl = lvl.substring(0, 2);
+  const idx = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'].indexOf(baseLvl);
+  return idx >= 0 ? WRITING_SCORES[idx] : 5;
 }
 
 function getInitials(name) {
@@ -125,7 +144,7 @@ function DetailModal({ assessment: a, onClose }) {
           <div className="grid grid-cols-2 gap-3">
             <div className="score-box-blue">
               <p className="text-xs font-semibold text-blue-600 uppercase tracking-wide mb-1">Total Score</p>
-              <p className="text-3xl font-bold text-blue-700">{a.totalScore ?? 0}{getScoreMax(a)}</p>
+              <p className="text-3xl font-bold text-blue-700">{getDisplayScore(a)}{getScoreMax(a)}</p>
             </div>
             <div className={`score-box border ${CEFR_COLORS[a.cefrLevel || a.level] || AE_COLORS[a.level] || 'bg-slate-50 border-slate-200'}`}>
               <p className="text-xs font-semibold uppercase tracking-wide mb-1 opacity-70">Level</p>
@@ -270,7 +289,7 @@ export default function AssessmentList() {
       a.yearGroupAndClass,
       a.term || 'T1',
       a.assessmentType,
-      a.totalScore ?? 0,
+      getDisplayScore(a),
       getScoreMax(a).replace('/', ''),
       a.cefrLevel || a.level || '—',
       new Date(a.createdAt).toLocaleString(),
@@ -393,11 +412,10 @@ export default function AssessmentList() {
                   <button
                     key={t}
                     onClick={() => setFilterType(t)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
-                      filterType === t
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${filterType === t
                         ? 'bg-blue-600 text-white'
                         : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
-                    }`}
+                      }`}
                   >
                     {t === 'All' ? 'All Skills' : (TYPE_META[t]?.label || t)}
                   </button>
@@ -409,11 +427,10 @@ export default function AssessmentList() {
                   <button
                     key={t}
                     onClick={() => setFilterTerm(t)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
-                      filterTerm === t
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${filterTerm === t
                         ? 'bg-indigo-600 text-white'
                         : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
-                    }`}
+                      }`}
                   >
                     {t === 'All' ? 'All Terms' : t}
                   </button>
@@ -468,7 +485,7 @@ export default function AssessmentList() {
                         </td>
                         <td className="text-center">
                           <span className="font-bold text-slate-900 text-sm">
-                            {a.totalScore ?? 0}{getScoreMax(a)}
+                            {getDisplayScore(a)}{getScoreMax(a)}
                           </span>
                         </td>
                         <td className="text-center">{getLevelBadge(a)}</td>

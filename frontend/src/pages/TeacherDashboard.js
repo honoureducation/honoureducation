@@ -8,7 +8,25 @@ import {
 } from 'recharts';
 import Chart from 'react-apexcharts';
 
-// ... (rest of the file remains unchanged)
+// Helper for retrieving display score safely
+const getDisplayScore = (a) => {
+  let score = a.totalScore;
+  const type = (a.assessmentType || '').toLowerCase();
+  const WRITING_SCORES = [4, 8, 12, 15, 17, 20];
+
+  if (score !== undefined && score !== null && score >= 0) {
+    if (score <= 5 && type.includes('writing')) {
+      return WRITING_SCORES[score] || 0;
+    }
+    return score;
+  }
+
+  const lvl = a.cefrLevel || a.level || 'A1';
+  const baseLvl = lvl.substring(0, 2);
+  const idx = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'].indexOf(baseLvl);
+  return idx >= 0 ? WRITING_SCORES[idx] : 5;
+};
+
 
 export default function TeacherDashboard() {
   const navigate = useNavigate();
@@ -128,7 +146,7 @@ export default function TeacherDashboard() {
       const term = (a.term || 'T1').toUpperCase();
       const type = a.assessmentType.toLowerCase();
 
-      const score = a.totalScore || (a.cefrLevel ? (['A1', 'A2', 'B1', 'B2', 'C1', 'C2'].indexOf(a.cefrLevel) + 1) * 4 : 5);
+      let score = getDisplayScore(a);
 
       if (termScores[term] !== undefined) termScores[term] += score;
 
@@ -355,7 +373,7 @@ export default function TeacherDashboard() {
                             <p className="text-[10px] text-indigo-500 font-black uppercase">{a.term || 'T1'}</p>
                           </div>
                           <div className="text-right">
-                            <span className="px-2 py-1 bg-indigo-600 text-white text-[10px] font-bold rounded-lg">{a.totalScore || a.level}</span>
+                            <span className="px-2 py-1 bg-indigo-600 text-white text-[10px] font-bold rounded-lg">{getDisplayScore(a)} Pts</span>
                           </div>
                         </div>
                       ))}

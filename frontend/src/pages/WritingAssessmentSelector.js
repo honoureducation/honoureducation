@@ -14,13 +14,7 @@ const OPTIONS = [
     id: 'junior-assessor',
     title: 'Year 7–9 / Grade 6–8',
     subtitle: 'Assessor Form',
-    desc: (
-      <>
-        Writing assessment with sports picture prompts.
-        <br />
-        CEFR scoring rubric and teacher observations.
-      </>
-    ),
+    desc: 'Writing assessment with sports picture prompts. A–E scoring rubric and teacher observations.',
     color: 'bg-amber-600',
     route: '/assessment/writing/junior',
   },
@@ -36,13 +30,7 @@ const OPTIONS = [
     id: 'senior-assessor',
     title: 'Year 10–13 / Grade 9–12',
     subtitle: 'Assessor Form',
-    desc: (
-      <>
-        Writing assessment with sports picture prompts.
-        <br />
-        CEFR scoring rubric and teacher observations.
-      </>
-    ),
+    desc: 'Writing assessment with sports picture prompts. A–E scoring rubric and teacher observations.',
     color: 'bg-pink-600',
     route: '/assessment/writing/senior',
   },
@@ -58,13 +46,7 @@ const OPTIONS = [
     id: 'senior-landmark-assessor',
     title: 'Year 10–13 / Grade 9-12',
     subtitle: 'Assessor Form',
-    desc: (
-      <>
-        Writing assessment with landmark picture prompts.
-        <br />
-        CEFR scoring rubric and teacher observations.
-      </>
-    ),
+    desc: 'Writing assessment with landmark picture prompts. New CEFR scoring rubric.',
     color: 'bg-indigo-600',
     route: '/assessment/writing/senior-landmark',
   },
