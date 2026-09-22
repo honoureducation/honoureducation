@@ -128,7 +128,7 @@ export default function TeacherDashboard() {
       title: 'Listening Assessment',
       description: 'Comprehensive evaluation of auditory comprehension across CEFR levels.',
       icon: '🎧',
-      color: 'bg-blue-500',
+      color: 'bg-cyan-500',
       route: '/assessment/listening'
     },
     {
@@ -152,7 +152,7 @@ export default function TeacherDashboard() {
       title: 'Writing Assessment',
       description: 'Assess grammatical accuracy, structure, and written expression.',
       icon: '✏️',
-      color: 'bg-orange-500',
+      color: 'bg-pink-500',
       route: '/assessment/writing'
     }
   ];
@@ -556,9 +556,9 @@ export default function TeacherDashboard() {
                         <Tooltip cursor={{ fill: 'transparent' }} contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }} />
                         <Legend iconType="circle" wrapperStyle={{ fontSize: '11px', bottom: -5 }} />
                         <Bar dataKey="Reading" stackId="a" fill="#10b981" />
-                        <Bar dataKey="Writing" stackId="a" fill="#f59e0b" />
+                        <Bar dataKey="Writing" stackId="a" fill="#ec4899" />
                         <Bar dataKey="Speaking" stackId="a" fill="#8b5cf6" />
-                        <Bar dataKey="Listening" stackId="a" fill="#3b82f6" radius={[0, 4, 4, 0]} />
+                        <Bar dataKey="Listening" stackId="a" fill="#06b6d4" radius={[0, 4, 4, 0]} />
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
@@ -579,7 +579,7 @@ export default function TeacherDashboard() {
                 <Chart
                   options={{
                     labels: overallChartData.overallDistributionData.map(d => d.name),
-                    colors: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f43f5e'],
+                    colors: ['#06b6d4', '#10b981', '#8b5cf6', '#ec4899', '#a855f7', '#14b8a6'],
                     legend: { position: 'right', fontSize: '11px', fontWeight: 'bold' },
                     dataLabels: {
                       enabled: true,
@@ -608,7 +608,7 @@ export default function TeacherDashboard() {
                   options={{
                     chart: { type: 'bar', height: 250, toolbar: { show: false } },
                     xaxis: { categories: overallAssessmentsData.map(d => d.name.replace(' Assessment', '')), labels: { style: { fontWeight: 'bold', colors: '#64748b' } } },
-                    colors: ['#8b5cf6'],
+                    colors: ['#06b6d4', '#8b5cf6', '#10b981', '#ec4899'], // Listening, Speaking, Reading, Writing in exact order
                     plotOptions: { bar: { distributed: true, borderRadius: 6 } },
                     dataLabels: { enabled: true, style: { fontSize: '10px' } },
                     legend: { show: false },
