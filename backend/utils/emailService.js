@@ -35,12 +35,12 @@ const getEmailTemplate = (title, content) => {
 
               <!-- HEADER -->
               <tr>
-                <td style="background: linear-gradient(135deg, #2b6c8a 0%, #1a4f6e 100%); padding: 36px 30px; text-align: center;">
-                  <img src="${logoUrl}" alt="Honour Education Logo" width="200"
-                    style="display: block; margin: 0 auto 16px auto; max-width: 100%; height: auto;"
+                <td style="background: linear-gradient(135deg, #2b6c8a 0%, #1a4f6e 100%); padding: 24px 30px; text-align: center;">
+                  <img src="${logoUrl}" alt="Honour Education Logo" width="120"
+                    style="display: block; margin: 0 auto 12px auto; max-width: 100%; height: auto;"
                     onerror="this.style.display='none'">
-                  <h1 style="color: #ffffff; margin: 0; font-size: 22px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;">Honour Education</h1>
-                  <p style="color: rgba(255,255,255,0.75); margin: 6px 0 0 0; font-size: 13px; letter-spacing: 0.5px;">Academic Excellence Platform</p>
+                  <h1 style="color: #ffffff; margin: 0; font-size: 18px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;">Honour Education</h1>
+                  <p style="color: rgba(255,255,255,0.8); margin: 4px 0 0 0; font-size: 12px; letter-spacing: 0.5px;">Academic Excellence Platform</p>
                 </td>
               </tr>
 

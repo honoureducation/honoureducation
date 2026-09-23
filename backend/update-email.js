@@ -27,9 +27,10 @@ const getEmailTemplate = (title, content) => {
       <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8fafc; margin: 0; padding: 40px 20px; }
         .container { max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
-        .header { background: linear-gradient(135deg, #2563eb, #4f46e5); padding: 30px; text-align: center; }
-        .header img { max-height: auto; max-width: 100%; width: 200px; margin-bottom: 15px; }
-        .header h1 { color: #ffffff; margin: 0; font-size: 24px; font-weight: 700; letter-spacing: 0.5px; }
+        .header { background: linear-gradient(135deg, #2b6c8a, #1a4f6e); padding: 24px; text-align: center; }
+        .header img { max-height: auto; max-width: 100%; width: 120px; margin-bottom: 12px; }
+        .header h1 { color: #ffffff; margin: 0; font-size: 18px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; }
+        .header p { color: rgba(255,255,255,0.8); margin: 4px 0 0 0; font-size: 12px; letter-spacing: 0.5px; }
         .content { padding: 40px 30px; color: #334155; line-height: 1.6; font-size: 16px; }
         .content h2 { color: #1e293b; margin-top: 0; }
         .button { display: inline-block; background-color: #4f46e5; color: #ffffff !important; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: bold; margin: 25px 0; text-align: center; }
@@ -41,6 +42,7 @@ const getEmailTemplate = (title, content) => {
         <div class="header">
           <img src="${logoUrl}" alt="Honour Education Logo" onerror="this.style.display='none'">
           <h1>Honour Education</h1>
+          <p>Academic Excellence Platform</p>
         </div>
         <div class="content">
           <h2>\${title}</h2>
