@@ -18,7 +18,7 @@ const createTransporter = () => {
 
 // Base Email Template
 const getEmailTemplate = (title, content) => {
-  const logoUrl = process.env.FRONTEND_URL ? \`\${process.env.FRONTEND_URL}/favicon.ico\` : 'https://academic-excellence-frontend.onrender.com/favicon.ico';
+  const logoUrl = process.env.FRONTEND_URL ? \`\${process.env.FRONTEND_URL}/logonew.png\` : 'https://academic-excellence-frontend.onrender.com/logonew.png';
   return \`
     <!DOCTYPE html>
     <html>
@@ -28,7 +28,7 @@ const getEmailTemplate = (title, content) => {
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8fafc; margin: 0; padding: 40px 20px; }
         .container { max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
         .header { background: linear-gradient(135deg, #2563eb, #4f46e5); padding: 30px; text-align: center; }
-        .header img { max-height: 50px; margin-bottom: 15px; }
+        .header img { max-height: auto; max-width: 100%; width: 200px; margin-bottom: 15px; }
         .header h1 { color: #ffffff; margin: 0; font-size: 24px; font-weight: 700; letter-spacing: 0.5px; }
         .content { padding: 40px 30px; color: #334155; line-height: 1.6; font-size: 16px; }
         .content h2 { color: #1e293b; margin-top: 0; }
@@ -39,6 +39,7 @@ const getEmailTemplate = (title, content) => {
     <body>
       <div class="container">
         <div class="header">
+          <img src="${logoUrl}" alt="Honour Education Logo" onerror="this.style.display='none'">
           <h1>Honour Education</h1>
         </div>
         <div class="content">

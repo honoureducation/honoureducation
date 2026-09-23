@@ -17,7 +17,7 @@ const createTransporter = () => {
 // Base Email Template
 const getEmailTemplate = (title, content) => {
   const baseUrl = process.env.FRONTEND_URL || 'https://assessment.honoureducation.online';
-  const logoUrl = `${baseUrl}/logo.png`;
+  const logoUrl = `${baseUrl}/logonew.png`;
 
   return `
     <!DOCTYPE html>
@@ -36,8 +36,8 @@ const getEmailTemplate = (title, content) => {
               <!-- HEADER -->
               <tr>
                 <td style="background: linear-gradient(135deg, #2b6c8a 0%, #1a4f6e 100%); padding: 36px 30px; text-align: center;">
-                  <img src="${logoUrl}" alt="Honour Education Logo" width="90" height="90"
-                    style="border-radius: 50%; display: block; margin: 0 auto 16px auto; border: 3px solid rgba(255,255,255,0.3);"
+                  <img src="${logoUrl}" alt="Honour Education Logo" width="200"
+                    style="display: block; margin: 0 auto 16px auto; max-width: 100%; height: auto;"
                     onerror="this.style.display='none'">
                   <h1 style="color: #ffffff; margin: 0; font-size: 22px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;">Honour Education</h1>
                   <p style="color: rgba(255,255,255,0.75); margin: 6px 0 0 0; font-size: 13px; letter-spacing: 0.5px;">Academic Excellence Platform</p>
