@@ -138,6 +138,7 @@ export default function WritingAssessmentForm() {
               <li>Sit with the pupil in a calm, distraction-free space.</li>
               <li>Ask the pupil to write paragraphs / sentences for these pictures.</li>
               <li>Use the questions below to prompt the student.</li>
+              <li>Allow 10 minutes for student to write.</li>
             </ul>
           </div>
         </div>

@@ -151,9 +151,10 @@ export default function WritingAssessmentLandmarkForm() {
           <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded space-y-2">
             <p className="text-sm text-gray-700"><strong>Instructions for assessor:</strong></p>
             <ul className="text-sm text-gray-700 space-y-1 ml-4">
-              <li>• Sit with the pupil in a calm, distraction-free spaceSSSS</li>
+              <li>• Sit with the pupil in a calm, distraction-free space.</li>
               <li>• Ask the pupil to write paragraphs / sentences for this picture.</li>
               <li>• Use the questions to prompt.</li>
+              <li>• Allow 10 minutes for student to write.</li>
             </ul>
           </div>
         </div>

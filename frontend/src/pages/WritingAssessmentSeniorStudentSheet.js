@@ -100,7 +100,10 @@ export default function WritingAssessmentSeniorStudentSheet() {
 
         {/* Questions + Pictures */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <h2 className="text-lg font-bold text-gray-900 mb-4">Questions</h2>
+          <h2 className="text-lg font-bold text-gray-900 mb-2">Questions</h2>
+          <p className="text-sm font-semibold text-blue-600 mb-4 bg-blue-50 inline-block px-3 py-1 rounded-md">
+            Note: Allow 10 minutes for student to write.
+          </p>
           <ol className="space-y-1 text-gray-700 mb-6">
             {WRITING_QUESTIONS.map((q, idx) => (
               <li key={idx} className="font-medium">{idx + 1}.{q}</li>

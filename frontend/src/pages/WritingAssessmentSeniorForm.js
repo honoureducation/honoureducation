@@ -156,6 +156,7 @@ export default function WritingAssessmentSeniorForm() {
               <li>• Sit with the pupil in a calm, distraction-free space.</li>
               <li>• Ask the pupil to write paragraphs / sentences for this picture.</li>
               <li>• Use the questions to prompt.</li>
+              <li>• Allow 10 minutes for student to write.</li>
             </ul>
           </div>
         </div>

@@ -94,12 +94,15 @@ export default function WritingAssessmentLandmarkStudentSheet() {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-1">Writing Assessment</h1>
-          <p className="text-gray-600 mb-6 font-medium uppercase tracking-wider text-xs">Year 10-13 / Grade 9-12SSSSSSSS</p>
+          <p className="text-gray-600 mb-6 font-medium uppercase tracking-wider text-xs">Year 10-13 / Grade 9-12</p>
         </div>
 
         {/* Questions + Pictures */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <h2 className="text-lg font-bold text-gray-900 mb-4">Questions</h2>
+          <h2 className="text-lg font-bold text-gray-900 mb-2">Questions</h2>
+          <p className="text-sm font-semibold text-blue-600 mb-4 bg-blue-50 inline-block px-3 py-1 rounded-md">
+            Note: Allow 10 minutes for student to write.
+          </p>
           <ol className="space-y-1 text-gray-700 mb-6">
             {WRITING_QUESTIONS.map((q, idx) => (
               <li key={idx} className="font-medium text-lg">{q}</li>

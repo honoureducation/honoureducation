@@ -207,6 +207,14 @@ function DetailModal({ assessment: a, onClose }) {
                   <p className="text-sm text-slate-700">{a.writingNotes}</p>
                 </div>
               )}
+              {a.studentWriting && (
+                <div className="bg-white rounded-xl p-4 border border-slate-200 shadow-sm mt-4">
+                  <p className="text-xs text-indigo-500 uppercase font-bold tracking-wider mb-2">Student Writing Sheet</p>
+                  <div className="text-sm text-slate-800 whitespace-pre-wrap leading-relaxed p-4 bg-slate-50 rounded-lg border border-slate-100">
+                    {a.studentWriting}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
@@ -413,8 +421,8 @@ export default function AssessmentList() {
                     key={t}
                     onClick={() => setFilterType(t)}
                     className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${filterType === t
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
                       }`}
                   >
                     {t === 'All' ? 'All Skills' : (TYPE_META[t]?.label || t)}
@@ -428,8 +436,8 @@ export default function AssessmentList() {
                     key={t}
                     onClick={() => setFilterTerm(t)}
                     className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${filterTerm === t
-                        ? 'bg-indigo-600 text-white'
-                        : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+                      ? 'bg-indigo-600 text-white'
+                      : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
                       }`}
                   >
                     {t === 'All' ? 'All Terms' : t}
