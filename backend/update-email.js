@@ -18,7 +18,7 @@ const createTransporter = () => {
 
 // Base Email Template
 const getEmailTemplate = (title, content) => {
-  const logoUrl = process.env.FRONTEND_URL ? \`\${process.env.FRONTEND_URL}/logonew.png\` : 'https://academic-excellence-frontend.onrender.com/logonew.png';
+  const logoUrl = \`https://assessment.honoureducation.online/logonew.png?v=\${Date.now()}\`;
   return \`
     <!DOCTYPE html>
     <html>
