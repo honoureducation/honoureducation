@@ -1060,7 +1060,7 @@ export default function TeacherDashboard() {
             </Link>
           </div>
 
-          <div className={`grid grid-cols-1 md:grid-cols-2 ${activeTier === 'primary' ? 'lg:grid-cols-3 xl:grid-cols-5' : 'lg:grid-cols-4'} gap-6`}>
+          <div className={`grid grid-cols-1 md:grid-cols-2 ${activeTier === 'primary' ? 'lg:grid-cols-3' : 'lg:grid-cols-4'} gap-6`}>
             {activeActionCards.map((type) => {
               const records = getCardRecordCount(type);
               return (

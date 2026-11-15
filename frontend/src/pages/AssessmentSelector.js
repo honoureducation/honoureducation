@@ -164,10 +164,10 @@ const PRIMARY_ASSESSMENTS = [
   {
     id: "primary-speaking",
     title: "Speaking Assessment",
-    subtitle: "FS1 & FS2 - KG1",
+    subtitle: "FS1 · FS2 · KG2 / Year 1",
     stage: "Primary",
-    tag: "FS1 · FS2 · KG1",
-    desc: "6 comprehension questions with family meal picture prompt and CEFR level evaluation (Pre-A1 to B2-C1).",
+    tag: "FS1 · FS2 · KG2 · Y1",
+    desc: "Comprehension questions with family meal picture prompt and CEFR level evaluation (Pre-A1 to B2-C1).",
     icon: (
       <svg
         className="w-6 h-6"
@@ -194,9 +194,9 @@ const PRIMARY_ASSESSMENTS = [
   {
     id: "primary-reading",
     title: "Reading Assessment",
-    subtitle: "FS1 & FS2 - KG1",
+    subtitle: "FS1 · FS2 · KG2 / Year 1",
     stage: "Primary",
-    tag: "FS1 · FS2 · KG1",
+    tag: "FS1 · FS2 · KG2 · Y1",
     desc: "6 CVC picture cards with sound blending, phonics decoding, and CEFR level scoring (Pre-A1 to B2-C1).",
     icon: (
       <svg
@@ -224,10 +224,10 @@ const PRIMARY_ASSESSMENTS = [
   {
     id: "primary-writing",
     title: "Writing Assessment",
-    subtitle: "FS1 & FS2 - KG1",
+    subtitle: "FS1 · FS2 · KG2 / Year 1 · AI",
     stage: "Primary",
-    tag: "FS1 · FS2 · KG1",
-    desc: "6 CVC missing graphemes, picture story prompts, and real-time AI keyword detection (Pre-A1 to B2-C1).",
+    tag: "FS1 · FS2 · KG2 · Y1",
+    desc: "FS1 CVC prompts, FS2 & KG2 / Year 1 picture story with real-time AI keyword detection and rubric.",
     icon: (
       <svg
         className="w-6 h-6"
@@ -254,10 +254,10 @@ const PRIMARY_ASSESSMENTS = [
   {
     id: "primary-phonic",
     title: "Phonic Assessment",
-    subtitle: "FS1 & FS2 - KG1",
+    subtitle: "FS1 · Phase 2 & 3",
     stage: "Primary",
-    tag: "FS1 · FS2 · KG1",
-    desc: "Phase 2 & Phase 3 letter sounds, consonant & vowel digraphs, CVC blending check, and CEFR scoring.",
+    tag: "FS1 Phonics",
+    desc: "Teacher-led phonics grapheme evaluation across Set 1-7 sounds, digraphs, and CVC blending.",
     icon: (
       <svg
         className="w-6 h-6"
@@ -447,11 +447,11 @@ export default function AssessmentSelector() {
           </div>
         </div>
 
-        {/* Assessment Cards Grid (Identical layout and color combo) */}
+        {/* Assessment Cards Grid - 3 cards per row for primary */}
         <div
-          className={`grid gap-4 xl:gap-6 ${
-            activeAssessments.length >= 5
-              ? "grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5"
+          className={`grid gap-6 ${
+            selectedStage === "primary"
+              ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
               : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-4"
           }`}
         >
