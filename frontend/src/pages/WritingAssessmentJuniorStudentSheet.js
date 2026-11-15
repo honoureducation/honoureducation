@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { assessmentAPI } from '../services/api';
+import AIAssistantConductor from '../components/AIAssistantConductor';
 import writingImg1 from '../assets/writing1.jpg.jpeg';
 import writingImg2 from '../assets/writing2.jpg.jpeg';
 import writingImg3 from '../assets/writing3.jpg.jpeg';
@@ -125,22 +126,11 @@ export default function WritingAssessmentJuniorStudentSheet() {
           </div>
         </div>
 
-        {/* Lined Writing Area */}
-        <div className="bg-white rounded-lg shadow-md p-8 mb-8">
-          <textarea
-            value={studentWriting}
-            onChange={(e) => setStudentWriting(e.target.value)}
-            placeholder="Write your story here..."
-            rows={18}
-            className="w-full px-2 py-2 border-0 focus:outline-none resize-none text-gray-800 text-base"
-            style={{
-              lineHeight: '2.2rem',
-              backgroundImage: 'repeating-linear-gradient(transparent, transparent calc(2.2rem - 1px), #d1d5db calc(2.2rem - 1px), #d1d5db 2.2rem)',
-              backgroundSize: '100% 2.2rem',
-              minHeight: '400px'
-            }}
-          />
-        </div>
+        {/* Lined Writing Area / AI Assistant */}
+        <AIAssistantConductor
+          questions={WRITING_QUESTIONS}
+          onCompleteTextChange={(text) => setStudentWriting(text)}
+        />
 
         {/* Student Info + Submit */}
         <form onSubmit={handleSubmit} className="space-y-6">

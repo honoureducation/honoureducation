@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { assessmentAPI } from '../services/api';
+import AIAssistantConductor from '../components/AIAssistantConductor';
 import car1 from '../assets/car1.png'; // Using car2 as a temporary placeholder since car1 is missing
 import car2 from '../assets/car2.png';
 import car3 from '../assets/car3.png';
@@ -38,12 +39,50 @@ export default function SpeakingAssessmentForm() {
   const [cefrLevel, setCefrLevel] = useState('');
   const [teacherComments, setTeacherComments] = useState('');
   const [loading, setLoading] = useState(false);
+  const [transcript, setTranscript] = useState('');
+  const [aiAnswers, setAIAnswers] = useState([]);
 
   useEffect(() => {
     if (preSelectedTerm) {
       setFormData(prev => ({ ...prev, term: preSelectedTerm }));
     }
   }, [preSelectedTerm]);
+
+  // Auto-scoring based on AI transcript
+  useEffect(() => {
+    let changed = false;
+    const nextScores = [...scores];
+
+    aiAnswers.forEach((ans, i) => {
+      if (ans && ans.trim().length > 0) {
+        const words = ans.trim().split(/\s+/).length;
+        // Simple heuristic: > 3 words is full comprehension (2), less is some (1)
+        let inferredScore = words >= 3 ? 2 : 1;
+
+        if (nextScores[i] !== inferredScore) {
+          nextScores[i] = inferredScore;
+          changed = true;
+        }
+      }
+    });
+
+    if (changed) {
+      setScores(nextScores);
+
+      const total = nextScores.reduce((sum, s) => sum + (s !== null ? s : 0), 0);
+      setTotalScore(total);
+
+      let nextCefrLevel = '';
+      if (total <= 2) nextCefrLevel = 'A1';
+      else if (total <= 4) nextCefrLevel = 'A2';
+      else if (total <= 6) nextCefrLevel = 'B1';
+      else if (total <= 8) nextCefrLevel = 'B2';
+      else if (total <= 10) nextCefrLevel = 'C1';
+      else nextCefrLevel = 'C2';
+      setCefrLevel(nextCefrLevel);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [aiAnswers]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -278,6 +317,12 @@ export default function SpeakingAssessmentForm() {
             </div>
           </div>
 
+          <AIAssistantConductor
+            questions={SPEAKING_QUESTIONS.map(q => q.question)}
+            onCompleteTextChange={setTranscript}
+            onAnswersArrayChange={setAIAnswers}
+          />
+
           {/* Questions Table */}
           <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
             <div className="p-6 border-b border-slate-100">
@@ -301,7 +346,14 @@ export default function SpeakingAssessmentForm() {
                 <tbody className="divide-y divide-slate-100">
                   {SPEAKING_QUESTIONS.map((q, index) => (
                     <tr key={q.id} className="hover:bg-slate-50/30 transition-colors">
-                      <td className="px-6 py-5 text-sm font-semibold text-slate-700 leading-relaxed">{q.question}</td>
+                      <td className="px-6 py-5">
+                        <div className="text-sm font-semibold text-slate-700 leading-relaxed">{q.question}</div>
+                        {aiAnswers[index] && (
+                          <div className="mt-3 text-sm text-indigo-700 bg-indigo-50/50 p-3 rounded-xl border border-indigo-100 shadow-inner">
+                            <span className="font-bold mr-1">Student Answer (AI):</span> "{aiAnswers[index]}"
+                          </div>
+                        )}
+                      </td>
                       <td className="px-6 py-5 text-center">
                         <label className="relative flex items-center justify-center cursor-pointer group">
                           <input
