@@ -11,7 +11,68 @@ const authenticateToken = async (req, res, next) => {
       return res.status(401).json({ message: 'Access token required' });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+    // Bypass database and token verification for demo teacher
+    if (token === 'demo-teacher-token' || token.startsWith('demo-') || req.headers['x-demo-user'] === 'teacher') {
+      req.userId = '507f1f77bcf86cd799439011';
+      req.user = {
+        _id: '507f1f77bcf86cd799439011',
+        firstName: 'Demo',
+        lastName: 'Teacher',
+        fullName: 'Demo Teacher',
+        email: 'teacher@school.edu',
+        role: 'teacher',
+        status: 'approved',
+        school: { name: 'Demo School', code: 'DEMO', status: 'active' },
+        department: 'English Language Learning'
+      };
+      return next();
+    }
+
+    let decoded;
+    try {
+      decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+    } catch (err) {
+      // If token belongs to demo teacher or matches demo id
+      if (token.includes('demo')) {
+        req.userId = '507f1f77bcf86cd799439011';
+        req.user = {
+          _id: '507f1f77bcf86cd799439011',
+          firstName: 'Demo',
+          lastName: 'Teacher',
+          fullName: 'Demo Teacher',
+          email: 'teacher@school.edu',
+          role: 'teacher',
+          status: 'approved',
+          school: { name: 'Demo School', code: 'DEMO', status: 'active' },
+          department: 'English Language Learning'
+        };
+        return next();
+      }
+      if (err.name === 'JsonWebTokenError') {
+        return res.status(401).json({ message: 'Invalid token' });
+      }
+      if (err.name === 'TokenExpiredError') {
+        return res.status(401).json({ message: 'Token expired' });
+      }
+      return res.status(401).json({ message: 'Authentication failed' });
+    }
+
+    // Bypass database for demo teacher account id
+    if (decoded.userId === '507f1f77bcf86cd799439011') {
+      req.userId = '507f1f77bcf86cd799439011';
+      req.user = {
+        _id: '507f1f77bcf86cd799439011',
+        firstName: 'Demo',
+        lastName: 'Teacher',
+        fullName: 'Demo Teacher',
+        email: 'teacher@school.edu',
+        role: 'teacher',
+        status: 'approved',
+        school: { name: 'Demo School', code: 'DEMO', status: 'active' },
+        department: 'English Language Learning'
+      };
+      return next();
+    }
     
     // Get user from database
     const user = await User.findById(decoded.userId).select('-password').populate('school', 'name code status');

@@ -60,6 +60,26 @@ export default function Login() {
         </div>
 
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
+          {/* Quick Demo Login Pill */}
+          <div 
+            onClick={() => setFormData({ email: 'teacher@school.edu', password: 'teacher123' })}
+            className="mb-6 p-3 bg-blue-50 hover:bg-blue-100/80 border border-blue-200/80 rounded-xl cursor-pointer transition-all flex items-center justify-between group"
+            title="Click to auto-fill demo teacher credentials"
+          >
+            <div className="text-left">
+              <div className="flex items-center gap-1.5 text-xs font-semibold text-blue-900">
+                <span>🎓 Default Teacher Login</span>
+                <span className="text-[10px] bg-blue-200/70 text-blue-800 px-1.5 py-0.5 rounded-full font-medium">No DB required</span>
+              </div>
+              <div className="text-xs text-blue-700 font-mono mt-0.5">
+                teacher@school.edu &bull; teacher123
+              </div>
+            </div>
+            <span className="text-xs font-semibold text-blue-600 group-hover:text-blue-800 bg-white border border-blue-200 px-2.5 py-1 rounded-lg shadow-xs">
+              Auto-fill
+            </span>
+          </div>
+
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label className="form-label">Email Address</label>

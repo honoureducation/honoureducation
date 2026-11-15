@@ -65,7 +65,7 @@ const schoolSchema = new mongoose.Schema({
   // Features
   enabledFeatures: [{
     type: String,
-    enum: ['listening', 'speaking', 'reading', 'writing', 'reports', 'exports', 'analytics']
+    enum: ['listening', 'speaking', 'reading', 'writing', 'phonic', 'reports', 'exports', 'analytics']
   }],
   
   // Branding

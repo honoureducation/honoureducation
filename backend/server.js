@@ -21,9 +21,12 @@ app.use(express.json());
 // MongoDB Connection
 const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/student-assessment';
 
-mongoose.connect(mongoURI)
+mongoose.connect(mongoURI, { serverSelectionTimeoutMS: 2000 })
   .then(() => console.log('MongoDB connected successfully'))
-  .catch(err => console.log('MongoDB connection error:', err));
+  .catch(err => {
+    console.log('ℹ️ MongoDB not detected (offline/demo mode enabled).');
+    console.log('👉 You can log in using: teacher@school.edu / teacher123');
+  });
 
 // Routes
 const assessmentRoutes = require('./routes/assessmentRoutes');
