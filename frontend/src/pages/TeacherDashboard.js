@@ -102,8 +102,8 @@ const PRIMARY_ACTION_CARDS = [
   {
     id: 'primary-listening',
     title: 'Listening Assessment',
-    badge: 'FS1 · FS2 · KG2 / Y1',
-    description: '10 personal questions with oral evaluation and CEFR scoring across FS1, FS2 - KG1, and KG2 / Year 1.',
+    badge: 'FS1 · FS2 · KG2 · Year 2',
+    description: '10 personal questions with oral evaluation and CEFR scoring across FS1, FS2, KG2 / Year 1, and Grade 1 / Year 2.',
     icon: '🎧',
     color: 'bg-cyan-500',
     lightBg: 'bg-cyan-50 text-cyan-700 border-cyan-200',
@@ -142,8 +142,8 @@ const PRIMARY_ACTION_CARDS = [
   {
     id: 'primary-phonic',
     title: 'Phonic Assessment',
-    badge: 'FS1 · Set 1–7 & Digraphs',
-    description: 'Teacher-led phonics grapheme evaluation across Set 1-7 sounds, digraphs, and CVC blending.',
+    badge: 'FS1 · FS2 · KG2 (Phase 2–5)',
+    description: 'Systematic synthetic phonics across Phase 2, Phase 3, Phase 4 consonant blends, and Phase 5 alternative spellings.',
     icon: '🔤',
     color: 'bg-amber-500',
     lightBg: 'bg-amber-50 text-amber-700 border-amber-200',

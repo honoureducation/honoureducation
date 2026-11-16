@@ -134,10 +134,10 @@ const PRIMARY_ASSESSMENTS = [
   {
     id: "primary-listening",
     title: "Listening Assessment",
-    subtitle: "FS1, FS2 & KG2 / Year 1",
+    subtitle: "FS1 · FS2 · KG2 · Year 2 · Year 3",
     stage: "Primary",
-    tag: "FS1 · FS2 · KG2 · Year 1",
-    desc: "10 personal questions with oral evaluation and CEFR scoring across FS1, FS2 - KG1, and KG2 / Year 1.",
+    tag: "FS1 · FS2 · KG2 · Year 2 · Year 3",
+    desc: "10 personal questions with oral evaluation and CEFR scoring across FS1, FS2, KG2, Grade 1 / Year 2, and Grade 2 / Year 3.",
     icon: (
       <svg
         className="w-6 h-6"
@@ -164,10 +164,10 @@ const PRIMARY_ASSESSMENTS = [
   {
     id: "primary-speaking",
     title: "Speaking Assessment",
-    subtitle: "FS1 · FS2 · KG2 / Year 1",
+    subtitle: "FS1 · FS2 · KG2 · Year 2",
     stage: "Primary",
-    tag: "FS1 · FS2 · KG2 · Y1",
-    desc: "Comprehension questions with family meal picture prompt and CEFR level evaluation (Pre-A1 to B2-C1).",
+    tag: "FS1 · FS2 · KG2 · Year 2",
+    desc: "Comprehension questions with picture prompts, sequential stories, and CEFR level evaluation across FS1, FS2, KG2, and Grade 1 / Year 2.",
     icon: (
       <svg
         className="w-6 h-6"
@@ -194,10 +194,10 @@ const PRIMARY_ASSESSMENTS = [
   {
     id: "primary-reading",
     title: "Reading Assessment",
-    subtitle: "FS1 · FS2 · KG2 / Year 1",
+    subtitle: "FS1 · FS2 · KG2 · Year 2",
     stage: "Primary",
-    tag: "FS1 · FS2 · KG2 · Y1",
-    desc: "6 CVC picture cards with sound blending, phonics decoding, and CEFR level scoring (Pre-A1 to B2-C1).",
+    tag: "FS1 · FS2 · KG2 · Year 2",
+    desc: "Decodable reading passages, accuracy scoring (/10), fluency metrics, and CEFR level scoring across FS1 to Grade 1 / Year 2.",
     icon: (
       <svg
         className="w-6 h-6"
@@ -224,10 +224,10 @@ const PRIMARY_ASSESSMENTS = [
   {
     id: "primary-writing",
     title: "Writing Assessment",
-    subtitle: "FS1 · FS2 · KG2 / Year 1 · AI",
+    subtitle: "FS1 · FS2 · KG2 · Year 2",
     stage: "Primary",
-    tag: "FS1 · FS2 · KG2 · Y1",
-    desc: "FS1 CVC prompts, FS2 & KG2 / Year 1 picture story with real-time AI keyword detection and rubric.",
+    tag: "FS1 · FS2 · KG2 · Year 2",
+    desc: "FS1 & Grade 1 / Year 2 word prompts, FS2 & KG2 picture story with real-time AI keyword detection and CEFR rubric.",
     icon: (
       <svg
         className="w-6 h-6"
@@ -254,10 +254,10 @@ const PRIMARY_ASSESSMENTS = [
   {
     id: "primary-phonic",
     title: "Phonic Assessment",
-    subtitle: "FS1 · Phase 2 & 3",
+    subtitle: "FS1 · FS2 · KG2 · Year 2 (Phase 2–5)",
     stage: "Primary",
-    tag: "FS1 Phonics",
-    desc: "Teacher-led phonics grapheme evaluation across Set 1-7 sounds, digraphs, and CVC blending.",
+    tag: "FS1 · FS2 · KG2 · Year 2",
+    desc: "Systematic synthetic phonics across Phase 2, Phase 3, Phase 4 consonant blends, and Phase 5 alternative spellings.",
     icon: (
       <svg
         className="w-6 h-6"
@@ -289,8 +289,15 @@ export default function AssessmentSelector() {
 
   // Read initial stage from: 1. URL search param (?tier=primary), 2. localStorage, 3. fallback 'secondary'
   const getInitialStage = () => {
-    const fromUrl = searchParams.get("tier") || searchParams.get("stage") || searchParams.get("school");
-    if (fromUrl && (fromUrl.toLowerCase() === "primary" || fromUrl.toLowerCase() === "secondary")) {
+    const fromUrl =
+      searchParams.get("tier") ||
+      searchParams.get("stage") ||
+      searchParams.get("school");
+    if (
+      fromUrl &&
+      (fromUrl.toLowerCase() === "primary" ||
+        fromUrl.toLowerCase() === "secondary")
+    ) {
       return fromUrl.toLowerCase();
     }
     const saved = localStorage.getItem("assessmentSchoolTier");
@@ -304,8 +311,15 @@ export default function AssessmentSelector() {
   const [selectedTerm, setSelectedTerm] = useState("T1");
 
   useEffect(() => {
-    const fromUrl = searchParams.get("tier") || searchParams.get("stage") || searchParams.get("school");
-    if (fromUrl && (fromUrl.toLowerCase() === "primary" || fromUrl.toLowerCase() === "secondary")) {
+    const fromUrl =
+      searchParams.get("tier") ||
+      searchParams.get("stage") ||
+      searchParams.get("school");
+    if (
+      fromUrl &&
+      (fromUrl.toLowerCase() === "primary" ||
+        fromUrl.toLowerCase() === "secondary")
+    ) {
       const normalized = fromUrl.toLowerCase();
       setSelectedStage(normalized);
       localStorage.setItem("assessmentSchoolTier", normalized);

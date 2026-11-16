@@ -77,6 +77,106 @@ const OPTIONS = [
     ),
     route: "/assessment/kg2-writing",
   },
+  {
+    id: "grade1-year2",
+    subtitle: "Stage 4 · Year 2",
+    title: "Grade 1 / Year 2 Writing Assessment",
+    tag: "Grade 1 · Year 2 · Age 6–7",
+    desc: "6 word-writing prompts (s _ _, c _ _, b _ _ _, sh _ _, ca _ _), independent word formation, and CEFR writing rubric.",
+    color: "bg-pink-500",
+    lightColor: "bg-pink-50 text-pink-500 border-pink-200",
+    icon: (
+      <svg
+        className="w-5 h-5"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        strokeWidth={1.8}
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"
+        />
+      </svg>
+    ),
+    route: "/assessment/grade1-writing",
+  },
+  {
+    id: "grade2-year3",
+    subtitle: "Stage 5 · Year 3",
+    title: "Grade 2 / Year 3 Writing Assessment",
+    tag: "Grade 2 · Year 3 · Age 7–8",
+    desc: "3 fantasy story pictures (Rocky mountain, Nature valley, Campfire dragons) with 4 prompts, real-time AI keyword detection, and CEFR writing rubric.",
+    color: "bg-pink-500",
+    lightColor: "bg-pink-50 text-pink-500 border-pink-200",
+    icon: (
+      <svg
+        className="w-5 h-5"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        strokeWidth={1.8}
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"
+        />
+      </svg>
+    ),
+    route: "/assessment/grade2-writing",
+  },
+  {
+    id: "grade3-year4",
+    subtitle: "Stage 6 · Year 4",
+    title: "Grade 3 / Year 4 Writing Assessment",
+    tag: "Grade 3 · Year 4 · Age 8–9",
+    desc: "Dual-mode: 3 sci-fi/fantasy adventure pictures (Spaceship, Canyon Ruins, Knight & Dragon) or 4 word-writing prompts (Moon, Star, Girl, Cube) with AI Conductor & CEFR rubric.",
+    color: "bg-pink-500",
+    lightColor: "bg-pink-50 text-pink-500 border-pink-200",
+    icon: (
+      <svg
+        className="w-5 h-5"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        strokeWidth={1.8}
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"
+        />
+      </svg>
+    ),
+    route: "/assessment/grade3-writing",
+  },
+  {
+    id: "grade4-year5",
+    subtitle: "Stage 7 · Year 5",
+    title: "Grade 4 / Year 5 Writing Assessment",
+    tag: "Grade 4 · Year 5 · Age 9–10",
+    desc: "Sci-Fi Space & Alien Planet story prompts (Neon Corridor, Futuristic Alien City, Astronauts Exploring) with AI Conductor & CEFR rubric.",
+    color: "bg-pink-500",
+    lightColor: "bg-pink-50 text-pink-500 border-pink-200",
+    icon: (
+      <svg
+        className="w-5 h-5"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        strokeWidth={1.8}
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"
+        />
+      </svg>
+    ),
+    route: "/assessment/grade4-writing",
+  },
 ];
 
 export default function PrimaryWritingSelector() {
@@ -123,7 +223,7 @@ export default function PrimaryWritingSelector() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-5 max-w-5xl">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 max-w-7xl">
           {OPTIONS.map((o) => (
             <button
               key={o.id}

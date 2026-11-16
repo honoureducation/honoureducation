@@ -7,10 +7,27 @@ import {
 } from "react-router-dom";
 import { toast } from "react-toastify";
 import { assessmentAPI } from "../services/api";
+import AIAssistantConductor from "../components/AIAssistantConductor";
 import familyPhoto from "../assets/fs1-speaking-family.jpg";
 import fs1SpeakingSheet from "../assets/fs1-speaking-sheet.jpg";
 import fs2SpeakingSheet from "../assets/fs2-speaking-sheet.png";
 import kg2SpeakingSheet from "../assets/kg2-speaking-sheet.png";
+import grade1SpeakingSheet from "../assets/grade1-year2-speaking-sheet.jpg";
+import grade1StoryImg from "../assets/grade1-speaking-story.jpg";
+import grade2SpeakingSheet from "../assets/grade2-year3-speaking-sheet.jpg";
+import grade2ClassroomStoryImg from "../assets/grade2-speaking-classroom.jpg";
+import grade2Pic1 from "../assets/grade2-speaking-pic1.jpg";
+import grade2Pic2 from "../assets/grade2-speaking-pic2.jpg";
+import grade2Pic3 from "../assets/grade2-speaking-pic3.jpg";
+import grade3SpeakingSheet from "../assets/grade3-year4-speaking-sheet.png";
+import grade3SpeakingStrip from "../assets/grade3-speaking-strip.png";
+import grade3SpeakingTable from "../assets/grade3-speaking-table.png";
+import grade3SpeakingTablet from "../assets/grade3-speaking-tablet.png";
+import grade3SpeakingRocket from "../assets/grade3-speaking-rocket.png";
+import grade4SpeakingSheet from "../assets/grade4-year5-speaking-sheet.jpg";
+import grade4SpeakingStrip from "../assets/grade4-speaking-ocean-strip.jpg";
+import grade4SpeakingReef from "../assets/grade4-speaking-coral-reef.jpg";
+import grade4SpeakingShark from "../assets/grade4-speaking-shark.jpg";
 
 // ==========================================
 // 6 QUESTIONS FROM FS1 / FS2 / KG2 SPEAKING ASSESSMENT
@@ -22,6 +39,325 @@ const FS1_SPEAKING_QUESTIONS = [
   { id: 4, text: "Who has no food on their plate?" },
   { id: 5, text: "How are they feeling?" },
   { id: 6, text: "How do you know this?" },
+];
+
+// ==========================================
+// 4 QUESTIONS FROM GRADE 1 / YEAR 2 SPEAKING ASSESSMENT
+// Exact from uploaded sheet
+// ==========================================
+const GRADE1_SPEAKING_QUESTIONS = [
+  { id: 1, text: "What is happening in picture 1?" },
+  { id: 2, text: "Can you explain what happens next?" },
+  { id: 3, text: "Can you tell the story in order?" },
+  { id: 4, text: "Can you tell me what you like about this story?" },
+];
+
+// ==========================================
+// 4 QUESTIONS FROM GRADE 2 / YEAR 3 SPEAKING ASSESSMENT
+// Exact from uploaded sheet
+// ==========================================
+const GRADE2_SPEAKING_QUESTIONS = [
+  { id: 1, text: "What is happening in picture 1?" },
+  { id: 2, text: "Can you explain what happens next?" },
+  { id: 3, text: "Can you tell the story in order?" },
+  { id: 4, text: "Can you tell me what you like about this story?" },
+];
+
+// ==========================================
+// 4 QUESTIONS FROM GRADE 3 / YEAR 4 SPEAKING ASSESSMENT
+// Exact from uploaded sheet
+// ==========================================
+const GRADE3_SPEAKING_QUESTIONS = [
+  { id: 1, text: "What is happening in picture 1?" },
+  { id: 2, text: "Can you explain what happens next?" },
+  { id: 3, text: "Can you tell the story in order?" },
+  { id: 4, text: "Can you tell me what you like about this story?" },
+];
+
+// ==========================================
+// CEFR RUBRIC TABLE FOR GRADE 3 / YEAR 4 SPEAKING
+// Exact from uploaded Grade 3 / Year 4 sheet
+// ==========================================
+const GRADE3_SPEAKING_RUBRIC = [
+  {
+    level: "A1.0–A1.2",
+    description:
+      "Uses 1–3 words or none; cannot explain the picture. Very limited output.",
+    badgeBg: "bg-orange-100 text-orange-800 border-orange-200",
+    activeBg: "bg-orange-50 border-orange-400 text-orange-900",
+    indicator: "bg-orange-500",
+  },
+  {
+    level: "A2.0–A2.2",
+    description:
+      "Uses 2–5 words; confused explanation; short, simple sentences.",
+    badgeBg: "bg-amber-100 text-amber-800 border-amber-200",
+    activeBg: "bg-amber-50 border-amber-400 text-amber-900",
+    indicator: "bg-amber-500",
+  },
+  {
+    level: "A2.3–B1.1",
+    description:
+      "Uses 5–10 words; includes conjunctions; mixes short and longer sentences; relevant vocabulary.",
+    badgeBg: "bg-blue-100 text-blue-800 border-blue-200",
+    activeBg: "bg-blue-50 border-blue-400 text-blue-900",
+    indicator: "bg-blue-600",
+  },
+  {
+    level: "B1.2–B1.3",
+    description:
+      "Speaks more fluently in short and long sentences; explains the gist confidently; adds details.",
+    badgeBg: "bg-indigo-100 text-indigo-800 border-indigo-200",
+    activeBg: "bg-indigo-50 border-indigo-400 text-indigo-900",
+    indicator: "bg-indigo-600",
+  },
+  {
+    level: "B2–C1",
+    description:
+      "Fluent, confident, detailed explanation; strong vocabulary and sentence structure; adds supporting information.",
+    badgeBg: "bg-emerald-100 text-emerald-800 border-emerald-200",
+    activeBg: "bg-emerald-50 border-emerald-400 text-emerald-900",
+    indicator: "bg-emerald-600",
+  },
+];
+
+const GRADE3_KEY_WORDS = [
+  "talking",
+  "speaking",
+  "conversation",
+  "discussing",
+  "listening",
+  "sharing",
+  "sitting",
+  "table",
+  "friends",
+  "people",
+  "communication",
+  "explaining",
+  "asking",
+  "answering",
+  "headphones",
+  "watching",
+  "reading",
+  "learning",
+  "studying",
+  "tablet",
+  "device",
+  "screen",
+  "focus",
+  "concentration",
+  "child",
+  "technology",
+  "audio",
+  "story",
+  "rocket",
+  "space",
+  "launch",
+  "flying",
+  "blasting off",
+  "sky",
+  "adventure",
+  "space travel",
+  "astronaut",
+  "fire",
+  "smoke",
+  "countdown",
+  "mission",
+  "excitement",
+];
+
+// ==========================================
+// 4 PROMPTS FROM GRADE 4 / YEAR 5 SPEAKING ASSESSMENT
+// Exact from uploaded Grade 4 / Year 5 sheet
+// ==========================================
+const GRADE4_SPEAKING_QUESTIONS = [
+  { id: 1, text: "What is happening in picture 1?" },
+  { id: 2, text: "Can you explain what happens next?" },
+  { id: 3, text: "Can you tell the story in order?" },
+  { id: 4, text: "Can you tell me what you like about this story?" },
+];
+
+// ==========================================
+// EXACT RUBRIC FROM GRADE 4 / YEAR 5 SPEAKING ASSESSMENT
+// Exact from uploaded Grade 4 / Year 5 sheet
+// ==========================================
+const GRADE4_SPEAKING_RUBRIC = [
+  {
+    level: "A1.0–A1.2",
+    description:
+      "Uses 1–3 word answers or none; cannot explain the picture; very limited output.",
+    badgeBg: "bg-orange-100 text-orange-800 border-orange-200",
+    activeBg: "bg-orange-50 border-orange-400 text-orange-900",
+    indicator: "bg-orange-500",
+  },
+  {
+    level: "A2.0–A2.2",
+    description:
+      "Uses 2–5 word answers; confused explanation; short, simple sentences.",
+    badgeBg: "bg-amber-100 text-amber-800 border-amber-200",
+    activeBg: "bg-amber-50 border-amber-400 text-amber-900",
+    indicator: "bg-amber-500",
+  },
+  {
+    level: "A2.3–B1.1",
+    description:
+      "Uses 5–10 words; includes conjunctions; mixes short and longer sentences with relevant vocabulary.",
+    badgeBg: "bg-blue-100 text-blue-800 border-blue-200",
+    activeBg: "bg-blue-50 border-blue-400 text-blue-900",
+    indicator: "bg-blue-600",
+  },
+  {
+    level: "B1.2–B1.3",
+    description:
+      "Speaks more fluently; explains the gist without hesitation; adds details; uses conjunctions confidently.",
+    badgeBg: "bg-indigo-100 text-indigo-800 border-indigo-200",
+    activeBg: "bg-indigo-50 border-indigo-400 text-indigo-900",
+    indicator: "bg-indigo-600",
+  },
+  {
+    level: "B2–C1",
+    description:
+      "Fluent, confident explanation; adds supporting details; uses strong vocabulary and clear sentence structures.",
+    badgeBg: "bg-emerald-100 text-emerald-800 border-emerald-200",
+    activeBg: "bg-emerald-50 border-emerald-400 text-emerald-900",
+    indicator: "bg-emerald-600",
+  },
+];
+
+// AI Keywords for Conductor comprehension (internal evaluation)
+const GRADE4_KEY_WORDS = [
+  "fish",
+  "coral",
+  "swimming",
+  "colourful",
+  "underwater",
+  "ocean",
+  "reef",
+  "plants",
+  "shark",
+  "danger",
+  "kelp",
+  "deep water",
+  "hunting",
+  "moving",
+  "sea",
+  "first",
+  "next",
+  "then",
+  "after that",
+  "finally",
+  "continues",
+  "happens next",
+  "describe",
+  "explain",
+  "happening",
+  "looks like",
+  "I think",
+  "I like",
+];
+
+// ==========================================
+// CEFR RUBRIC TABLE FOR GRADE 2 / YEAR 3 SPEAKING
+// Exact from uploaded Grade 2 / Year 3 sheet
+// ==========================================
+const GRADE2_SPEAKING_RUBRIC = [
+  {
+    level: "A1.0–A1.2",
+    description: "Uses 1–3 word answers or none because they cannot explain.",
+    badgeBg: "bg-orange-100 text-orange-800 border-orange-200",
+    activeBg: "bg-orange-50 border-orange-400 text-orange-900",
+    indicator: "bg-orange-500",
+  },
+  {
+    level: "A2.0–A2.2",
+    description:
+      "Uses 2–5 word answers; explains in a confused way. Short sentences.",
+    badgeBg: "bg-amber-100 text-amber-800 border-amber-200",
+    activeBg: "bg-amber-50 border-amber-400 text-amber-900",
+    indicator: "bg-amber-500",
+  },
+  {
+    level: "A2.3–B1.1",
+    description:
+      "Uses 5–10 words in a sentence and includes conjunctions. Mix of short and longer sentences with relevant vocabulary.",
+    badgeBg: "bg-blue-100 text-blue-800 border-blue-200",
+    activeBg: "bg-blue-50 border-blue-400 text-blue-900",
+    indicator: "bg-blue-600",
+  },
+  {
+    level: "B1.2–B1.3",
+    description:
+      "Speaks more fluently in short and long sentences; explains the gist of the picture without hesitation. Uses conjunctions and adds details.",
+    badgeBg: "bg-indigo-100 text-indigo-800 border-indigo-200",
+    activeBg: "bg-indigo-50 border-indigo-400 text-indigo-900",
+    indicator: "bg-indigo-600",
+  },
+  {
+    level: "B2–C1",
+    description:
+      "Fluently and confidently explains the picture; adds additional information that supports the picture and story. Uses strong vocabulary and sentence structures.",
+    badgeBg: "bg-emerald-100 text-emerald-800 border-emerald-200",
+    activeBg: "bg-emerald-50 border-emerald-400 text-emerald-900",
+    indicator: "bg-emerald-600",
+  },
+];
+
+const GRADE2_KEY_WORDS = [
+  "children",
+  "teacher",
+  "learning",
+  "reading",
+  "laughing",
+  "enjoying",
+  "books",
+  "listening",
+  "friends",
+];
+
+// ==========================================
+// CEFR RUBRIC TABLE FOR GRADE 1 / YEAR 2 SPEAKING
+// Exact from uploaded Grade 1 / Year 2 sheet
+// ==========================================
+const GRADE1_SPEAKING_RUBRIC = [
+  {
+    level: "A1.0–A1.2",
+    description: "Gives no response or only 1 word.",
+    badgeBg: "bg-orange-100 text-orange-800 border-orange-200",
+    activeBg: "bg-orange-50 border-orange-400 text-orange-900",
+    indicator: "bg-orange-500",
+  },
+  {
+    level: "A2.0–A2.2",
+    description:
+      "Gives a very short response (2–3 words), explains simple order (first, then).",
+    badgeBg: "bg-amber-100 text-amber-800 border-amber-200",
+    activeBg: "bg-amber-50 border-amber-400 text-amber-900",
+    indicator: "bg-amber-500",
+  },
+  {
+    level: "A2.3–B1.1",
+    description:
+      "Uses 3–6 words to explain. Gives a basic description with some detail.",
+    badgeBg: "bg-blue-100 text-blue-800 border-blue-200",
+    activeBg: "bg-blue-50 border-blue-400 text-blue-900",
+    indicator: "bg-blue-600",
+  },
+  {
+    level: "B1.2–B1.3",
+    description:
+      "Explains the story more confidently in sentences, with some fluency.",
+    badgeBg: "bg-indigo-100 text-indigo-800 border-indigo-200",
+    activeBg: "bg-indigo-50 border-indigo-400 text-indigo-900",
+    indicator: "bg-indigo-600",
+  },
+  {
+    level: "B2–C1",
+    description:
+      "Gives a full explanation with extra details, clear vocabulary, and confidence.",
+    badgeBg: "bg-emerald-100 text-emerald-800 border-emerald-200",
+    activeBg: "bg-emerald-50 border-emerald-400 text-emerald-900",
+    indicator: "bg-emerald-600",
+  },
 ];
 
 // ==========================================
@@ -149,20 +485,75 @@ export default function PrimarySpeakingAssessmentForm() {
   const [searchParams] = useSearchParams();
   const preSelectedTerm = searchParams.get("term") || "T1";
 
+  const isGrade4Initial =
+    location.pathname.includes("grade4") ||
+    location.pathname.includes("year5") ||
+    searchParams.get("grade") === "grade4" ||
+    searchParams.get("grade") === "year5" ||
+    searchParams.get("stage") === "grade4" ||
+    searchParams.get("stage") === "year5";
+
+  const isGrade3Initial =
+    !isGrade4Initial &&
+    (location.pathname.includes("grade3") ||
+      location.pathname.includes("year4") ||
+      searchParams.get("grade") === "grade3" ||
+      searchParams.get("grade") === "year4" ||
+      searchParams.get("stage") === "grade3" ||
+      searchParams.get("stage") === "year4");
+
+  const isGrade2Initial =
+    !isGrade4Initial &&
+    !isGrade3Initial &&
+    (location.pathname.includes("grade2") ||
+      location.pathname.includes("year3") ||
+      searchParams.get("grade") === "grade2" ||
+      searchParams.get("grade") === "year3" ||
+      searchParams.get("stage") === "grade2" ||
+      searchParams.get("stage") === "year3");
+
+  const isGrade1Initial =
+    !isGrade4Initial &&
+    !isGrade3Initial &&
+    !isGrade2Initial &&
+    (location.pathname.includes("grade1") ||
+      location.pathname.includes("year2") ||
+      searchParams.get("grade") === "grade1" ||
+      searchParams.get("grade") === "year2" ||
+      searchParams.get("stage") === "grade1" ||
+      searchParams.get("stage") === "year2");
+
   const isKG2Initial =
-    location.pathname.includes("kg2") ||
-    location.pathname.includes("year1") ||
-    searchParams.get("grade") === "kg2" ||
-    searchParams.get("grade") === "year1" ||
-    searchParams.get("stage") === "kg2" ||
-    searchParams.get("stage") === "year1";
+    !isGrade4Initial &&
+    !isGrade3Initial &&
+    !isGrade2Initial &&
+    !isGrade1Initial &&
+    (location.pathname.includes("kg2") ||
+      location.pathname.includes("year1") ||
+      searchParams.get("grade") === "kg2" ||
+      searchParams.get("grade") === "year1" ||
+      searchParams.get("stage") === "kg2" ||
+      searchParams.get("stage") === "year1");
 
   const isFS2Initial =
-    location.pathname.includes("fs2") ||
-    searchParams.get("grade") === "fs2" ||
-    searchParams.get("stage") === "fs2";
+    !isGrade4Initial &&
+    !isGrade3Initial &&
+    !isGrade2Initial &&
+    !isGrade1Initial &&
+    !isKG2Initial &&
+    (location.pathname.includes("fs2") ||
+      searchParams.get("grade") === "fs2" ||
+      searchParams.get("stage") === "fs2");
 
-  const initialStage = isKG2Initial
+  const initialStage = isGrade4Initial
+    ? "Grade 4 / Year 5"
+    : isGrade3Initial
+    ? "Grade 3 / Year 4"
+    : isGrade2Initial
+    ? "Grade 2 / Year 3"
+    : isGrade1Initial
+    ? "Grade 1 / Year 2"
+    : isKG2Initial
     ? "KG2 / Year 1"
     : isFS2Initial
     ? "FS2 - KG1"
@@ -170,6 +561,41 @@ export default function PrimarySpeakingAssessmentForm() {
 
   const [selectedStage, setSelectedStage] = useState(initialStage);
   const [showSheetModal, setShowSheetModal] = useState(false);
+
+  const isGrade4Stage =
+    selectedStage === "Grade 4 / Year 5" ||
+    selectedStage.includes("Grade 4") ||
+    selectedStage.includes("Year 5");
+
+  const isGrade3Stage =
+    !isGrade4Stage &&
+    (selectedStage === "Grade 3 / Year 4" ||
+      selectedStage.includes("Grade 3") ||
+      selectedStage.includes("Year 4"));
+
+  const isGrade2Stage =
+    !isGrade4Stage &&
+    !isGrade3Stage &&
+    (selectedStage === "Grade 2 / Year 3" ||
+      selectedStage.includes("Grade 2") ||
+      selectedStage.includes("Year 3"));
+
+  const isGrade1Stage =
+    !isGrade4Stage &&
+    !isGrade3Stage &&
+    (selectedStage === "Grade 1 / Year 2" ||
+      selectedStage.includes("Grade 1") ||
+      selectedStage.includes("Year 2"));
+
+  const activeQuestions = isGrade4Stage
+    ? GRADE4_SPEAKING_QUESTIONS
+    : isGrade3Stage
+    ? GRADE3_SPEAKING_QUESTIONS
+    : isGrade2Stage
+    ? GRADE2_SPEAKING_QUESTIONS
+    : isGrade1Stage
+    ? GRADE1_SPEAKING_QUESTIONS
+    : FS1_SPEAKING_QUESTIONS;
 
   useEffect(() => {
     localStorage.setItem("assessmentSchoolTier", "primary");
@@ -191,31 +617,101 @@ export default function PrimarySpeakingAssessmentForm() {
       yearGroupAndClass:
         prev.yearGroupAndClass === "FS1" ||
         prev.yearGroupAndClass === "FS2 - KG1" ||
-        prev.yearGroupAndClass === "KG2 / Year 1"
+        prev.yearGroupAndClass === "KG2 / Year 1" ||
+        prev.yearGroupAndClass === "Grade 1 / Year 2" ||
+        prev.yearGroupAndClass === "Grade 2 / Year 3" ||
+        prev.yearGroupAndClass === "Grade 3 / Year 4" ||
+        prev.yearGroupAndClass === "Grade 4 / Year 5"
           ? newStage
           : prev.yearGroupAndClass,
     }));
   };
 
-  const activeRubric =
-    selectedStage === "KG2 / Year 1" ? KG2_SPEAKING_RUBRIC : CEFR_RUBRIC_LEVELS;
+  const activeRubric = isGrade4Stage
+    ? GRADE4_SPEAKING_RUBRIC
+    : isGrade3Stage
+    ? GRADE3_SPEAKING_RUBRIC
+    : isGrade2Stage
+    ? GRADE2_SPEAKING_RUBRIC
+    : isGrade1Stage
+    ? GRADE1_SPEAKING_RUBRIC
+    : selectedStage === "KG2 / Year 1"
+    ? KG2_SPEAKING_RUBRIC
+    : CEFR_RUBRIC_LEVELS;
 
-  const activeSheet =
-    selectedStage === "KG2 / Year 1"
-      ? kg2SpeakingSheet
-      : selectedStage === "FS2 - KG1"
-      ? fs2SpeakingSheet
-      : fs1SpeakingSheet;
+  const activeSheet = isGrade4Stage
+    ? grade4SpeakingSheet
+    : isGrade3Stage
+    ? grade3SpeakingSheet
+    : isGrade2Stage
+    ? grade2SpeakingSheet
+    : isGrade1Stage
+    ? grade1SpeakingSheet
+    : selectedStage === "KG2 / Year 1"
+    ? kg2SpeakingSheet
+    : selectedStage === "FS2 - KG1"
+    ? fs2SpeakingSheet
+    : fs1SpeakingSheet;
+
+  const activePromptImage = isGrade4Stage
+    ? grade4SpeakingStrip
+    : isGrade3Stage
+    ? grade3SpeakingStrip
+    : isGrade2Stage
+    ? grade2ClassroomStoryImg
+    : isGrade1Stage
+    ? grade1StoryImg
+    : familyPhoto;
+
+  const activeKeyWords = isGrade4Stage
+    ? GRADE4_KEY_WORDS
+    : isGrade3Stage
+    ? GRADE3_KEY_WORDS
+    : isGrade2Stage
+    ? GRADE2_KEY_WORDS
+    : isGrade1Stage
+    ? [
+        "Paul",
+        "Grandma",
+        "visit",
+        "tennis",
+        "play",
+        "walk",
+        "path",
+        "horse",
+        "beach",
+        "game",
+        "happy",
+      ]
+    : KEY_WORDS;
 
   // Observations and per-question notes
   const [questionNotes, setQuestionNotes] = useState(
-    Array(FS1_SPEAKING_QUESTIONS.length).fill(""),
+    Array(8).fill(""),
   );
+  const [aiAnswers, setAiAnswers] = useState([]);
   const [selectedLevel, setSelectedLevel] = useState(null); // 'Pre-A1' | 'A1.0–A1.2' etc.
   const [usedKeywords, setUsedKeywords] = useState([]);
   const [teacherGeneralComments, setTeacherGeneralComments] = useState("");
   const [showFullPicture, setShowFullPicture] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  // Sync AI answers to questionNotes if note is empty
+  useEffect(() => {
+    if (aiAnswers && aiAnswers.length > 0) {
+      setQuestionNotes((prev) => {
+        const next = [...prev];
+        let changed = false;
+        aiAnswers.forEach((ans, idx) => {
+          if (ans && ans.trim().length > 0 && !next[idx]) {
+            next[idx] = ans.trim();
+            changed = true;
+          }
+        });
+        return changed ? next : prev;
+      });
+    }
+  }, [aiAnswers]);
 
   useEffect(() => {
     if (preSelectedTerm) {
@@ -275,7 +771,15 @@ export default function PrimarySpeakingAssessmentForm() {
 
     setLoading(true);
     const assessmentType =
-      selectedStage === "KG2 / Year 1"
+      selectedStage === "Grade 4 / Year 5"
+        ? "Grade 4 / Year 5 Speaking Assessment"
+        : selectedStage === "Grade 3 / Year 4"
+        ? "Grade 3 / Year 4 Speaking Assessment"
+        : selectedStage === "Grade 2 / Year 3"
+        ? "Grade 2 / Year 3 Speaking Assessment"
+        : selectedStage === "Grade 1 / Year 2"
+        ? "Grade 1 / Year 2 Speaking Assessment"
+        : selectedStage === "KG2 / Year 1"
         ? "KG2 / Year 1 Speaking Assessment"
         : selectedStage === "FS2 - KG1"
         ? "FS2 - KG1 Speaking Assessment"
@@ -288,6 +792,8 @@ export default function PrimarySpeakingAssessmentForm() {
 
       const payload = {
         assessmentType,
+        schoolTier: "primary",
+        skillType: "speaking",
         yearGroupType: "junior",
         email: formData.email,
         studentName: formData.studentName,
@@ -298,7 +804,7 @@ export default function PrimarySpeakingAssessmentForm() {
         level: selectedLevel,
         totalScore:
           activeRubric.findIndex((r) => r.level === selectedLevel) + 1,
-        speakingAssessmentAnswers: FS1_SPEAKING_QUESTIONS.map((q, idx) => ({
+        speakingAssessmentAnswers: activeQuestions.map((q, idx) => ({
           questionId: q.id,
           question: q.text,
           studentResponse: questionNotes[idx] || "",
@@ -412,6 +918,90 @@ export default function PrimarySpeakingAssessmentForm() {
                 Year 1
               </span>
             </button>
+
+            <button
+              type="button"
+              onClick={() => handleStageSwitch("Grade 1 / Year 2")}
+              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-200 ${
+                selectedStage === "Grade 1 / Year 2"
+                  ? "bg-white text-violet-700 shadow-sm scale-[1.02]"
+                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/50"
+              }`}
+            >
+              <span>⭐ Grade 1 / Year 2</span>
+              <span
+                className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
+                  selectedStage === "Grade 1 / Year 2"
+                    ? "bg-violet-100 text-violet-800"
+                    : "bg-slate-300 text-slate-700"
+                }`}
+              >
+                Year 2
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleStageSwitch("Grade 2 / Year 3")}
+              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-200 ${
+                selectedStage === "Grade 2 / Year 3"
+                  ? "bg-white text-violet-700 shadow-sm scale-[1.02]"
+                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/50"
+              }`}
+            >
+              <span>🎓 Grade 2 / Year 3</span>
+              <span
+                className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
+                  selectedStage === "Grade 2 / Year 3"
+                    ? "bg-violet-100 text-violet-800"
+                    : "bg-slate-300 text-slate-700"
+                }`}
+              >
+                Year 3
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleStageSwitch("Grade 3 / Year 4")}
+              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-200 ${
+                selectedStage === "Grade 3 / Year 4"
+                  ? "bg-white text-violet-700 shadow-sm scale-[1.02]"
+                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/50"
+              }`}
+            >
+              <span>🚀 Grade 3 / Year 4</span>
+              <span
+                className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
+                  selectedStage === "Grade 3 / Year 4"
+                    ? "bg-violet-100 text-violet-800"
+                    : "bg-slate-300 text-slate-700"
+                }`}
+              >
+                Year 4
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleStageSwitch("Grade 4 / Year 5")}
+              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-200 ${
+                selectedStage === "Grade 4 / Year 5"
+                  ? "bg-white text-violet-700 shadow-sm scale-[1.02]"
+                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/50"
+              }`}
+            >
+              <span>🌟 Grade 4 / Year 5</span>
+              <span
+                className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
+                  selectedStage === "Grade 4 / Year 5"
+                    ? "bg-violet-100 text-violet-800"
+                    : "bg-slate-300 text-slate-700"
+                }`}
+              >
+                Year 5
+              </span>
+            </button>
           </div>
         </div>
 
@@ -434,7 +1024,13 @@ export default function PrimarySpeakingAssessmentForm() {
                 {selectedStage} Speaking Assessment
               </h1>
               <p className="text-slate-500 text-sm mt-2 max-w-2xl">
-                {selectedStage === "KG2 / Year 1"
+                {selectedStage === "Grade 3 / Year 4"
+                  ? "3-picture story prompts (Conversation, Tablet, Space Launch), sequential storytelling, and CEFR level evaluation for Grade 3 / Year 4 pupils."
+                  : selectedStage === "Grade 2 / Year 3"
+                  ? "Classroom 3-picture story prompts, sequential storytelling, fluency, and CEFR level evaluation for Grade 2 / Year 3 pupils."
+                  : selectedStage === "Grade 1 / Year 2"
+                  ? "Paul & Grandma 5-picture story prompts, sequential storytelling, fluency, and CEFR level evaluation for Year 2 pupils."
+                  : selectedStage === "KG2 / Year 1"
                   ? "Picture-based oral response evaluation with sentence structures and conjunctions for Year 1 pupils."
                   : selectedStage === "FS2 - KG1"
                   ? "Picture-based oral response evaluation for FS2 - KG1 students."
@@ -492,25 +1088,43 @@ export default function PrimarySpeakingAssessmentForm() {
                 <div>
                   <h3 className="text-xs font-black uppercase tracking-wider text-violet-900 flex items-center gap-2 mb-2">
                     <span className="w-2.5 h-2.5 rounded-full bg-violet-600"></span>
-                    Instructions for assessor
+                    {isGrade4Stage || isGrade3Stage || isGrade2Stage || isGrade1Stage ? "Speaking Prompts" : "Instructions for assessor"}
                   </h3>
-                  <ul className="text-xs text-slate-700 font-bold space-y-1 list-disc list-inside">
-                    <li>Show the student the picture.</li>
-                    <li>Ask each question once only.</li>
-                    <li>Accept the first answer given.</li>
-                    <li>Do not probe or repeat.</li>
-                  </ul>
+                  {isGrade4Stage ? (
+                    <p className="text-xs text-slate-700 font-bold">
+                      Show the student the 2 ocean story pictures below (Coral Reef and Shark in Deep Water). Ask each speaking prompt in order to assess story sequencing, description, and fluency.
+                    </p>
+                  ) : isGrade3Stage ? (
+                    <p className="text-xs text-slate-700 font-bold">
+                      Show the student the 3 story pictures below. Ask each speaking prompt in order to assess story sequencing, description, and fluency.
+                    </p>
+                  ) : isGrade2Stage ? (
+                    <p className="text-xs text-slate-700 font-bold">
+                      Show the student the 3 classroom story pictures below. Ask each speaking prompt in order to assess story sequencing, description, and fluency.
+                    </p>
+                  ) : isGrade1Stage ? (
+                    <p className="text-xs text-slate-700 font-bold">
+                      Show the student the 5 story pictures below. Ask each speaking prompt in order to assess story sequencing, description, and fluency.
+                    </p>
+                  ) : (
+                    <ul className="text-xs text-slate-700 font-bold space-y-1 list-disc list-inside">
+                      <li>Show the student the picture.</li>
+                      <li>Ask each question once only.</li>
+                      <li>Accept the first answer given.</li>
+                      <li>Do not probe or repeat.</li>
+                    </ul>
+                  )}
                 </div>
 
                 <div className="border-t border-slate-200/80 pt-4">
                   <h4 className="text-xs font-black uppercase tracking-wider text-slate-900 mb-2">
-                    Questions for the student
+                    {isGrade2Stage || isGrade1Stage ? "Speaking Prompts:" : "Questions for the student"}
                   </h4>
                   <ul className="text-xs sm:text-sm text-slate-800 font-semibold space-y-2">
-                    {FS1_SPEAKING_QUESTIONS.map((q) => (
+                    {activeQuestions.map((q) => (
                       <li key={q.id} className="flex items-start gap-2">
                         <span className="text-violet-600 font-extrabold">
-                          •
+                          {q.id}.
                         </span>
                         <span>{q.text}</span>
                       </li>
@@ -519,26 +1133,125 @@ export default function PrimarySpeakingAssessmentForm() {
                 </div>
               </div>
 
-              {/* Right Column: Family Dinner Photo Prompt */}
+              {/* Right Column: Photo Prompt */}
               <div className="lg:col-span-5 flex flex-col items-center">
                 <div
                   onClick={() => setShowFullPicture(!showFullPicture)}
-                  className="cursor-pointer group relative rounded-2xl overflow-hidden border-2 border-violet-300 shadow-md bg-white transition-all hover:scale-102 hover:shadow-xl"
+                  className="cursor-pointer group relative rounded-2xl overflow-hidden border-2 border-violet-300 shadow-md bg-white transition-all hover:scale-102 hover:shadow-xl w-full"
                   title="Click to view large prompt image"
                 >
-                  <img
-                    src={familyPhoto}
-                    alt="Family dinner prompt"
-                    className="w-full h-56 sm:h-64 object-cover object-center"
-                  />
+                  {isGrade4Stage ? (
+                    <div className="grid grid-cols-2 gap-2 p-2 bg-slate-50">
+                      <div className="flex flex-col items-center">
+                        <img
+                          src={grade4SpeakingReef}
+                          alt="Coral reef with fish"
+                          className="h-40 sm:h-48 w-full object-cover bg-white rounded-xl border border-slate-200 shadow-xs"
+                        />
+                        <span className="text-[10px] font-bold text-slate-600 mt-1">
+                          1. Coral Reef
+                        </span>
+                      </div>
+                      <div className="flex flex-col items-center">
+                        <img
+                          src={grade4SpeakingShark}
+                          alt="Shark swimming in deep water"
+                          className="h-40 sm:h-48 w-full object-cover bg-white rounded-xl border border-slate-200 shadow-xs"
+                        />
+                        <span className="text-[10px] font-bold text-slate-600 mt-1">
+                          2. Shark in Deep Sea
+                        </span>
+                      </div>
+                    </div>
+                  ) : isGrade3Stage ? (
+                    <div className="grid grid-cols-3 gap-1.5 p-2 bg-slate-50">
+                      <div className="flex flex-col items-center">
+                        <img
+                          src={grade3SpeakingTable}
+                          alt="Conversation at table"
+                          className="h-40 sm:h-48 w-full object-contain bg-white rounded-xl border border-slate-200 shadow-xs p-1"
+                        />
+                        <span className="text-[10px] font-bold text-slate-600 mt-1">
+                          1. Conversation
+                        </span>
+                      </div>
+                      <div className="flex flex-col items-center">
+                        <img
+                          src={grade3SpeakingTablet}
+                          alt="Child with headphones and tablet"
+                          className="h-40 sm:h-48 w-full object-contain bg-white rounded-xl border border-slate-200 shadow-xs p-1"
+                        />
+                        <span className="text-[10px] font-bold text-slate-600 mt-1">
+                          2. Audio / Tablet
+                        </span>
+                      </div>
+                      <div className="flex flex-col items-center">
+                        <img
+                          src={grade3SpeakingRocket}
+                          alt="Rocket launch into space"
+                          className="h-40 sm:h-48 w-full object-contain bg-white rounded-xl border border-slate-200 shadow-xs p-1"
+                        />
+                        <span className="text-[10px] font-bold text-slate-600 mt-1">
+                          3. Space Launch
+                        </span>
+                      </div>
+                    </div>
+                  ) : isGrade2Stage ? (
+                    <div className="grid grid-cols-3 gap-1.5 p-2 bg-slate-50">
+                      <div className="flex flex-col items-center">
+                        <img
+                          src={grade2Pic1}
+                          alt="Classroom Discussion"
+                          className="h-40 sm:h-48 w-full object-cover rounded-xl border border-slate-200 shadow-xs"
+                        />
+                        <span className="text-[10px] font-bold text-slate-600 mt-1">
+                          1. Discussion
+                        </span>
+                      </div>
+                      <div className="flex flex-col items-center">
+                        <img
+                          src={grade2Pic2}
+                          alt="Girl at Board"
+                          className="h-40 sm:h-48 w-full object-cover rounded-xl border border-slate-200 shadow-xs"
+                        />
+                        <span className="text-[10px] font-bold text-slate-600 mt-1">
+                          2. Presentation
+                        </span>
+                      </div>
+                      <div className="flex flex-col items-center">
+                        <img
+                          src={grade2Pic3}
+                          alt="Reading Circle"
+                          className="h-40 sm:h-48 w-full object-cover rounded-xl border border-slate-200 shadow-xs"
+                        />
+                        <span className="text-[10px] font-bold text-slate-600 mt-1">
+                          3. Reading Circle
+                        </span>
+                      </div>
+                    </div>
+                  ) : (
+                    <img
+                      src={activePromptImage}
+                      alt={isGrade1Stage ? "Paul and Grandma Story" : "Family dinner prompt"}
+                      className={`w-full ${isGrade1Stage ? 'h-64 sm:h-72 object-contain bg-slate-100 p-1' : 'h-56 sm:h-64 object-cover'} object-center`}
+                    />
+                  )}
                   <div className="absolute inset-0 bg-violet-900/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                     <span className="bg-white/90 text-violet-900 text-xs font-extrabold px-3 py-1.5 rounded-xl shadow-md">
                       🔍 Tap to Zoom Prompt
                     </span>
                   </div>
                 </div>
-                <span className="text-[11px] font-bold text-slate-500 mt-2">
-                  Picture Prompt (Family at Table)
+                <span className="text-[11px] font-bold text-slate-500 mt-2 text-center">
+                  {isGrade4Stage
+                    ? "Story Prompts (1. Coral Reef with Fish, 2. Shark in Deep Water)"
+                    : isGrade3Stage
+                    ? "Story Prompts (Table Discussion, Audio Learning, Rocket Launch)"
+                    : isGrade2Stage
+                    ? "Classroom Story (3 Sequential Pictures)"
+                    : isGrade1Stage
+                    ? "Paul & Grandma 5-Picture Story"
+                    : "Picture Prompt (Family at Table)"}
                 </span>
               </div>
             </div>
@@ -552,12 +1265,12 @@ export default function PrimarySpeakingAssessmentForm() {
             className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 p-4 backdrop-blur-xs cursor-pointer"
           >
             <div
-              className="bg-white rounded-3xl p-4 max-w-2xl w-full shadow-2xl relative"
+              className="bg-white rounded-3xl p-4 max-w-3xl w-full shadow-2xl relative"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex justify-between items-center mb-3">
                 <h3 className="text-sm font-black text-slate-800">
-                  FS1 Speaking Prompt Image
+                  {selectedStage} Speaking Prompt Image
                 </h3>
                 <button
                   onClick={() => setShowFullPicture(false)}
@@ -567,13 +1280,20 @@ export default function PrimarySpeakingAssessmentForm() {
                 </button>
               </div>
               <img
-                src={familyPhoto}
-                alt="Family dinner prompt large"
+                src={activePromptImage}
+                alt={`${selectedStage} speaking prompt large`}
                 className="w-full max-h-[75vh] object-contain rounded-2xl border"
               />
               <p className="text-center text-xs text-slate-500 mt-3 font-semibold">
-                Show this image clearly to the student while asking the 6
-                questions.
+                {isGrade4Stage
+                  ? "Show these 2 ocean story pictures (1. Coral reef with colourful fish, 2. Shark swimming in deep water kelp forest) to the student."
+                  : isGrade3Stage
+                  ? "Show these 3 story pictures (1. People discussing at table, 2. Child listening with headphones on tablet, 3. Rocket launch into space) to the student."
+                  : isGrade2Stage
+                  ? "Show these 3 classroom story pictures (1. Class discussion, 2. Girl presenting at chalkboard, 3. Reading circle on carpet) to the student."
+                  : isGrade1Stage
+                  ? "Show these 5 story pictures (1. Arrival with Grandma, 2. Tennis, 3. Walking, 4. Beach & horse, 5. Video game) to the student."
+                  : "Show this image clearly to the student while asking the 6 questions."}
               </p>
             </div>
           </div>
@@ -653,6 +1373,38 @@ export default function PrimarySpeakingAssessmentForm() {
             </div>
           </div>
 
+          {/* AI Assessment Conductor */}
+          <AIAssistantConductor
+            questions={activeQuestions.map((q) => q.text)}
+            rubrics={
+              isGrade4Stage
+                ? activeQuestions.map((q, idx) => ({
+                    keyPhrases: GRADE4_KEY_WORDS,
+                    relatablePhrases:
+                      idx === 0
+                        ? ["fish", "coral", "reef", "swimming", "colourful", "underwater", "ocean", "plants"]
+                        : idx === 1
+                        ? ["shark", "swimming", "danger", "kelp", "deep water", "hunting", "moving", "sea"]
+                        : idx === 2
+                        ? ["first", "next", "then", "after that", "finally", "continues", "happens next"]
+                        : ["like", "think", "favourite", "story", "interesting", "ocean", "shark", "fish"],
+                  }))
+                : isGrade3Stage
+                ? activeQuestions.map(() => ({
+                    keyPhrases: GRADE3_KEY_WORDS,
+                    relatablePhrases: ["table", "story", "tablet", "rocket", "space"],
+                  }))
+                : isGrade2Stage
+                ? activeQuestions.map(() => ({
+                    keyPhrases: GRADE2_KEY_WORDS,
+                    relatablePhrases: ["classroom", "story", "picture", "girl", "school"],
+                  }))
+                : null
+            }
+            title={`${selectedStage} Speaking Conductor`}
+            onAnswersArrayChange={setAiAnswers}
+          />
+
           {/* Student Verbal Responses Logging (Optional notes per question) */}
           <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-xs">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
@@ -664,14 +1416,15 @@ export default function PrimarySpeakingAssessmentForm() {
                   Question Responses & Observed Speech
                 </h2>
                 <p className="text-xs text-slate-500 mt-1">
-                  Record brief notes of the student’s first answer for each
-                  question (e.g. single words, phrases, complete sentences).
+                  {isGrade1Stage
+                    ? "Record brief notes of the student’s response to each story prompt."
+                    : "Record brief notes of the student’s first answer for each question (e.g. single words, phrases, complete sentences)."}
                 </p>
               </div>
             </div>
 
             <div className="space-y-4">
-              {FS1_SPEAKING_QUESTIONS.map((q, idx) => (
+              {activeQuestions.map((q, idx) => (
                 <div
                   key={q.id}
                   className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 transition-all hover:bg-slate-100/50"
@@ -682,11 +1435,20 @@ export default function PrimarySpeakingAssessmentForm() {
                       {q.text}
                     </span>
                   </div>
+                  {aiAnswers && aiAnswers[idx] && aiAnswers[idx].trim().length > 0 && (
+                    <div className="mt-2 mb-2 text-sm text-indigo-700 bg-indigo-50/50 p-3 rounded-xl border border-indigo-100 shadow-inner">
+                      <span className="font-bold mr-1">Student Answer (AI):</span> "{aiAnswers[idx]}"
+                    </div>
+                  )}
                   <input
                     type="text"
-                    value={questionNotes[idx]}
+                    value={questionNotes[idx] || ""}
                     onChange={(e) => handleNoteChange(idx, e.target.value)}
-                    placeholder="Note child's answer (e.g. 'eating rice', points to plate, says 'happy')..."
+                    placeholder={
+                      isGrade1Stage
+                        ? `Note student's response to Prompt ${q.id}...`
+                        : "Note child's answer (e.g. 'eating rice', points to plate, says 'happy')..."
+                    }
                     className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-violet-200 focus:border-violet-500"
                   />
                 </div>
@@ -773,51 +1535,57 @@ export default function PrimarySpeakingAssessmentForm() {
                     );
                   })}
 
-                  {/* Key Words Row (Exact from image) */}
-                  <tr className="bg-slate-50/90 border-t-2 border-slate-300">
-                    <td className="py-4 px-4 font-black text-slate-800 align-top">
-                      Key Words
-                    </td>
-                    <td colSpan={2} className="py-4 px-4">
-                      <p className="text-[11px] text-slate-500 font-semibold mb-2">
-                        Tap words to mark what the student used during speaking:
-                      </p>
-                      <div className="flex flex-wrap gap-1.5">
-                        {KEY_WORDS.map((word, kIdx) => {
-                          const isUsed = usedKeywords.includes(word);
-                          return (
-                            <button
-                              key={kIdx}
-                              type="button"
-                              onClick={() => toggleKeyword(word)}
-                              className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all ${
-                                isUsed
-                                  ? "bg-violet-600 text-white font-bold shadow-xs scale-105"
-                                  : "bg-white border border-slate-200 text-slate-700 hover:border-violet-300"
-                              }`}
-                            >
-                              {isUsed ? "✓ " : ""}
-                              {word}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </td>
-                  </tr>
+                  {/* Key Words Row (Exact from FS1/FS2/KG2 & Grade 2/Year 3 sheets) */}
+                  {!isGrade4Stage && (!isGrade1Stage || isGrade2Stage) && (
+                    <tr className="bg-slate-50/90 border-t-2 border-slate-300">
+                      <td className="py-4 px-4 font-black text-slate-800 align-top">
+                        Key Words
+                      </td>
+                      <td colSpan={2} className="py-4 px-4">
+                        <p className="text-[11px] text-slate-500 font-semibold mb-2">
+                          Tap words to mark what the student used during speaking:
+                        </p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {activeKeyWords.map((word, kIdx) => {
+                            const isUsed = usedKeywords.includes(word);
+                            return (
+                              <button
+                                key={kIdx}
+                                type="button"
+                                onClick={() => toggleKeyword(word)}
+                                className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all ${
+                                  isUsed
+                                    ? "bg-violet-600 text-white font-bold shadow-xs scale-105"
+                                    : "bg-white border border-slate-200 text-slate-700 hover:border-violet-300"
+                                }`}
+                              >
+                                {isUsed ? "✓ " : ""}
+                                {word}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
 
-            {/* General Assessor Comments */}
+            {/* General Assessor Comments / Teacher Comments */}
             <div>
               <label className="block text-xs font-extrabold text-slate-700 mb-1.5">
-                Assessor General Comments / Observations
+                {isGrade1Stage ? "Teacher Comments:" : "Assessor General Comments / Observations"}
               </label>
               <textarea
                 value={teacherGeneralComments}
                 onChange={(e) => setTeacherGeneralComments(e.target.value)}
-                rows={2}
-                placeholder="Additional notes on pronunciation, confidence, non-verbal gestures..."
+                rows={3}
+                placeholder={
+                  isGrade1Stage
+                    ? "Enter teacher comments, story sequencing observations, and fluency remarks..."
+                    : "Additional notes on pronunciation, confidence, non-verbal gestures..."
+                }
                 className="w-full bg-slate-50 border border-slate-200 focus:border-violet-500 focus:bg-white rounded-xl px-3.5 py-2.5 text-xs font-medium text-slate-800 transition-all focus:outline-none focus:ring-4 focus:ring-violet-100"
               />
             </div>

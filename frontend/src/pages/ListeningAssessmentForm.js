@@ -2,34 +2,22 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { assessmentAPI } from '../services/api';
+import AIAssistantConductor from '../components/AIAssistantConductor';
+import { evaluateAnswer, QUESTIONS_TEXT } from '../utils/listeningRubric';
 
-const QUESTIONS = [
-  'What is your name?',
-  'What is your age?',
-  'What language do you speak at home?',
-  'Where do you live?',
-  'Have you got brothers and sisters?',
-  'What hobbies or sports do you like?',
-  'How did you come to school today?',
-  'Did you go to school in another place? Where?',
-  'Tell me about your last school.',
-  'What was your best subject?',
-  'What did you not like in school?',
-  'What will you do after school today?',
-  'What would you like to do when you finish school?',
-];
+const QUESTIONS = QUESTIONS_TEXT;
 
 const CEFR_BANDS = [
-  { range: '0–5',   level: 'A1', desc: 'Very limited English. Can answer isolated personal questions.', color: 'text-red-600',     bg: 'bg-red-50 border-red-200' },
-  { range: '6–10',  level: 'A2', desc: 'Basic user. Can describe simple personal information with support.', color: 'text-orange-600', bg: 'bg-orange-50 border-orange-200' },
-  { range: '11–15', level: 'B1', desc: 'Intermediate. Can describe past events, preferences, and school topics.', color: 'text-amber-600',  bg: 'bg-amber-50 border-amber-200' },
-  { range: '16–20', level: 'B2', desc: 'Upper intermediate. Can give detail, reasons, and extended responses.', color: 'text-blue-600',   bg: 'bg-blue-50 border-blue-200' },
+  { range: '0–5', level: 'A1', desc: 'Very limited English. Can answer isolated personal questions.', color: 'text-red-600', bg: 'bg-red-50 border-red-200' },
+  { range: '6–10', level: 'A2', desc: 'Basic user. Can describe simple personal information with support.', color: 'text-orange-600', bg: 'bg-orange-50 border-orange-200' },
+  { range: '11–15', level: 'B1', desc: 'Intermediate. Can describe past events, preferences, and school topics.', color: 'text-amber-600', bg: 'bg-amber-50 border-amber-200' },
+  { range: '16–20', level: 'B2', desc: 'Upper intermediate. Can give detail, reasons, and extended responses.', color: 'text-blue-600', bg: 'bg-blue-50 border-blue-200' },
   { range: '21–24', level: 'C1', desc: 'Advanced. Fluent, coherent, accurate, extended speaking.', color: 'text-emerald-600', bg: 'bg-emerald-50 border-emerald-200' },
-  { range: '25–26', level: 'C2', desc: 'Near-native. Precise, nuanced, sophisticated responses.', color: 'text-violet-600',  bg: 'bg-violet-50 border-violet-200' },
+  { range: '25–26', level: 'C2', desc: 'Near-native. Precise, nuanced, sophisticated responses.', color: 'text-violet-600', bg: 'bg-violet-50 border-violet-200' },
 ];
 
 function getCefr(total) {
-  if (total <= 5)  return 'A1';
+  if (total <= 5) return 'A1';
   if (total <= 10) return 'A2';
   if (total <= 15) return 'B1';
   if (total <= 20) return 'B2';
@@ -44,23 +32,49 @@ export default function ListeningAssessmentForm() {
   const [searchParams] = useSearchParams();
   const preSelectedTerm = searchParams.get('term') || 'T1';
 
-  const [formData, setFormData] = useState({ 
-    email: '', 
-    studentName: '', 
-    yearGroupAndClass: '', 
+  const [formData, setFormData] = useState({
+    email: '',
+    studentName: '',
+    yearGroupAndClass: '',
     teacherName: '',
-    term: preSelectedTerm 
+    term: preSelectedTerm
   });
   const [scores, setScores] = useState(Array(QUESTIONS.length).fill(null));
   const [totalScore, setTotalScore] = useState(0);
   const [cefrLevel, setCefrLevel] = useState('');
   const [loading, setLoading] = useState(false);
+  const [, setTranscript] = useState('');
+  const [aiAnswers, setAIAnswers] = useState([]);
 
   useEffect(() => {
     if (preSelectedTerm) {
       setFormData(prev => ({ ...prev, term: preSelectedTerm }));
     }
   }, [preSelectedTerm]);
+
+  // Auto-scoring based on AI keywords & comprehension rubric
+  useEffect(() => {
+    let changed = false;
+    const nextScores = [...scores];
+
+    aiAnswers.forEach((ans, i) => {
+      if (ans && ans.trim().length > 0) {
+        const evaluation = evaluateAnswer(i, ans);
+        if (nextScores[i] !== evaluation.score) {
+          nextScores[i] = evaluation.score;
+          changed = true;
+        }
+      }
+    });
+
+    if (changed) {
+      setScores(nextScores);
+      const total = nextScores.reduce((s, v) => s + (v ?? 0), 0);
+      setTotalScore(total);
+      setCefrLevel(getCefr(total));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [aiAnswers]);
 
   const handleInput = (e) => {
     const { name, value } = e.target;
@@ -101,12 +115,12 @@ export default function ListeningAssessmentForm() {
         level: cefrLevel,
       });
       toast.success('Assessment submitted successfully!');
-      setFormData({ 
-        email: '', 
-        studentName: '', 
-        yearGroupAndClass: '', 
+      setFormData({
+        email: '',
+        studentName: '',
+        yearGroupAndClass: '',
         teacherName: '',
-        term: preSelectedTerm 
+        term: preSelectedTerm
       });
       setScores(Array(QUESTIONS.length).fill(null));
       setTotalScore(0);
@@ -203,6 +217,12 @@ export default function ListeningAssessmentForm() {
             </div>
           </div>
 
+          <AIAssistantConductor
+            questions={QUESTIONS}
+            onCompleteTextChange={setTranscript}
+            onAnswersArrayChange={setAIAnswers}
+          />
+
           {/* Progress */}
           <div className="card-section">
             <div className="flex items-center justify-between mb-2">
@@ -230,26 +250,67 @@ export default function ListeningAssessmentForm() {
                   </tr>
                 </thead>
                 <tbody>
-                  {QUESTIONS.map((q, i) => (
-                    <tr key={i} className={scores[i] !== null ? 'bg-blue-50/40' : ''}>
-                      <td className="text-slate-400 text-xs font-medium">{i + 1}</td>
-                      <td className="font-medium text-slate-800">{q}</td>
-                      {[0, 1, 2].map(val => (
-                        <td key={val} className="text-center">
-                          <label className="inline-flex items-center justify-center cursor-pointer">
-                            <input
-                              type="radio"
-                              name={`q-${i}`}
-                              value={val}
-                              checked={scores[i] === val}
-                              onChange={() => handleScore(i, val)}
-                              className="w-4 h-4 accent-blue-600 cursor-pointer"
-                            />
-                          </label>
-                        </td>
-                      ))}
-                    </tr>
-                  ))}
+                  {QUESTIONS.map((q, i) => {
+                    const evalResult = aiAnswers[i] && aiAnswers[i].trim() ? evaluateAnswer(i, aiAnswers[i]) : null;
+                    return (
+                      <React.Fragment key={i}>
+                        <tr className={scores[i] !== null ? 'bg-blue-50/40' : ''}>
+                          <td className="text-slate-400 text-xs font-medium">{i + 1}</td>
+                          <td className="text-slate-800">
+                            <div className="font-medium">{q}</div>
+                            {aiAnswers[i] && aiAnswers[i].trim() && (
+                              <div className="mt-2 text-sm bg-white p-3 rounded-xl border border-slate-200 shadow-xs space-y-1.5">
+                                <div className="flex items-start justify-between gap-2">
+                                  <div>
+                                    <span className="font-bold text-slate-800 mr-1">Student Answer:</span>
+                                    <span className="italic text-slate-700">"{aiAnswers[i]}"</span>
+                                  </div>
+                                  {evalResult && (
+                                    <span className={`text-xs px-2.5 py-0.5 rounded-full font-bold shrink-0 ${
+                                      evalResult.score === 2
+                                        ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                                        : evalResult.score === 1
+                                          ? 'bg-amber-100 text-amber-800 border border-amber-200'
+                                          : 'bg-slate-100 text-slate-600 border border-slate-200'
+                                    }`}>
+                                      AI Auto-Score: {evalResult.score}/2
+                                    </span>
+                                  )}
+                                </div>
+                                {evalResult && evalResult.detectedKeywords.length > 0 && (
+                                  <div className="flex items-center gap-1.5 flex-wrap pt-1 border-t border-slate-100">
+                                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Detected:</span>
+                                    {evalResult.detectedKeywords.map((kw, kwIdx) => (
+                                      <span key={kwIdx} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                        <svg className="w-3 h-3 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                                          <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                                        </svg>
+                                        {kw}
+                                      </span>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </td>
+                          {[0, 1, 2].map(val => (
+                            <td key={val} className="text-center">
+                              <label className="inline-flex items-center justify-center cursor-pointer">
+                                <input
+                                  type="radio"
+                                  name={`q-${i}`}
+                                  value={val}
+                                  checked={scores[i] === val}
+                                  onChange={() => handleScore(i, val)}
+                                  className="w-4 h-4 accent-blue-600 cursor-pointer"
+                                />
+                              </label>
+                            </td>
+                          ))}
+                        </tr>
+                      </React.Fragment>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -305,9 +366,9 @@ export default function ListeningAssessmentForm() {
 
           {/* Submit */}
           <div className="flex gap-3">
-            <button 
-              type="submit" 
-              disabled={loading} 
+            <button
+              type="submit"
+              disabled={loading}
               className="flex-1 px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold rounded-2xl hover:from-blue-700 hover:to-indigo-700 active:scale-[0.98] transition-all disabled:opacity-50 disabled:pointer-events-none shadow-xl shadow-blue-600/20 flex items-center justify-center gap-2 text-base"
             >
               {loading ? (
@@ -323,9 +384,9 @@ export default function ListeningAssessmentForm() {
                 </>
               )}
             </button>
-            <button 
-              type="button" 
-              onClick={() => window.location.reload()} 
+            <button
+              type="button"
+              onClick={() => window.location.reload()}
               className="px-8 py-4 bg-white text-slate-600 font-bold rounded-2xl border-2 border-slate-200 hover:bg-slate-50 hover:border-slate-300 active:scale-[0.98] transition-all flex items-center justify-center gap-2 text-base shadow-sm"
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>

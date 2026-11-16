@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { assessmentAPI } from '../services/api';
+import AIAssistantConductor from '../components/AIAssistantConductor';
 import landmarkImg1 from '../assets/landmark_wall.png';
 import landmarkImg2 from '../assets/landmark_colosseum.png';
 import landmarkImg3 from '../assets/landmark_taj.png';
@@ -25,6 +26,7 @@ export default function WritingAssessmentLandmarkStudentSheet() {
   });
   const [studentWriting, setStudentWriting] = useState('');
   const [loading, setLoading] = useState(false);
+  const [aiAnswers, setAiAnswers] = useState([]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -103,11 +105,18 @@ export default function WritingAssessmentLandmarkStudentSheet() {
           <p className="text-sm font-semibold text-blue-600 mb-4 bg-blue-50 inline-block px-3 py-1 rounded-md">
             Note: Allow 10 minutes for student to write.
           </p>
-          <ol className="space-y-1 text-gray-700 mb-6">
+          <div className="space-y-3 text-gray-700 mb-6">
             {WRITING_QUESTIONS.map((q, idx) => (
-              <li key={idx} className="font-medium text-lg">{q}</li>
+              <div key={idx}>
+                <div className="font-semibold text-base text-slate-900">{q}</div>
+                {aiAnswers && aiAnswers[idx] && (
+                  <div className="mt-2 text-sm text-indigo-700 bg-indigo-50/50 p-2.5 rounded-lg border border-indigo-100 shadow-inner">
+                    <span className="font-bold mr-1">Student Answer (AI):</span> "{aiAnswers[idx]}"
+                  </div>
+                )}
+              </div>
             ))}
-          </ol>
+          </div>
 
           {/* 3 Landmark Pictures */}
           <div className="grid grid-cols-3 gap-4">
@@ -125,22 +134,12 @@ export default function WritingAssessmentLandmarkStudentSheet() {
           </div>
         </div>
 
-        {/* Lined Writing Area */}
-        <div className="bg-white rounded-lg shadow-md p-8 mb-8">
-          <textarea
-            value={studentWriting}
-            onChange={(e) => setStudentWriting(e.target.value)}
-            placeholder="Write your story here..."
-            rows={18}
-            className="w-full px-2 py-2 border-0 focus:outline-none resize-none text-gray-800 text-base"
-            style={{
-              lineHeight: '2.2rem',
-              backgroundImage: 'repeating-linear-gradient(transparent, transparent calc(2.2rem - 1px), #d1d5db calc(2.2rem - 1px), #d1d5db 2.2rem)',
-              backgroundSize: '100% 2.2rem',
-              minHeight: '400px'
-            }}
-          />
-        </div>
+        {/* Lined Writing Area / AI Assistant */}
+        <AIAssistantConductor
+          questions={WRITING_QUESTIONS}
+          onCompleteTextChange={(text) => setStudentWriting(text)}
+          onAnswersArrayChange={setAiAnswers}
+        />
 
         {/* Student Info + Submit */}
         <form onSubmit={handleSubmit} className="space-y-6">

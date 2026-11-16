@@ -223,6 +223,102 @@ function App() {
             }
           />
           <Route
+            path="/assessment/grade1-listening"
+            element={
+              <ProtectedRoute requireApprovedTeacher={true}>
+                <PrimaryListeningAssessmentForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/assessment/year2-listening"
+            element={
+              <ProtectedRoute requireApprovedTeacher={true}>
+                <PrimaryListeningAssessmentForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/assessment/grade1-year2-listening"
+            element={
+              <ProtectedRoute requireApprovedTeacher={true}>
+                <PrimaryListeningAssessmentForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/assessment/grade2-listening"
+            element={
+              <ProtectedRoute requireApprovedTeacher={true}>
+                <PrimaryListeningAssessmentForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/assessment/year3-listening"
+            element={
+              <ProtectedRoute requireApprovedTeacher={true}>
+                <PrimaryListeningAssessmentForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/assessment/grade2-year3-listening"
+            element={
+              <ProtectedRoute requireApprovedTeacher={true}>
+                <PrimaryListeningAssessmentForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/assessment/grade3-listening"
+            element={
+              <ProtectedRoute requireApprovedTeacher={true}>
+                <PrimaryListeningAssessmentForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/assessment/year4-listening"
+            element={
+              <ProtectedRoute requireApprovedTeacher={true}>
+                <PrimaryListeningAssessmentForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/assessment/grade3-year4-listening"
+            element={
+              <ProtectedRoute requireApprovedTeacher={true}>
+                <PrimaryListeningAssessmentForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/assessment/grade4-listening"
+            element={
+              <ProtectedRoute requireApprovedTeacher={true}>
+                <PrimaryListeningAssessmentForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/assessment/year5-listening"
+            element={
+              <ProtectedRoute requireApprovedTeacher={true}>
+                <PrimaryListeningAssessmentForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/assessment/grade4-year5-listening"
+            element={
+              <ProtectedRoute requireApprovedTeacher={true}>
+                <PrimaryListeningAssessmentForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/assessment/primary-speaking"
             element={
               <ProtectedRoute requireApprovedTeacher={true}>
@@ -272,6 +368,102 @@ function App() {
           />
           <Route
             path="/assessment/kg2-year1-speaking"
+            element={
+              <ProtectedRoute requireApprovedTeacher={true}>
+                <PrimarySpeakingAssessmentForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/assessment/grade1-speaking"
+            element={
+              <ProtectedRoute requireApprovedTeacher={true}>
+                <PrimarySpeakingAssessmentForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/assessment/year2-speaking"
+            element={
+              <ProtectedRoute requireApprovedTeacher={true}>
+                <PrimarySpeakingAssessmentForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/assessment/grade1-year2-speaking"
+            element={
+              <ProtectedRoute requireApprovedTeacher={true}>
+                <PrimarySpeakingAssessmentForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/assessment/grade2-speaking"
+            element={
+              <ProtectedRoute requireApprovedTeacher={true}>
+                <PrimarySpeakingAssessmentForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/assessment/year3-speaking"
+            element={
+              <ProtectedRoute requireApprovedTeacher={true}>
+                <PrimarySpeakingAssessmentForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/assessment/grade2-year3-speaking"
+            element={
+              <ProtectedRoute requireApprovedTeacher={true}>
+                <PrimarySpeakingAssessmentForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/assessment/grade3-speaking"
+            element={
+              <ProtectedRoute requireApprovedTeacher={true}>
+                <PrimarySpeakingAssessmentForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/assessment/year4-speaking"
+            element={
+              <ProtectedRoute requireApprovedTeacher={true}>
+                <PrimarySpeakingAssessmentForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/assessment/grade3-year4-speaking"
+            element={
+              <ProtectedRoute requireApprovedTeacher={true}>
+                <PrimarySpeakingAssessmentForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/assessment/grade4-speaking"
+            element={
+              <ProtectedRoute requireApprovedTeacher={true}>
+                <PrimarySpeakingAssessmentForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/assessment/year5-speaking"
+            element={
+              <ProtectedRoute requireApprovedTeacher={true}>
+                <PrimarySpeakingAssessmentForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/assessment/grade4-year5-speaking"
             element={
               <ProtectedRoute requireApprovedTeacher={true}>
                 <PrimarySpeakingAssessmentForm />
@@ -335,6 +527,102 @@ function App() {
             }
           />
           <Route
+            path="/assessment/grade1-reading"
+            element={
+              <ProtectedRoute requireApprovedTeacher={true}>
+                <PrimaryReadingAssessmentForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/assessment/year2-reading"
+            element={
+              <ProtectedRoute requireApprovedTeacher={true}>
+                <PrimaryReadingAssessmentForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/assessment/grade1-year2-reading"
+            element={
+              <ProtectedRoute requireApprovedTeacher={true}>
+                <PrimaryReadingAssessmentForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/assessment/grade2-reading"
+            element={
+              <ProtectedRoute requireApprovedTeacher={true}>
+                <PrimaryReadingAssessmentForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/assessment/year3-reading"
+            element={
+              <ProtectedRoute requireApprovedTeacher={true}>
+                <PrimaryReadingAssessmentForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/assessment/grade2-year3-reading"
+            element={
+              <ProtectedRoute requireApprovedTeacher={true}>
+                <PrimaryReadingAssessmentForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/assessment/grade3-reading"
+            element={
+              <ProtectedRoute requireApprovedTeacher={true}>
+                <PrimaryReadingAssessmentForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/assessment/year4-reading"
+            element={
+              <ProtectedRoute requireApprovedTeacher={true}>
+                <PrimaryReadingAssessmentForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/assessment/grade3-year4-reading"
+            element={
+              <ProtectedRoute requireApprovedTeacher={true}>
+                <PrimaryReadingAssessmentForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/assessment/grade4-reading"
+            element={
+              <ProtectedRoute requireApprovedTeacher={true}>
+                <PrimaryReadingAssessmentForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/assessment/year5-reading"
+            element={
+              <ProtectedRoute requireApprovedTeacher={true}>
+                <PrimaryReadingAssessmentForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/assessment/grade4-year5-reading"
+            element={
+              <ProtectedRoute requireApprovedTeacher={true}>
+                <PrimaryReadingAssessmentForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/assessment/primary-writing"
             element={
               <ProtectedRoute requireApprovedTeacher={true}>
@@ -391,6 +679,102 @@ function App() {
             }
           />
           <Route
+            path="/assessment/grade1-writing"
+            element={
+              <ProtectedRoute requireApprovedTeacher={true}>
+                <PrimaryWritingAssessmentForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/assessment/year2-writing"
+            element={
+              <ProtectedRoute requireApprovedTeacher={true}>
+                <PrimaryWritingAssessmentForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/assessment/grade1-year2-writing"
+            element={
+              <ProtectedRoute requireApprovedTeacher={true}>
+                <PrimaryWritingAssessmentForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/assessment/grade2-writing"
+            element={
+              <ProtectedRoute requireApprovedTeacher={true}>
+                <PrimaryWritingAssessmentForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/assessment/year3-writing"
+            element={
+              <ProtectedRoute requireApprovedTeacher={true}>
+                <PrimaryWritingAssessmentForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/assessment/grade2-year3-writing"
+            element={
+              <ProtectedRoute requireApprovedTeacher={true}>
+                <PrimaryWritingAssessmentForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/assessment/grade3-writing"
+            element={
+              <ProtectedRoute requireApprovedTeacher={true}>
+                <PrimaryWritingAssessmentForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/assessment/year4-writing"
+            element={
+              <ProtectedRoute requireApprovedTeacher={true}>
+                <PrimaryWritingAssessmentForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/assessment/grade3-year4-writing"
+            element={
+              <ProtectedRoute requireApprovedTeacher={true}>
+                <PrimaryWritingAssessmentForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/assessment/grade4-writing"
+            element={
+              <ProtectedRoute requireApprovedTeacher={true}>
+                <PrimaryWritingAssessmentForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/assessment/year5-writing"
+            element={
+              <ProtectedRoute requireApprovedTeacher={true}>
+                <PrimaryWritingAssessmentForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/assessment/grade4-year5-writing"
+            element={
+              <ProtectedRoute requireApprovedTeacher={true}>
+                <PrimaryWritingAssessmentForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/assessment/primary-phonic"
             element={
               <ProtectedRoute requireApprovedTeacher={true}>
@@ -432,6 +816,70 @@ function App() {
           />
           <Route
             path="/assessment/fs2-phonics"
+            element={
+              <ProtectedRoute requireApprovedTeacher={true}>
+                <PrimaryPhonicAssessmentForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/assessment/kg2-phonic"
+            element={
+              <ProtectedRoute requireApprovedTeacher={true}>
+                <PrimaryPhonicAssessmentForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/assessment/kg2-phonics"
+            element={
+              <ProtectedRoute requireApprovedTeacher={true}>
+                <PrimaryPhonicAssessmentForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/assessment/year1-phonic"
+            element={
+              <ProtectedRoute requireApprovedTeacher={true}>
+                <PrimaryPhonicAssessmentForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/assessment/kg2-year1-phonic"
+            element={
+              <ProtectedRoute requireApprovedTeacher={true}>
+                <PrimaryPhonicAssessmentForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/assessment/kg2-phonic-phase45"
+            element={
+              <ProtectedRoute requireApprovedTeacher={true}>
+                <PrimaryPhonicAssessmentForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/assessment/year1-phonic-phase45"
+            element={
+              <ProtectedRoute requireApprovedTeacher={true}>
+                <PrimaryPhonicAssessmentForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/assessment/kg2-year1-phonic-phase45"
+            element={
+              <ProtectedRoute requireApprovedTeacher={true}>
+                <PrimaryPhonicAssessmentForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/assessment/phonic-phase45"
             element={
               <ProtectedRoute requireApprovedTeacher={true}>
                 <PrimaryPhonicAssessmentForm />

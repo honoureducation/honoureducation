@@ -47,6 +47,66 @@ const OPTIONS = [
     ),
     route: '/assessment/kg2-speaking',
   },
+  {
+    id: 'grade1-year2',
+    subtitle: 'Stage 4 · Year 2',
+    title: 'Grade 1 / Year 2 Speaking Assessment',
+    tag: 'Grade 1 · Year 2 · Age 6–7',
+    desc: '4 story prompts with Paul & Grandma picture strip, storytelling evaluation, and CEFR scoring (A1.0–A1.2 to B2–C1).',
+    color: 'bg-violet-500',
+    lightColor: 'bg-violet-50 text-violet-500 border-violet-200',
+    icon: (
+      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+      </svg>
+    ),
+    route: '/assessment/grade1-speaking',
+  },
+  {
+    id: 'grade2-year3',
+    subtitle: 'Stage 5 · Year 3',
+    title: 'Grade 2 / Year 3 Speaking Assessment',
+    tag: 'Grade 2 · Year 3 · Age 7–8',
+    desc: '4 story prompts with classroom 3-picture strip, sequential storytelling, CEFR scoring, and key vocabulary detection.',
+    color: 'bg-violet-500',
+    lightColor: 'bg-violet-50 text-violet-500 border-violet-200',
+    icon: (
+      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M4.26 10.147a60.438 60.438 0 01-.491 6.347A48.62 48.62 0 0112 20.904a48.62 48.62 0 018.232-4.41 60.46 60.46 0 00-.491-6.347m-15.482 0a50.636 50.636 0 00-2.658-.813A59.906 59.906 0 0112 3.493a59.903 59.903 0 0110.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.717 50.717 0 0112 13.489a50.702 50.702 0 017.74-3.342" />
+      </svg>
+    ),
+    route: '/assessment/grade2-speaking',
+  },
+  {
+    id: 'grade3-year4',
+    subtitle: 'Stage 6 · Year 4',
+    title: 'Grade 3 / Year 4 Speaking Assessment',
+    tag: 'Grade 3 · Year 4 · Age 8–9',
+    desc: '4 story prompts with table discussion, digital learning & rocket launch strip, story sequencing, and CEFR scoring.',
+    color: 'bg-violet-500',
+    lightColor: 'bg-violet-50 text-violet-500 border-violet-200',
+    icon: (
+      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M15.59 14.37a6 6 0 01-5.84 7.38v-4.8m5.84-2.58a14.98 14.98 0 006.16-12.12A14.98 14.98 0 009.631 8.41m5.96 5.96a14.926 14.926 0 01-5.841 2.58m-.119-8.54a6 6 0 00-7.381 5.84h4.8m2.581-5.84a14.927 14.927 0 00-2.58 5.84m2.699 2.7c-.103.021-.207.041-.311.06a15.09 15.09 0 01-2.448-2.458m8.28-8.28a15.09 15.09 0 01-2.448 2.458m-2.448-2.458a15.09 15.09 0 012.448-2.458" />
+      </svg>
+    ),
+    route: '/assessment/grade3-speaking',
+  },
+  {
+    id: 'grade4-year5',
+    subtitle: 'Stage 7 · Year 5',
+    title: 'Grade 4 / Year 5 Speaking Assessment',
+    tag: 'Grade 4 · Year 5 · Age 9–10',
+    desc: '4 story prompts with coral reef & shark ocean images, story sequencing, and CEFR scoring.',
+    color: 'bg-violet-500',
+    lightColor: 'bg-violet-50 text-violet-500 border-violet-200',
+    icon: (
+      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+      </svg>
+    ),
+    route: '/assessment/grade4-speaking',
+  },
 ];
 
 export default function PrimarySpeakingSelector() {
@@ -89,7 +149,7 @@ export default function PrimarySpeakingSelector() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-5 max-w-5xl">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 max-w-7xl">
           {OPTIONS.map((o) => (
             <button
               key={o.id}

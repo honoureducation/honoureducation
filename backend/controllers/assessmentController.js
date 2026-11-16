@@ -6,6 +6,8 @@ const DEMO_ASSESSMENTS = [
   {
     _id: "demo-assessment-1",
     assessmentType: "Speaking Assessment",
+    schoolTier: "secondary",
+    skillType: "speaking",
     studentName: "Alex Johnson",
     yearGroupAndClass: "Year 8A",
     teacherName: "Demo Teacher",
@@ -18,6 +20,8 @@ const DEMO_ASSESSMENTS = [
   {
     _id: "demo-assessment-2",
     assessmentType: "Reading Assessment",
+    schoolTier: "secondary",
+    skillType: "reading",
     studentName: "Sophia Lee",
     yearGroupAndClass: "Year 8A",
     teacherName: "Demo Teacher",
@@ -30,6 +34,8 @@ const DEMO_ASSESSMENTS = [
   {
     _id: "demo-assessment-3",
     assessmentType: "Writing Assessment",
+    schoolTier: "secondary",
+    skillType: "writing",
     studentName: "Marcus Brown",
     yearGroupAndClass: "Year 9B",
     teacherName: "Demo Teacher",
@@ -42,6 +48,8 @@ const DEMO_ASSESSMENTS = [
   {
     _id: "demo-assessment-4",
     assessmentType: "Listening Part 1",
+    schoolTier: "secondary",
+    skillType: "listening",
     studentName: "Emma Watson",
     yearGroupAndClass: "Year 7C",
     teacherName: "Demo Teacher",
@@ -50,6 +58,77 @@ const DEMO_ASSESSMENTS = [
     level: "B1",
     term: "T1",
     createdAt: new Date(Date.now() - 86400000 * 10).toISOString(),
+  },
+  // Primary Demo Assessments
+  {
+    _id: "demo-prim-1",
+    assessmentType: "Grade 4 / Year 5 Writing Assessment",
+    schoolTier: "primary",
+    skillType: "writing",
+    studentName: "Liam Chen",
+    yearGroupAndClass: "Grade 4 / Year 5",
+    teacherName: "Demo Teacher",
+    totalScore: 8,
+    cefrLevel: "B2–C1",
+    level: "B2–C1",
+    term: "T1",
+    createdAt: new Date(Date.now() - 86400000 * 1).toISOString(),
+  },
+  {
+    _id: "demo-prim-2",
+    assessmentType: "Grade 3 / Year 4 Reading Assessment",
+    schoolTier: "primary",
+    skillType: "reading",
+    studentName: "Maya Patel",
+    yearGroupAndClass: "Grade 3 / Year 4",
+    teacherName: "Demo Teacher",
+    totalScore: 4,
+    cefrLevel: "B1.2–B1.3",
+    level: "B1.2–B1.3",
+    term: "T1",
+    createdAt: new Date(Date.now() - 86400000 * 3).toISOString(),
+  },
+  {
+    _id: "demo-prim-3",
+    assessmentType: "Grade 2 / Year 3 Speaking Assessment",
+    schoolTier: "primary",
+    skillType: "speaking",
+    studentName: "Noah Smith",
+    yearGroupAndClass: "Grade 2 / Year 3",
+    teacherName: "Demo Teacher",
+    totalScore: 3,
+    cefrLevel: "A2.3–B1.1",
+    level: "A2.3–B1.1",
+    term: "T1",
+    createdAt: new Date(Date.now() - 86400000 * 4).toISOString(),
+  },
+  {
+    _id: "demo-prim-4",
+    assessmentType: "Grade 1 / Year 2 Listening Assessment",
+    schoolTier: "primary",
+    skillType: "listening",
+    studentName: "Olivia Brown",
+    yearGroupAndClass: "Grade 1 / Year 2",
+    teacherName: "Demo Teacher",
+    totalScore: 5,
+    cefrLevel: "A2.0–A2.2",
+    level: "A2.0–A2.2",
+    term: "T1",
+    createdAt: new Date(Date.now() - 86400000 * 6).toISOString(),
+  },
+  {
+    _id: "demo-prim-5",
+    assessmentType: "KG2 / Year 1 Phonics Assessment (Phase 4 & 5)",
+    schoolTier: "primary",
+    skillType: "phonic",
+    studentName: "Ethan Wilson",
+    yearGroupAndClass: "KG2 / Year 1",
+    teacherName: "Demo Teacher",
+    totalScore: 28,
+    cefrLevel: "Secure",
+    level: "Secure",
+    term: "T1",
+    createdAt: new Date(Date.now() - 86400000 * 8).toISOString(),
   },
 ];
 
@@ -101,7 +180,9 @@ const saveAssessmentRecord = async (assessmentInstance, rawPayload) => {
 // Create new assessment
 exports.createAssessment = async (req, res) => {
   try {
-    const {
+    let {
+      schoolTier,
+      skillType,
       assessmentType = "EAL & ELL",
       yearGroupType, // 'junior' or 'senior' for Listening Part 2
       email,
@@ -138,6 +219,7 @@ exports.createAssessment = async (req, res) => {
       cefrLevel,
       level,
       totalScore,
+      score,
       term,
     } = req.body;
 
@@ -148,15 +230,66 @@ exports.createAssessment = async (req, res) => {
       });
     }
 
+    // Auto-detect schoolTier if not provided
+    if (!schoolTier) {
+      const type = (assessmentType || "").toLowerCase();
+      const yg = (yearGroupAndClass || "").toLowerCase();
+      if (
+        type.includes("fs") ||
+        type.includes("kg") ||
+        type.includes("primary") ||
+        type.includes("phonic") ||
+        type.includes("year 1") ||
+        type.includes("year 2") ||
+        type.includes("year 3") ||
+        type.includes("year 4") ||
+        type.includes("year 5") ||
+        type.includes("year 6") ||
+        type.includes("grade 1") ||
+        type.includes("grade 2") ||
+        type.includes("grade 3") ||
+        type.includes("grade 4") ||
+        type.includes("grade 5") ||
+        type.includes("grade 6") ||
+        yg.includes("fs") ||
+        yg.includes("kg") ||
+        yg.includes("year 1") ||
+        yg.includes("year 2") ||
+        yg.includes("year 3") ||
+        yg.includes("year 4") ||
+        yg.includes("year 5") ||
+        yg.includes("year 6") ||
+        yg.includes("grade 1") ||
+        yg.includes("grade 2") ||
+        yg.includes("grade 3") ||
+        yg.includes("grade 4") ||
+        yg.includes("grade 5") ||
+        yg.includes("grade 6")
+      ) {
+        schoolTier = "primary";
+      } else {
+        schoolTier = "secondary";
+      }
+    }
+
+    // Auto-detect skillType if not provided
+    if (!skillType) {
+      const type = (assessmentType || "").toLowerCase();
+      if (type.includes("listen")) skillType = "listening";
+      else if (type.includes("speak")) skillType = "speaking";
+      else if (type.includes("read")) skillType = "reading";
+      else if (type.includes("write") || type.includes("writing")) skillType = "writing";
+      else if (type.includes("phonic")) skillType = "phonic";
+      else skillType = "general";
+    }
+
     // Get the authenticated teacher's ID for ownership tracking
     const createdBy = req.userId || null;
 
-    // Handle Speaking Assessment (Secondary and Primary FS1, FS2 - KG1)
+    // Handle Speaking Assessment (Secondary and Primary FS1, FS2, KG2, Grade 1 to Grade 4)
     if (
       assessmentType === "Speaking Assessment" ||
-      assessmentType === "FS1 Speaking Assessment" ||
-      assessmentType === "FS2 - KG1 Speaking Assessment" ||
-      assessmentType === "FS2 Speaking Assessment"
+      assessmentType.includes("Speaking")
     ) {
       if (!speakingAssessmentAnswers || !cefrLevel) {
         return res
@@ -164,8 +297,10 @@ exports.createAssessment = async (req, res) => {
           .json({ error: "Missing speaking assessment data" });
       }
 
-      const assessment = new Assessment({
+      const assessmentData = {
         assessmentType,
+        schoolTier,
+        skillType,
         yearGroupType: yearGroupType || "junior",
         email,
         studentName,
@@ -173,38 +308,31 @@ exports.createAssessment = async (req, res) => {
         teacherName,
         speakingAssessmentAnswers,
         cefrLevel,
-        level: cefrLevel,
+        level: level || cefrLevel,
         totalScore: totalScore || 0,
+        score: score || totalScore || 0,
         term: term || "T1",
         createdBy,
-      });
+        keywordsUsed: req.body.keywordsUsed || req.body.keyWordsUsed || [],
+        keyWordsUsed: req.body.keyWordsUsed || req.body.keywordsUsed || [],
+        teacherComments: req.body.teacherComments || req.body.comments || "",
+        comments: req.body.comments || req.body.teacherComments || "",
+        notes: req.body.notes || req.body.teachingFocus || "",
+        teachingFocus: req.body.teachingFocus || "",
+      };
 
-      const saved = await saveAssessmentRecord(assessment, {
-        assessmentType,
-        yearGroupType: yearGroupType || "junior",
-        email,
-        studentName,
-        yearGroupAndClass,
-        teacherName,
-        speakingAssessmentAnswers,
-        cefrLevel,
-        level: cefrLevel,
-        totalScore: totalScore || 0,
-        term: term || "T1",
-        createdBy,
-      });
+      const assessment = new Assessment(assessmentData);
+      const saved = await saveAssessmentRecord(assessment, assessmentData);
       return res.status(201).json({
         message: "Speaking Assessment saved successfully",
         assessment: saved,
       });
     }
 
-    // Handle Reading Assessment (Secondary and Primary FS1, FS2 - KG1)
+    // Handle Reading Assessment (Secondary and Primary FS1, FS2, KG2, Grade 1 to Grade 4)
     if (
       assessmentType === "Reading Assessment" ||
-      assessmentType === "FS1 Reading Assessment" ||
-      assessmentType === "FS2 - KG1 Reading Assessment" ||
-      assessmentType === "FS2 Reading Assessment"
+      assessmentType.includes("Reading")
     ) {
       const finalReadingScore = readingScore || cefrLevel;
       if (!finalReadingScore) {
@@ -218,8 +346,10 @@ exports.createAssessment = async (req, res) => {
             ? ["A", "B", "C", "D", "E"].indexOf(finalReadingScore)
             : 0;
 
-      const assessment = new Assessment({
+      const assessmentData = {
         assessmentType,
+        schoolTier,
+        skillType,
         yearGroupType: yearGroupType || "junior",
         email,
         studentName,
@@ -229,38 +359,28 @@ exports.createAssessment = async (req, res) => {
         cefrLevel: cefrLevel || finalReadingScore,
         level: finalReadingScore,
         totalScore: calculatedReadingTotal,
+        score: score || calculatedReadingTotal,
         term: term || "T1",
         createdBy,
-      });
+        readingNotes: readingNotes || req.body.notes || req.body.teachingFocus || "",
+        notes: req.body.notes || req.body.teachingFocus || "",
+        itemsEvaluated: req.body.itemsEvaluated || [],
+        teachingFocus: req.body.teachingFocus || "",
+        recommendedLevel: req.body.recommendedLevel || "",
+      };
 
-      const saved = await saveAssessmentRecord(assessment, {
-        assessmentType,
-        yearGroupType: yearGroupType || "junior",
-        email,
-        studentName,
-        yearGroupAndClass,
-        teacherName,
-        readingScore: finalReadingScore,
-        cefrLevel: cefrLevel || finalReadingScore,
-        level: finalReadingScore,
-        totalScore: calculatedReadingTotal,
-        term: term || "T1",
-        createdBy,
-        itemsEvaluated: req.body.itemsEvaluated,
-        teachingFocus: req.body.teachingFocus,
-      });
+      const assessment = new Assessment(assessmentData);
+      const saved = await saveAssessmentRecord(assessment, assessmentData);
       return res.status(201).json({
         message: "Reading Assessment saved successfully",
         assessment: saved,
       });
     }
 
-    // Handle Writing Assessment (Secondary and Primary FS1, FS2 - KG1)
+    // Handle Writing Assessment (Secondary and Primary FS1, FS2, KG2, Grade 1 to Grade 4)
     if (
       assessmentType === "Writing Assessment" ||
-      assessmentType === "FS1 Writing Assessment" ||
-      assessmentType === "FS2 - KG1 Writing Assessment" ||
-      assessmentType === "FS2 Writing Assessment"
+      assessmentType.includes("Writing")
     ) {
       const finalWritingScore = writingScore || cefrLevel;
       // Accept either writingScore, studentWriting, or cefrLevel
@@ -280,6 +400,8 @@ exports.createAssessment = async (req, res) => {
 
       const assessmentData = {
         assessmentType,
+        schoolTier,
+        skillType,
         yearGroupType: yearGroupType || "junior",
         email,
         studentName,
@@ -288,141 +410,107 @@ exports.createAssessment = async (req, res) => {
         level: finalWritingScore || "Developing",
         cefrLevel: cefrLevel || finalWritingScore || "Developing",
         totalScore: calculatedWritingTotal,
+        score: score || calculatedWritingTotal,
         term: term || "T1",
         createdBy,
+        writingScore: finalWritingScore,
+        studentWriting: studentWriting || req.body.studentWriting || "",
+        writingNotes: writingNotes || req.body.teachingFocus || req.body.notes || "",
+        notes: req.body.notes || req.body.teachingFocus || "",
+        detailedResponses: req.body.detailedResponses || [],
+        keyWordsUsed: req.body.keyWordsUsed || req.body.keywordsUsed || [],
+        keywordsUsed: req.body.keywordsUsed || req.body.keyWordsUsed || [],
+        formationQuality: req.body.formationQuality || "",
+        pencilGrip: req.body.pencilGrip || "",
+        fs2WritingAnswers: req.body.fs2WritingAnswers || req.body.writingAnswers || [],
+        writingAnswers: req.body.writingAnswers || req.body.fs2WritingAnswers || [],
+        detectedKeywords: req.body.detectedKeywords || req.body.aiKeywordsDetected || [],
+        aiKeywordsDetected: req.body.aiKeywordsDetected || req.body.detectedKeywords || [],
+        teachingFocus: req.body.teachingFocus || "",
+        recommendedLevel: req.body.recommendedLevel || "",
       };
 
-      // Only add writingScore if it exists
-      if (finalWritingScore) {
-        assessmentData.writingScore = finalWritingScore;
-      }
-
-      // Only add studentWriting if it exists
-      if (studentWriting) {
-        assessmentData.studentWriting = studentWriting;
-      }
-
-      // Add notes if provided
-      if (writingNotes || req.body.teachingFocus || req.body.notes) {
-        assessmentData.writingNotes =
-          writingNotes || req.body.teachingFocus || req.body.notes;
-      }
-
       const assessment = new Assessment(assessmentData);
-      const saved = await saveAssessmentRecord(assessment, {
-        ...assessmentData,
-        detailedResponses: req.body.detailedResponses,
-        keyWordsUsed: req.body.keyWordsUsed,
-        formationQuality: req.body.formationQuality,
-        pencilGrip: req.body.pencilGrip,
-        fs2WritingAnswers: req.body.fs2WritingAnswers,
-        detectedKeywords: req.body.detectedKeywords,
-        aiKeywordsDetected: req.body.aiKeywordsDetected,
-        teachingFocus: req.body.teachingFocus,
-      });
+      const saved = await saveAssessmentRecord(assessment, assessmentData);
       return res.status(201).json({
         message: "Writing Assessment saved successfully",
         assessment: saved,
       });
     }
 
-    // Handle Listening Assessment (Part 1, Part 2, and Primary FS1, FS2, KG2/Year 1)
-    if (
-      assessmentType === "Listening Part 1" ||
-      assessmentType === "Listening Part 2" ||
-      assessmentType === "FS1 Listening Assessment" ||
-      assessmentType === "FS2 - KG1 Listening Assessment" ||
-      assessmentType === "FS2 Listening Assessment" ||
-      assessmentType === "KG2 / Year 1 Listening Assessment" ||
-      assessmentType === "KG2 Listening Assessment" ||
-      assessmentType === "Year 1 Listening Assessment"
-    ) {
+    // Handle Listening Assessment (Part 1, Part 2, and Primary FS1, FS2, KG2, Grade 1 to Grade 4)
+    if (assessmentType.includes("Listening")) {
       if (!listeningAssessmentAnswers || !cefrLevel) {
         return res
           .status(400)
           .json({ error: "Missing listening assessment data" });
       }
 
-      const assessment = new Assessment({
+      const assessmentData = {
         assessmentType,
-        yearGroupType,
+        schoolTier,
+        skillType,
+        yearGroupType: yearGroupType || "junior",
         email,
         studentName,
         yearGroupAndClass,
         teacherName,
         listeningAssessmentAnswers,
         cefrLevel,
-        level: cefrLevel,
+        level: level || cefrLevel,
         totalScore: totalScore || 0,
+        score: score || totalScore || 0,
         term: term || "T1",
         createdBy,
-      });
+        notes: req.body.notes || "",
+        recommendedLevel: req.body.recommendedLevel || "",
+      };
 
-      const saved = await saveAssessmentRecord(assessment, {
-        assessmentType,
-        yearGroupType,
-        email,
-        studentName,
-        yearGroupAndClass,
-        teacherName,
-        listeningAssessmentAnswers,
-        cefrLevel,
-        level: cefrLevel,
-        totalScore: totalScore || 0,
-        term: term || "T1",
-        createdBy,
-      });
+      const assessment = new Assessment(assessmentData);
+      const saved = await saveAssessmentRecord(assessment, assessmentData);
       return res.status(201).json({
         message: `${assessmentType} saved successfully`,
         assessment: saved,
       });
     }
 
-    // Handle Phonic Assessment (Primary FS1, FS2 - KG1)
-    if (
-      assessmentType === "FS1 Phonic Assessment" ||
-      assessmentType === "FS2 - KG1 Phonic Assessment" ||
-      assessmentType === "FS2 Phonic Assessment"
-    ) {
+    // Handle Phonic Assessment (Primary FS1, FS2, KG2 / Year 1 Phase 2-5)
+    if (assessmentType.includes("Phonic")) {
       if (!cefrLevel) {
         return res
           .status(400)
           .json({ error: "Missing CEFR Level for Phonic Assessment" });
       }
 
-      const assessment = new Assessment({
+      const assessmentData = {
         assessmentType,
+        schoolTier,
+        skillType,
         yearGroupType: yearGroupType || "junior",
         email,
         studentName,
         yearGroupAndClass,
         teacherName,
         cefrLevel,
-        level: cefrLevel,
+        level: level || cefrLevel,
         totalScore: typeof totalScore === "number" ? totalScore : 0,
+        score: score || totalScore || 0,
         term: term || "T1",
         createdBy,
-      });
+        phase2Sets: req.body.phase2Sets || [],
+        phase3Sets: req.body.phase3Sets || [],
+        phase4Sets: req.body.phase4Sets || [],
+        phase5Sets: req.body.phase5Sets || [],
+        graphemesNeedingRevisit: req.body.graphemesNeedingRevisit || [],
+        wordsNeedingRevisit: req.body.wordsNeedingRevisit || [],
+        notes: req.body.notes || "",
+        recommendedLevel: req.body.recommendedLevel || "",
+      };
 
-      const saved = await saveAssessmentRecord(assessment, {
-        assessmentType,
-        yearGroupType: yearGroupType || "junior",
-        email,
-        studentName,
-        yearGroupAndClass,
-        teacherName,
-        cefrLevel,
-        level: cefrLevel,
-        totalScore: typeof totalScore === "number" ? totalScore : 0,
-        term: term || "T1",
-        createdBy,
-        phase2Sets: req.body.phase2Sets,
-        phase3Sets: req.body.phase3Sets,
-        graphemesNeedingRevisit: req.body.graphemesNeedingRevisit,
-        notes: req.body.notes,
-      });
+      const assessment = new Assessment(assessmentData);
+      const saved = await saveAssessmentRecord(assessment, assessmentData);
       return res.status(201).json({
-        message: "FS1 Phonic Assessment saved successfully",
+        message: `${assessmentType} saved successfully`,
         assessment: saved,
       });
     }
@@ -446,8 +534,10 @@ exports.createAssessment = async (req, res) => {
       writingSkillsLevel: Number(writingSkillsLevel),
     });
 
-    const assessment = new Assessment({
+    const assessmentData = {
       assessmentType,
+      schoolTier,
+      skillType: "general",
       email,
       studentName,
       yearGroupAndClass,
@@ -476,21 +566,18 @@ exports.createAssessment = async (req, res) => {
       suggestionsForMaterials,
       classroomSupportIdeas,
       totalScore: ealTotalScore,
+      score: ealTotalScore,
       level: ealLevel,
       term: term || "T1",
       createdBy,
-    });
+    };
 
-    const saved = await saveAssessmentRecord(assessment, {
-      assessmentType,
-      email,
-      studentName,
-      yearGroupAndClass,
-      teacherName,
-      totalScore: ealTotalScore,
-      level: ealLevel,
-      term: term || "T1",
-      createdBy,
+    const assessment = new Assessment(assessmentData);
+    const saved = await saveAssessmentRecord(assessment, assessmentData);
+
+    res.status(201).json({
+      message: "EAL & ELL assessment saved successfully",
+      assessment: saved,
     });
 
     res.status(201).json({

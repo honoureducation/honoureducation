@@ -32,6 +32,36 @@ const OPTIONS = [
     ),
     route: '/assessment/fs2-phonic',
   },
+  {
+    id: 'kg2-phase23',
+    subtitle: 'Stage 3 · Year 1',
+    title: 'KG2 / Year 1 Phonics (Phase 2 & 3)',
+    tag: 'KG2 · Year 1 · Age 5–6',
+    desc: 'Sets 1–7 letter sounds, CVC words, consonant and vowel digraphs, with CEFR decoding levels.',
+    color: 'bg-amber-500',
+    lightColor: 'bg-amber-50 text-amber-500 border-amber-200',
+    icon: (
+      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M4.26 10.147a60.438 60.438 0 01-.491 6.347A48.62 48.62 0 0112 20.904a48.62 48.62 0 018.232-4.41 60.46 60.46 0 00-.491-6.347m-15.482 0a50.636 50.636 0 00-2.658-.813A59.906 59.906 0 0112 3.493a59.903 59.903 0 0110.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.717 50.717 0 0112 13.489a50.702 50.702 0 017.74-3.342" />
+      </svg>
+    ),
+    route: '/assessment/kg2-phonic',
+  },
+  {
+    id: 'kg2-phase45',
+    subtitle: 'Stage 3 · Year 1 Higher',
+    title: 'KG2 / Year 1 Phonics (Phase 4 & 5)',
+    tag: 'Phase 4 & 5 · Advanced',
+    desc: 'Initial/final/complex consonant blends (CCVC/CVCC), alternative spellings, split digraphs & tricky words.',
+    color: 'bg-amber-500',
+    lightColor: 'bg-amber-50 text-amber-500 border-amber-200',
+    icon: (
+      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
+      </svg>
+    ),
+    route: '/assessment/kg2-phonic-phase45',
+  },
 ];
 
 export default function PrimaryPhonicSelector() {
@@ -74,7 +104,7 @@ export default function PrimaryPhonicSelector() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-5 max-w-3xl">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-5 max-w-6xl">
           {OPTIONS.map((o) => (
             <button
               key={o.id}

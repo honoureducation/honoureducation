@@ -49,6 +49,7 @@ const TYPE_META = {
     label: "Writing",
     color: "bg-amber-100 text-amber-700",
   },
+  // Primary Phonics
   "FS1 Phonic Assessment": {
     label: "FS1 Phonics",
     color: "bg-amber-100 text-amber-800",
@@ -57,6 +58,19 @@ const TYPE_META = {
     label: "FS2 Phonics",
     color: "bg-amber-100 text-amber-800",
   },
+  "KG2 / Year 1 Phonic Assessment": {
+    label: "KG2 Phonics",
+    color: "bg-amber-100 text-amber-800",
+  },
+  "Grade 1 / Year 2 Phonic Assessment": {
+    label: "Grade 1 Phonics",
+    color: "bg-amber-100 text-amber-800",
+  },
+  "Grade 2 / Year 3 Phonic Assessment": {
+    label: "Grade 2 Phonics",
+    color: "bg-amber-100 text-amber-800",
+  },
+  // Primary Listening
   "FS1 Listening Assessment": {
     label: "FS1 Listening",
     color: "bg-cyan-100 text-cyan-800",
@@ -69,6 +83,23 @@ const TYPE_META = {
     label: "KG2 Listening",
     color: "bg-cyan-100 text-cyan-800",
   },
+  "Grade 1 / Year 2 Listening Assessment": {
+    label: "Grade 1 Listening",
+    color: "bg-cyan-100 text-cyan-800",
+  },
+  "Grade 2 / Year 3 Listening Assessment": {
+    label: "Grade 2 Listening",
+    color: "bg-cyan-100 text-cyan-800",
+  },
+  "Grade 3 / Year 4 Listening Assessment": {
+    label: "Grade 3 Listening",
+    color: "bg-cyan-100 text-cyan-800",
+  },
+  "Grade 4 / Year 5 Listening Assessment": {
+    label: "Grade 4 Listening",
+    color: "bg-cyan-100 text-cyan-800",
+  },
+  // Primary Speaking
   "FS1 Speaking Assessment": {
     label: "FS1 Speaking",
     color: "bg-violet-100 text-violet-800",
@@ -81,6 +112,23 @@ const TYPE_META = {
     label: "KG2 Speaking",
     color: "bg-violet-100 text-violet-800",
   },
+  "Grade 1 / Year 2 Speaking Assessment": {
+    label: "Grade 1 Speaking",
+    color: "bg-violet-100 text-violet-800",
+  },
+  "Grade 2 / Year 3 Speaking Assessment": {
+    label: "Grade 2 Speaking",
+    color: "bg-violet-100 text-violet-800",
+  },
+  "Grade 3 / Year 4 Speaking Assessment": {
+    label: "Grade 3 Speaking",
+    color: "bg-violet-100 text-violet-800",
+  },
+  "Grade 4 / Year 5 Speaking Assessment": {
+    label: "Grade 4 Speaking",
+    color: "bg-violet-100 text-violet-800",
+  },
+  // Primary Reading
   "FS1 Reading Assessment": {
     label: "FS1 Reading",
     color: "bg-emerald-100 text-emerald-800",
@@ -93,6 +141,23 @@ const TYPE_META = {
     label: "KG2 Reading",
     color: "bg-emerald-100 text-emerald-800",
   },
+  "Grade 1 / Year 2 Reading Assessment": {
+    label: "Grade 1 Reading",
+    color: "bg-emerald-100 text-emerald-800",
+  },
+  "Grade 2 / Year 3 Reading Assessment": {
+    label: "Grade 2 Reading",
+    color: "bg-emerald-100 text-emerald-800",
+  },
+  "Grade 3 / Year 4 Reading Assessment": {
+    label: "Grade 3 Reading",
+    color: "bg-emerald-100 text-emerald-800",
+  },
+  "Grade 4 / Year 5 Reading Assessment": {
+    label: "Grade 4 Reading",
+    color: "bg-emerald-100 text-emerald-800",
+  },
+  // Primary Writing
   "FS1 Writing Assessment": {
     label: "FS1 Writing",
     color: "bg-pink-100 text-pink-800",
@@ -105,7 +170,47 @@ const TYPE_META = {
     label: "KG2 Writing",
     color: "bg-pink-100 text-pink-800",
   },
+  "Grade 1 / Year 2 Writing Assessment": {
+    label: "Grade 1 Writing",
+    color: "bg-pink-100 text-pink-800",
+  },
+  "Grade 2 / Year 3 Writing Assessment": {
+    label: "Grade 2 Writing",
+    color: "bg-pink-100 text-pink-800",
+  },
+  "Grade 2 / Year 3 Writing Assessment (Phonics)": {
+    label: "Grade 2 Writing (Phonics)",
+    color: "bg-pink-100 text-pink-800",
+  },
+  "Grade 3 / Year 4 Writing Assessment": {
+    label: "Grade 3 Writing",
+    color: "bg-pink-100 text-pink-800",
+  },
+  "Grade 3 / Year 4 Writing Assessment (Phonics)": {
+    label: "Grade 3 Writing (Phonics)",
+    color: "bg-pink-100 text-pink-800",
+  },
+  "Grade 4 / Year 5 Writing Assessment": {
+    label: "Grade 4 Writing",
+    color: "bg-pink-100 text-pink-800",
+  },
 };
+
+function getTypeMeta(type) {
+  if (TYPE_META[type]) return TYPE_META[type];
+  const t = (type || "").toLowerCase();
+  if (t.includes("phonic"))
+    return { label: type, color: "bg-amber-100 text-amber-800" };
+  if (t.includes("reading"))
+    return { label: type, color: "bg-emerald-100 text-emerald-800" };
+  if (t.includes("writing"))
+    return { label: type, color: "bg-pink-100 text-pink-800" };
+  if (t.includes("speaking"))
+    return { label: type, color: "bg-violet-100 text-violet-800" };
+  if (t.includes("listening"))
+    return { label: type, color: "bg-cyan-100 text-cyan-800" };
+  return { label: type || "Assessment", color: "bg-slate-100 text-slate-700" };
+}
 
 const CEFR_COLORS = {
   "Pre-A1": "bg-red-100 text-red-700",
@@ -152,52 +257,77 @@ function isPrimaryAssessment(a) {
   return (
     type.includes("fs") ||
     type.includes("kg") ||
-    type.includes("year 1") ||
     type.includes("phonic") ||
     type.startsWith("primary") ||
+    type.includes("grade 1") ||
+    type.includes("grade 2") ||
+    type.includes("grade 3") ||
+    type.includes("grade 4") ||
+    type.includes("grade 5") ||
+    type.includes("grade 6") ||
+    type.includes("year 1") ||
+    type.includes("year 2") ||
+    type.includes("year 3") ||
+    type.includes("year 4") ||
+    type.includes("year 5") ||
+    type.includes("year 6") ||
     yg.includes("fs") ||
     yg.includes("kg") ||
     yg.startsWith("y1") ||
     yg.includes("year 1") ||
-    yg.includes("grade 1")
+    yg.includes("year 2") ||
+    yg.includes("year 3") ||
+    yg.includes("year 4") ||
+    yg.includes("year 5") ||
+    yg.includes("year 6") ||
+    yg.includes("grade 1") ||
+    yg.includes("grade 2") ||
+    yg.includes("grade 3") ||
+    yg.includes("grade 4") ||
+    yg.includes("grade 5") ||
+    yg.includes("grade 6")
   );
 }
 
 function getScoreMax(a) {
+  if (a.totalPossible) return `/${a.totalPossible}`;
   const type = (a.assessmentType || "").toLowerCase();
+  if (isPrimaryAssessment(a)) {
+    if (type.includes("listening")) return "/10";
+    if (type.includes("reading")) return "/6";
+    if (type.includes("writing")) {
+      if (type.includes("grade 3") || type.includes("grade 2")) return "/4";
+      if (type.includes("grade 1") || type.includes("grade 4")) return "";
+      return "/6";
+    }
+    if (type.includes("phonic")) return "/10";
+    return "";
+  }
   if (type.includes("listening")) {
-    if (type.includes("fs") || type.includes("kg") || type.includes("primary"))
-      return "/10";
     if (a.assessmentType === "Listening Part 1") return "/26";
     return a.yearGroupType === "junior" ? "/8" : "/20";
   }
-  if (
-    type.includes("reading") &&
-    (type.includes("fs") || type.includes("kg") || type.includes("primary"))
-  )
-    return "/6";
-  if (type.includes("writing") && type.includes("fs1")) return "/6";
   if (a.assessmentType === "Speaking Assessment") return "/12";
+  if (a.assessmentType === "Reading Assessment") return "/10";
   if (a.assessmentType === "Writing Assessment") return "/20";
   return "";
 }
 
 function getDisplayScore(a) {
-  let score = a.totalScore;
+  let score = a.totalScore !== undefined && a.totalScore !== null ? a.totalScore : a.score;
+  const isPrimary = isPrimaryAssessment(a);
   const type = (a.assessmentType || "").toLowerCase();
   const WRITING_SCORES = [4, 8, 12, 15, 17, 20];
 
   if (score !== undefined && score !== null && score >= 0) {
-    if (
-      score <= 5 &&
-      type.includes("writing") &&
-      !type.includes("fs") &&
-      !type.includes("kg") &&
-      !type.includes("primary")
-    ) {
+    if (score <= 5 && type.includes("writing") && !isPrimary) {
       return WRITING_SCORES[score] || 0;
     }
     return score;
+  }
+
+  if (isPrimary) {
+    return a.cefrLevel || a.level || "—";
   }
 
   const lvl = a.cefrLevel || a.level || "A1";
@@ -247,6 +377,7 @@ function formatDate(d) {
 /* ── Detail Modal ─────────────────────────────────────────── */
 function DetailModal({ assessment: a, onClose }) {
   if (!a) return null;
+  const isPrimary = isPrimaryAssessment(a);
   const scoreLabel = (s) =>
     s === 0
       ? "No response"
@@ -254,9 +385,32 @@ function DetailModal({ assessment: a, onClose }) {
         ? "Some comprehension"
         : "Full comprehension";
 
+  const allKeywords = Array.from(
+    new Set([
+      ...(Array.isArray(a.keyWordsUsed) ? a.keyWordsUsed : []),
+      ...(Array.isArray(a.keywordsUsed) ? a.keywordsUsed : []),
+      ...(Array.isArray(a.detectedKeywords) ? a.detectedKeywords : []),
+      ...(Array.isArray(a.aiKeywordsDetected) ? a.aiKeywordsDetected : []),
+      ...(Array.isArray(a.keywordsIdentified) ? a.keywordsIdentified : []),
+    ]),
+  ).filter(Boolean);
+
+  const isReading = (a.assessmentType || "")
+    .toLowerCase()
+    .includes("reading");
+  const isWriting = (a.assessmentType || "")
+    .toLowerCase()
+    .includes("writing");
+  const isPhonic = (a.assessmentType || "")
+    .toLowerCase()
+    .includes("phonic");
+
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-panel" onClick={(e) => e.stopPropagation()}>
+      <div
+        className="modal-panel max-w-3xl"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
         <div className="modal-header">
           <div className="flex items-center gap-3">
@@ -264,9 +418,20 @@ function DetailModal({ assessment: a, onClose }) {
               {getInitials(a.studentName)}
             </div>
             <div>
-              <h2 className="text-base font-bold text-slate-900">
-                {a.studentName}
-              </h2>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h2 className="text-base font-bold text-slate-900">
+                  {a.studentName}
+                </h2>
+                {isPrimary ? (
+                  <span className="px-2 py-0.5 rounded text-[10px] font-black bg-pink-100 text-pink-700 border border-pink-200">
+                    🎒 Primary
+                  </span>
+                ) : (
+                  <span className="px-2 py-0.5 rounded text-[10px] font-black bg-blue-100 text-blue-700 border border-blue-200">
+                    🎓 Secondary
+                  </span>
+                )}
+              </div>
               <p className="text-xs text-slate-500">
                 {a.assessmentType} · {a.yearGroupAndClass}
               </p>
@@ -292,14 +457,17 @@ function DetailModal({ assessment: a, onClose }) {
           </button>
         </div>
 
-        <div className="modal-body">
+        <div className="modal-body space-y-6">
           {/* Meta grid */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {[
               { label: "Email", value: a.email },
               { label: "Year & Class", value: a.yearGroupAndClass },
               { label: "Term", value: a.term || "T1" },
-              a.teacherName && { label: "Teacher", value: a.teacherName },
+              a.teacherName && {
+                label: "Teacher / Assessor",
+                value: a.teacherName,
+              },
               { label: "Date", value: new Date(a.createdAt).toLocaleString() },
             ]
               .filter(Boolean)
@@ -308,71 +476,144 @@ function DetailModal({ assessment: a, onClose }) {
                   key={label}
                   className="bg-slate-50 rounded-xl p-3 border border-slate-200"
                 >
-                  <p className="text-xs text-slate-400 font-semibold uppercase tracking-wide mb-0.5">
+                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">
                     {label}
                   </p>
-                  <p className="text-sm text-slate-800 font-medium">{value}</p>
+                  <p className="text-xs text-slate-800 font-semibold truncate">
+                    {value}
+                  </p>
                 </div>
               ))}
           </div>
 
-          {/* Score + Level */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="score-box-blue">
-              <p className="text-xs font-semibold text-blue-600 uppercase tracking-wide mb-1">
+          {/* Score + Level + Badges */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="score-box-blue p-3 rounded-xl border border-blue-100 bg-blue-50/60">
+              <p className="text-[10px] font-bold text-blue-600 uppercase tracking-wider mb-1">
                 Total Score
               </p>
-              <p className="text-3xl font-bold text-blue-700">
+              <p className="text-2xl font-black text-blue-700">
                 {getDisplayScore(a)}
                 {getScoreMax(a)}
               </p>
             </div>
             <div
-              className={`score-box border ${CEFR_COLORS[a.cefrLevel || a.level] || AE_COLORS[a.level] || "bg-slate-50 border-slate-200"}`}
+              className={`score-box p-3 rounded-xl border ${CEFR_COLORS[a.cefrLevel || a.level] || AE_COLORS[a.level] || "bg-slate-50 border-slate-200"}`}
             >
-              <p className="text-xs font-semibold uppercase tracking-wide mb-1 opacity-70">
-                Level
+              <p className="text-[10px] font-bold uppercase tracking-wider mb-1 opacity-70">
+                Assessed Level
               </p>
-              <p className="text-3xl font-bold">
+              <p className="text-2xl font-black">
                 {a.cefrLevel || a.level || "—"}
               </p>
             </div>
+            {a.recommendedLevel && (
+              <div className="p-3 rounded-xl border border-indigo-100 bg-indigo-50/60">
+                <p className="text-[10px] font-bold text-indigo-600 uppercase tracking-wider mb-1">
+                  AI Recommended
+                </p>
+                <p className="text-lg font-black text-indigo-800">
+                  {a.recommendedLevel}
+                </p>
+              </div>
+            )}
+            {(a.formationQuality || a.pencilGrip) && (
+              <div className="p-3 rounded-xl border border-amber-100 bg-amber-50/60">
+                <p className="text-[10px] font-bold text-amber-700 uppercase tracking-wider mb-1">
+                  Pencil & Formation
+                </p>
+                <div className="text-xs font-bold text-amber-900 space-y-0.5">
+                  {a.pencilGrip && (
+                    <div>
+                      Grip: <span className="capitalize">{a.pencilGrip}</span>
+                    </div>
+                  )}
+                  {a.formationQuality && (
+                    <div>
+                      Formation:{" "}
+                      <span className="capitalize">{a.formationQuality}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* Listening / Speaking answers */}
-          {(a.listeningAssessmentAnswers?.length > 0 ||
-            a.speakingAssessmentAnswers?.length > 0) && (
-            <div>
-              <h3 className="text-sm font-semibold text-slate-800 mb-3">
-                Question Scores
+          {/* Keywords Chips if available */}
+          {allKeywords.length > 0 && (
+            <div className="bg-slate-50 rounded-xl p-3.5 border border-slate-200">
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-2">
+                Identified / Detected Keywords ({allKeywords.length})
+              </p>
+              <div className="flex flex-wrap gap-1.5">
+                {allKeywords.map((kw, idx) => (
+                  <span
+                    key={idx}
+                    className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-white text-indigo-700 border border-indigo-200 shadow-2xs"
+                  >
+                    ✓ {kw}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Listening answers */}
+          {a.listeningAssessmentAnswers?.length > 0 && (
+            <div className="space-y-2">
+              <h3 className="text-xs font-black uppercase tracking-wider text-slate-700">
+                Listening Assessment Breakdown (
+                {a.listeningAssessmentAnswers.length} Questions)
               </h3>
-              <div className="table-wrapper">
-                <table className="data-table">
-                  <thead>
+              <div className="table-wrapper overflow-x-auto rounded-xl border border-slate-200">
+                <table className="data-table text-xs">
+                  <thead className="bg-slate-100">
                     <tr>
-                      <th>Question</th>
-                      <th className="text-center">Score</th>
-                      <th>Result</th>
+                      <th className="py-2.5 px-3">#</th>
+                      <th className="py-2.5 px-3">Question</th>
+                      <th className="py-2.5 px-3 text-center">
+                        Result / Score
+                      </th>
+                      <th className="py-2.5 px-3">Notes</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {(
-                      a.listeningAssessmentAnswers ||
-                      a.speakingAssessmentAnswers
-                    ).map((ans, i) => {
-                      const questions = a.listeningAssessmentAnswers
-                        ? LISTENING_P1_QUESTIONS
-                        : SPEAKING_QUESTIONS_JUNIOR;
+                    {a.listeningAssessmentAnswers.map((ans, i) => {
+                      const isAccDefined = ans.acceptable !== undefined;
                       return (
-                        <tr key={i}>
-                          <td className="text-xs">
-                            {questions[i] || `Question ${ans.questionId}`}
+                        <tr
+                          key={i}
+                          className="hover:bg-slate-50 border-b border-slate-100 last:border-none"
+                        >
+                          <td className="py-2 px-3 font-bold text-slate-500">
+                            {ans.questionId || i + 1}
                           </td>
-                          <td className="text-center font-bold">
-                            {ans.score}/2
+                          <td className="py-2 px-3 font-medium text-slate-800">
+                            {ans.question ||
+                              LISTENING_P1_QUESTIONS[i] ||
+                              `Question ${ans.questionId || i + 1}`}
                           </td>
-                          <td className="text-xs text-slate-500">
-                            {scoreLabel(ans.score)}
+                          <td className="py-2 px-3 text-center">
+                            {isAccDefined ? (
+                              <span
+                                className={`inline-flex px-2 py-0.5 rounded-full font-bold text-[10px] ${
+                                  ans.acceptable
+                                    ? "bg-emerald-100 text-emerald-800"
+                                    : "bg-red-100 text-red-800"
+                                }`}
+                              >
+                                {ans.acceptable
+                                  ? "✓ Acceptable"
+                                  : "✗ Not acceptable"}
+                              </span>
+                            ) : (
+                              <span className="font-bold text-slate-900">
+                                {ans.score}/2 ({scoreLabel(ans.score)})
+                              </span>
+                            )}
+                          </td>
+                          <td className="py-2 px-3 text-slate-500 italic">
+                            {ans.notes || "—"}
                           </td>
                         </tr>
                       );
@@ -383,73 +624,277 @@ function DetailModal({ assessment: a, onClose }) {
             </div>
           )}
 
-          {/* Reading details */}
-          {a.assessmentType === "Reading Assessment" && (
-            <div className="space-y-3">
-              <h3 className="text-sm font-semibold text-slate-800">
-                Reading Details
+          {/* Speaking answers */}
+          {a.speakingAssessmentAnswers?.length > 0 && (
+            <div className="space-y-2">
+              <h3 className="text-xs font-black uppercase tracking-wider text-slate-700">
+                Speaking Assessment Breakdown
               </h3>
-              <div className="bg-slate-50 rounded-xl p-3 border border-slate-200">
-                <p className="text-xs text-slate-400 uppercase font-semibold mb-0.5">
-                  Reading Score
-                </p>
-                <p className="text-2xl font-bold text-emerald-600">
-                  {a.readingScore}
-                </p>
+              <div className="table-wrapper overflow-x-auto rounded-xl border border-slate-200">
+                <table className="data-table text-xs">
+                  <thead className="bg-slate-100">
+                    <tr>
+                      <th className="py-2.5 px-3">Prompt</th>
+                      <th className="py-2.5 px-3">Student Response / Notes</th>
+                      <th className="py-2.5 px-3 text-center">
+                        Assessed Score
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {a.speakingAssessmentAnswers.map((ans, i) => (
+                      <tr
+                        key={i}
+                        className="hover:bg-slate-50 border-b border-slate-100 last:border-none"
+                      >
+                        <td className="py-2 px-3 font-semibold text-slate-800 max-w-xs">
+                          {ans.question ||
+                            SPEAKING_QUESTIONS_JUNIOR[i] ||
+                            `Prompt ${ans.questionId || i + 1}`}
+                        </td>
+                        <td className="py-2 px-3 text-slate-600">
+                          {ans.studentResponse || "—"}
+                        </td>
+                        <td className="py-2 px-3 text-center font-bold text-slate-900">
+                          {ans.score || a.cefrLevel || "—"}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
-              {a.readingNotes && (
-                <div className="bg-slate-50 rounded-xl p-3 border border-slate-200">
-                  <p className="text-xs text-slate-400 uppercase font-semibold mb-0.5">
-                    Notes
-                  </p>
-                  <p className="text-sm text-slate-700">{a.readingNotes}</p>
+            </div>
+          )}
+
+          {/* Reading Details & Items Evaluated */}
+          {isReading && (
+            <div className="space-y-3">
+              <h3 className="text-xs font-black uppercase tracking-wider text-slate-700">
+                Reading Assessment Details
+              </h3>
+              {a.itemsEvaluated?.length > 0 && (
+                <div className="table-wrapper overflow-x-auto rounded-xl border border-slate-200">
+                  <table className="data-table text-xs">
+                    <thead className="bg-slate-100">
+                      <tr>
+                        <th className="py-2.5 px-3">Word / Passage Box</th>
+                        <th className="py-2.5 px-3 text-center">Status</th>
+                        <th className="py-2.5 px-3">Notes</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {a.itemsEvaluated.map((it, idx) => (
+                        <tr
+                          key={idx}
+                          className="hover:bg-slate-50 border-b border-slate-100 last:border-none"
+                        >
+                          <td className="py-2 px-3 font-bold text-slate-800">
+                            {it.word}
+                          </td>
+                          <td className="py-2 px-3 text-center">
+                            <span
+                              className={`inline-flex px-2 py-0.5 rounded-full font-bold text-[10px] ${
+                                it.status === "read" || it.status === "correct"
+                                  ? "bg-emerald-100 text-emerald-800"
+                                  : it.status === "struggled"
+                                    ? "bg-amber-100 text-amber-800"
+                                    : "bg-slate-100 text-slate-700"
+                              }`}
+                            >
+                              {it.status}
+                            </span>
+                          </td>
+                          <td className="py-2 px-3 text-slate-500">
+                            {it.notes || "—"}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               )}
             </div>
           )}
 
-          {/* Writing details */}
-          {a.assessmentType === "Writing Assessment" && (
-            <div className="space-y-3">
-              <h3 className="text-sm font-semibold text-slate-800">
-                Writing Details
+          {/* Writing Details: Detailed Responses (Phonics words) */}
+          {isWriting && a.detailedResponses?.length > 0 && (
+            <div className="space-y-2">
+              <h3 className="text-xs font-black uppercase tracking-wider text-slate-700">
+                Phonics & Word Writing Breakdown
               </h3>
-              <div className="bg-slate-50 rounded-xl p-3 border border-slate-200">
-                <p className="text-xs text-slate-400 uppercase font-semibold mb-0.5">
-                  Writing Score
-                </p>
-                <p className="text-2xl font-bold text-amber-600">
-                  {a.writingScore}
-                </p>
+              <div className="table-wrapper overflow-x-auto rounded-xl border border-slate-200">
+                <table className="data-table text-xs">
+                  <thead className="bg-slate-100">
+                    <tr>
+                      <th className="py-2.5 px-3">#</th>
+                      <th className="py-2.5 px-3">Target Word</th>
+                      <th className="py-2.5 px-3">Student Wrote</th>
+                      <th className="py-2.5 px-3 text-center">Evaluation</th>
+                      <th className="py-2.5 px-3">Notes</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {a.detailedResponses.map((d, idx) => (
+                      <tr
+                        key={idx}
+                        className="hover:bg-slate-50 border-b border-slate-100 last:border-none"
+                      >
+                        <td className="py-2 px-3 font-bold text-slate-500">
+                          {d.itemNumber || idx + 1}
+                        </td>
+                        <td className="py-2 px-3 font-black text-slate-800">
+                          {d.targetWord}
+                        </td>
+                        <td className="py-2 px-3 font-mono font-bold text-indigo-700">
+                          {d.writtenByStudent || "(no attempt)"}
+                        </td>
+                        <td className="py-2 px-3 text-center">
+                          <span
+                            className={`inline-flex px-2 py-0.5 rounded-full font-bold text-[10px] ${
+                              d.status === "correct"
+                                ? "bg-emerald-100 text-emerald-800"
+                                : d.status === "incorrect"
+                                  ? "bg-red-100 text-red-800"
+                                  : "bg-slate-100 text-slate-700"
+                            }`}
+                          >
+                            {d.status}
+                          </span>
+                        </td>
+                        <td className="py-2 px-3 text-slate-500">
+                          {d.notes || "—"}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
-              {a.writingNotes && (
-                <div className="bg-slate-50 rounded-xl p-3 border border-slate-200">
-                  <p className="text-xs text-slate-400 uppercase font-semibold mb-0.5">
-                    Notes
+            </div>
+          )}
+
+          {/* Writing Details: Picture AI Prompt Answers */}
+          {isWriting &&
+            (a.writingAnswers?.length > 0 ||
+              a.fs2WritingAnswers?.length > 0) && (
+              <div className="space-y-3">
+                <h3 className="text-xs font-black uppercase tracking-wider text-slate-700">
+                  Picture Writing Responses
+                </h3>
+                <div className="space-y-2">
+                  {(a.writingAnswers || a.fs2WritingAnswers).map((wa, idx) => (
+                    <div
+                      key={idx}
+                      className="p-3 bg-slate-50 rounded-xl border border-slate-200"
+                    >
+                      <p className="text-xs font-bold text-slate-800 mb-1">
+                        {wa.question || `Prompt ${wa.questionId || idx + 1}`}
+                      </p>
+                      <p className="text-xs text-slate-700 p-2.5 bg-white rounded-lg border border-slate-100 font-medium">
+                        {wa.answer || "(No response)"}
+                      </p>
+                      {wa.detectedKeywords?.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-2">
+                          {wa.detectedKeywords.map((k, kIdx) => (
+                            <span
+                              key={kIdx}
+                              className="text-[10px] font-bold px-1.5 py-0.5 bg-indigo-50 text-indigo-700 rounded"
+                            >
+                              {k}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+          {/* Student Writing raw sheet text */}
+          {a.studentWriting && (
+            <div className="space-y-1">
+              <p className="text-xs text-indigo-600 uppercase font-black tracking-wider">
+                Student Writing Text
+              </p>
+              <div className="text-xs text-slate-800 whitespace-pre-wrap leading-relaxed p-4 bg-slate-50 rounded-xl border border-slate-200 font-medium">
+                {a.studentWriting}
+              </div>
+            </div>
+          )}
+
+          {/* Phonics Phase sets & revisits */}
+          {isPhonic && (
+            <div className="space-y-3">
+              <h3 className="text-xs font-black uppercase tracking-wider text-slate-700">
+                Phonics Progression & Revisits
+              </h3>
+              {a.graphemesNeedingRevisit?.length > 0 && (
+                <div className="p-3 bg-red-50 rounded-xl border border-red-200">
+                  <p className="text-[10px] font-black uppercase tracking-wider text-red-700 mb-1.5">
+                    Sounds / Graphemes Needing Revisit (
+                    {a.graphemesNeedingRevisit.length})
                   </p>
-                  <p className="text-sm text-slate-700">{a.writingNotes}</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {a.graphemesNeedingRevisit.map((s, idx) => (
+                      <span
+                        key={idx}
+                        className="px-2 py-0.5 bg-white text-red-800 border border-red-200 rounded-md text-xs font-mono font-bold"
+                      >
+                        {s}
+                      </span>
+                    ))}
+                  </div>
                 </div>
               )}
-              {a.studentWriting && (
-                <div className="bg-white rounded-xl p-4 border border-slate-200 shadow-sm mt-4">
-                  <p className="text-xs text-indigo-500 uppercase font-bold tracking-wider mb-2">
-                    Student Writing Sheet
+              {a.wordsNeedingRevisit?.length > 0 && (
+                <div className="p-3 bg-amber-50 rounded-xl border border-amber-200">
+                  <p className="text-[10px] font-black uppercase tracking-wider text-amber-800 mb-1.5">
+                    Words Needing Revisit ({a.wordsNeedingRevisit.length})
                   </p>
-                  <div className="text-sm text-slate-800 whitespace-pre-wrap leading-relaxed p-4 bg-slate-50 rounded-lg border border-slate-100">
-                    {a.studentWriting}
+                  <div className="flex flex-wrap gap-1.5">
+                    {a.wordsNeedingRevisit.map((w, idx) => (
+                      <span
+                        key={idx}
+                        className="px-2 py-0.5 bg-white text-amber-800 border border-amber-200 rounded-md text-xs font-bold"
+                      >
+                        {w}
+                      </span>
+                    ))}
                   </div>
                 </div>
               )}
             </div>
           )}
 
-          {/* Teacher comments */}
-          {a.teacherComments && (
-            <div className="bg-amber-50 rounded-xl p-4 border border-amber-200">
-              <p className="text-xs text-amber-600 uppercase font-semibold mb-1">
-                Teacher Comments
+          {/* Teaching Focus */}
+          {a.teachingFocus && (
+            <div className="bg-emerald-50 rounded-xl p-3.5 border border-emerald-200">
+              <p className="text-[10px] text-emerald-700 uppercase font-black tracking-wider mb-1">
+                Targeted Teaching Focus
               </p>
-              <p className="text-sm text-slate-700">{a.teacherComments}</p>
+              <p className="text-xs text-slate-800 font-medium">
+                {a.teachingFocus}
+              </p>
+            </div>
+          )}
+
+          {/* Notes / Assessor comments */}
+          {(a.readingNotes ||
+            a.writingNotes ||
+            a.notes ||
+            a.comments ||
+            a.teacherComments) && (
+            <div className="bg-amber-50 rounded-xl p-3.5 border border-amber-200">
+              <p className="text-[10px] text-amber-700 uppercase font-black tracking-wider mb-1">
+                Teacher Notes & Feedback
+              </p>
+              <p className="text-xs text-slate-800 font-medium whitespace-pre-wrap">
+                {a.teacherComments ||
+                  a.comments ||
+                  a.readingNotes ||
+                  a.writingNotes ||
+                  a.notes}
+              </p>
             </div>
           )}
         </div>
@@ -577,9 +1022,15 @@ export default function AssessmentList() {
     return matchTier && matchType && matchTerm && matchSearch;
   });
 
+  const typesInAssessments = Array.from(
+    new Set(assessments.map((a) => a.assessmentType).filter(Boolean)),
+  );
+  const allKnownTypes = Array.from(
+    new Set([...Object.keys(TYPE_META), ...typesInAssessments]),
+  );
   const availableTypes = [
     "All",
-    ...Object.keys(TYPE_META).filter((typeKey) => {
+    ...allKnownTypes.filter((typeKey) => {
       if (filterTier === "All") return true;
       const isPrim = isPrimaryAssessment({ assessmentType: typeKey });
       return filterTier === "primary" ? isPrim : !isPrim;
@@ -843,7 +1294,7 @@ export default function AssessmentList() {
                         : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
                     }`}
                   >
-                    {t === "All" ? "All Skills" : TYPE_META[t]?.label || t}
+                    {t === "All" ? "All Skills" : getTypeMeta(t)?.label || t}
                   </button>
                 ))}
               </div>
@@ -892,10 +1343,7 @@ export default function AssessmentList() {
                     </tr>
                   ) : (
                     filtered.map((a) => {
-                      const typeMeta = TYPE_META[a.assessmentType] || {
-                        label: a.assessmentType,
-                        color: "bg-slate-100 text-slate-600",
-                      };
+                      const typeMeta = getTypeMeta(a.assessmentType);
                       return (
                         <tr key={a._id}>
                           <td>

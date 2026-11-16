@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { assessmentAPI } from '../services/api';
+import AIAssistantConductor from '../components/AIAssistantConductor';
 import readingImg1 from '../assets/reading1.jpg.jpeg';
 import readingImg2 from '../assets/reading2.jpg.jpeg';
 import readingImg3 from '../assets/reading3.jpg.jpeg';
@@ -36,6 +37,13 @@ const LEVEL_COLORS = {
   'C2 - Mastery': 'text-blue-600 bg-blue-50 border-blue-200'
 };
 
+const READING_QUESTIONS = [
+  'Paragraph 1: Asha and Rafi met at the rocky edge of their village, where the mountain winds rushed across the open field. Asha was the only girl who played football in the whole valley, and she carried her ball with pride. Some leaders shake their heads when they saw her train, saying the game was not for girls, but she refused to stop. Rafi walked beside her each day, cheering her on as they climbed the steep path.',
+  'Paragraph 2: The ground was uneven, with stones hidden under the grass, and the thin air made their breaths short. Still, Asha dribbled and kicked with fierce joy. Rafi practised with her, blocking shots and passing the ball across the slope. Sometimes they slipped, sometimes the wind blew the ball too far, but they always tried again.',
+  'Paragraph 3: Asha\'s brother often joined them, laughing as he chased the ball down the hill. Their father watched from the field\'s edge, nodding proudly whenever Asha made a strong strike. He told her she had the spirit of a true player.',
+  'Paragraph 4: One evening, as the sun dipped behind the mountains, Asha scored a goal that echoed across the valley. She stood tall, imagining a stadium full of cheering fans. One day, she whispered, she would be a football hero. And with Rafi, her brother, and her father believing in her, the dream felt closer than ever.'
+];
+
 export default function ReadingAssessmentForm() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -51,6 +59,23 @@ export default function ReadingAssessmentForm() {
   const [score, setScore] = useState(null);
   const [teacherNotes, setTeacherNotes] = useState('');
   const [loading, setLoading] = useState(false);
+  const [aiAnswers, setAiAnswers] = useState([]);
+
+  useEffect(() => {
+    if (aiAnswers && aiAnswers.some((ans) => ans && ans.trim())) {
+      const summary = aiAnswers
+        .map((ans, idx) => (ans && ans.trim() ? `[Para ${idx + 1} AI Read]: ${ans.trim()}` : null))
+        .filter(Boolean)
+        .join('\n');
+      if (summary) {
+        setTeacherNotes((prev) => {
+          if (!prev) return summary;
+          if (prev.includes('[Para')) return summary;
+          return `${prev}\n\n${summary}`;
+        });
+      }
+    }
+  }, [aiAnswers]);
 
   useEffect(() => {
     if (preSelectedTerm) {
@@ -148,6 +173,12 @@ export default function ReadingAssessmentForm() {
           </div>
         </div>
 
+        {/* AI Assessment Conductor */}
+        <AIAssistantConductor
+          questions={READING_QUESTIONS}
+          onAnswersArrayChange={setAiAnswers}
+        />
+
         {/* Story */}
         <div className="card-section">
           <h2 className="section-heading">
@@ -158,7 +189,14 @@ export default function ReadingAssessmentForm() {
           </h2>
           <div className="bg-slate-50 rounded-xl border border-slate-200 p-5 mb-5 text-sm text-slate-700 leading-relaxed">
             {STORY.split('\n\n').map((para, i) => (
-              <p key={i} className={`${i === 0 ? 'font-semibold text-slate-900 mb-3' : 'mb-3'}`}>{para}</p>
+              <div key={i} className="mb-4 last:mb-0">
+                <p className={`${i === 0 ? 'font-semibold text-slate-900 mb-2' : 'mb-2'}`}>{para}</p>
+                {i > 0 && aiAnswers && aiAnswers[i - 1] && (
+                  <div className="mt-2 mb-3 text-sm text-indigo-700 bg-indigo-50/50 p-3 rounded-xl border border-indigo-100 shadow-inner">
+                    <span className="font-bold mr-1">Student Answer (AI):</span> "{aiAnswers[i - 1]}"
+                  </div>
+                )}
+              </div>
             ))}
           </div>
           <div className="grid grid-cols-3 gap-3">

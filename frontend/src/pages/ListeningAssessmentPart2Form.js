@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { assessmentAPI } from '../services/api';
+import AIAssistantConductor from '../components/AIAssistantConductor';
 
 /* ── Data ─────────────────────────────────────────────────── */
 const QUESTIONS_JUNIOR = [
@@ -25,30 +26,30 @@ const QUESTIONS_SENIOR = [
 ];
 
 const CEFR_BANDS_JUNIOR = [
-  { range: '0–1', level: 'A1',    desc: 'Understands very little; isolated words only.',                              color: 'text-red-600',     bg: 'bg-red-50 border-red-200' },
-  { range: '2–4', level: 'A2',    desc: 'Understands simple, clear factual details with support.',                    color: 'text-orange-600',  bg: 'bg-orange-50 border-orange-200' },
-  { range: '5–6', level: 'B1',    desc: 'Can follow main points and extract key information.',                        color: 'text-amber-600',   bg: 'bg-amber-50 border-amber-200' },
-  { range: '6–7', level: 'B2',    desc: 'Accurate, detailed listening; understands all essential information.',       color: 'text-blue-600',    bg: 'bg-blue-50 border-blue-200' },
-  { range: '8',   level: 'C1-C2', desc: 'Fully accurate, precise, confident comprehension. No errors.',              color: 'text-emerald-600', bg: 'bg-emerald-50 border-emerald-200' },
+  { range: '0–1', level: 'A1', desc: 'Understands very little; isolated words only.', color: 'text-red-600', bg: 'bg-red-50 border-red-200' },
+  { range: '2–4', level: 'A2', desc: 'Understands simple, clear factual details with support.', color: 'text-orange-600', bg: 'bg-orange-50 border-orange-200' },
+  { range: '5–6', level: 'B1', desc: 'Can follow main points and extract key information.', color: 'text-amber-600', bg: 'bg-amber-50 border-amber-200' },
+  { range: '6–7', level: 'B2', desc: 'Accurate, detailed listening; understands all essential information.', color: 'text-blue-600', bg: 'bg-blue-50 border-blue-200' },
+  { range: '8', level: 'C1-C2', desc: 'Fully accurate, precise, confident comprehension. No errors.', color: 'text-emerald-600', bg: 'bg-emerald-50 border-emerald-200' },
 ];
 
 const CEFR_BANDS_SENIOR = [
-  { range: '0–4',   level: 'A1', desc: 'Understands almost none of the text; isolated words only.',                                    color: 'text-red-600',     bg: 'bg-red-50 border-red-200' },
-  { range: '5–8',   level: 'A2', desc: 'Understands basic, simple information; may catch 1–2 details.',                               color: 'text-orange-600',  bg: 'bg-orange-50 border-orange-200' },
-  { range: '9–12',  level: 'B1', desc: 'Understands main ideas but misses detail; partial comprehension.',                            color: 'text-amber-600',   bg: 'bg-amber-50 border-amber-200' },
-  { range: '13–16', level: 'B2', desc: 'Good comprehension of details, reasons, cause/effect; mostly accurate.',                      color: 'text-blue-600',    bg: 'bg-blue-50 border-blue-200' },
-  { range: '17–18', level: 'C1', desc: 'Very accurate and detailed understanding; able to interpret implied meaning.',                color: 'text-emerald-600', bg: 'bg-emerald-50 border-emerald-200' },
-  { range: '19–20', level: 'C2', desc: 'Near-native comprehension; precise, complete, nuanced understanding.',                        color: 'text-violet-600',  bg: 'bg-violet-50 border-violet-200' },
+  { range: '0–4', level: 'A1', desc: 'Understands almost none of the text; isolated words only.', color: 'text-red-600', bg: 'bg-red-50 border-red-200' },
+  { range: '5–8', level: 'A2', desc: 'Understands basic, simple information; may catch 1–2 details.', color: 'text-orange-600', bg: 'bg-orange-50 border-orange-200' },
+  { range: '9–12', level: 'B1', desc: 'Understands main ideas but misses detail; partial comprehension.', color: 'text-amber-600', bg: 'bg-amber-50 border-amber-200' },
+  { range: '13–16', level: 'B2', desc: 'Good comprehension of details, reasons, cause/effect; mostly accurate.', color: 'text-blue-600', bg: 'bg-blue-50 border-blue-200' },
+  { range: '17–18', level: 'C1', desc: 'Very accurate and detailed understanding; able to interpret implied meaning.', color: 'text-emerald-600', bg: 'bg-emerald-50 border-emerald-200' },
+  { range: '19–20', level: 'C2', desc: 'Near-native comprehension; precise, complete, nuanced understanding.', color: 'text-violet-600', bg: 'bg-violet-50 border-violet-200' },
 ];
 
 const CEFR_COLORS = {
-  A1:     'text-red-600 bg-red-50 border-red-200',
-  A2:     'text-orange-600 bg-orange-50 border-orange-200',
-  B1:     'text-amber-600 bg-amber-50 border-amber-200',
-  B2:     'text-blue-600 bg-blue-50 border-blue-200',
-  C1:     'text-emerald-600 bg-emerald-50 border-emerald-200',
-  'C1-C2':'text-emerald-600 bg-emerald-50 border-emerald-200',
-  C2:     'text-violet-600 bg-violet-50 border-violet-200',
+  A1: 'text-red-600 bg-red-50 border-red-200',
+  A2: 'text-orange-600 bg-orange-50 border-orange-200',
+  B1: 'text-amber-600 bg-amber-50 border-amber-200',
+  B2: 'text-blue-600 bg-blue-50 border-blue-200',
+  C1: 'text-emerald-600 bg-emerald-50 border-emerald-200',
+  'C1-C2': 'text-emerald-600 bg-emerald-50 border-emerald-200',
+  C2: 'text-violet-600 bg-violet-50 border-violet-200',
 };
 
 function getCefrJunior(t) {
@@ -63,36 +64,65 @@ function getCefrSenior(t) {
 /* ── Component ────────────────────────────────────────────── */
 export default function ListeningAssessmentPart2Form({ yearGroupProp }) {
   const navigate = useNavigate();
-  const params   = useParams();
+  const params = useParams();
   const [searchParams] = useSearchParams();
   const preSelectedTerm = searchParams.get('term') || 'T1';
 
   // Support both prop-based and route-based year group detection
   const yearGroup = yearGroupProp || params.yearGroup || 'junior';
-  const isJunior  = yearGroup === 'junior';
+  const isJunior = yearGroup === 'junior';
 
-  const questions  = isJunior ? QUESTIONS_JUNIOR  : QUESTIONS_SENIOR;
-  const cefrBands  = isJunior ? CEFR_BANDS_JUNIOR : CEFR_BANDS_SENIOR;
-  const maxScore   = isJunior ? 8 : 20;
-  const getCefr    = isJunior ? getCefrJunior : getCefrSenior;
+  const questions = isJunior ? QUESTIONS_JUNIOR : QUESTIONS_SENIOR;
+  const cefrBands = isJunior ? CEFR_BANDS_JUNIOR : CEFR_BANDS_SENIOR;
+  const maxScore = isJunior ? 8 : 20;
+  const getCefr = isJunior ? getCefrJunior : getCefrSenior;
 
-  const [formData, setFormData] = useState({ 
-    email: '', 
-    studentName: '', 
-    yearGroupAndClass: '', 
+  const [formData, setFormData] = useState({
+    email: '',
+    studentName: '',
+    yearGroupAndClass: '',
     teacherName: '',
     term: preSelectedTerm
   });
-  const [scores,   setScores]   = useState(Array(questions.length).fill(null));
+  const [scores, setScores] = useState(Array(questions.length).fill(null));
   const [totalScore, setTotalScore] = useState(0);
-  const [cefrLevel,  setCefrLevel]  = useState('');
-  const [loading,    setLoading]    = useState(false);
+  const [cefrLevel, setCefrLevel] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [, setTranscript] = useState('');
+  const [aiAnswers, setAIAnswers] = useState([]);
 
   useEffect(() => {
     if (preSelectedTerm) {
       setFormData(prev => ({ ...prev, term: preSelectedTerm }));
     }
   }, [preSelectedTerm]);
+
+  // Auto-scoring based on AI transcript
+  useEffect(() => {
+    let changed = false;
+    const nextScores = [...scores];
+
+    aiAnswers.forEach((ans, i) => {
+      if (ans && ans.trim().length > 0) {
+        const words = ans.trim().split(/\s+/).length;
+        // Simple heuristic: > 3 words is full comprehension (2), less is some (1)
+        let inferredScore = words >= 3 ? 2 : 1;
+
+        if (nextScores[i] !== inferredScore) {
+          nextScores[i] = inferredScore;
+          changed = true;
+        }
+      }
+    });
+
+    if (changed) {
+      setScores(nextScores);
+      const total = nextScores.reduce((s, v) => s + (v ?? 0), 0);
+      setTotalScore(total);
+      setCefrLevel(getCefr(total));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [aiAnswers]);
 
   const handleInput = (e) => {
     const { name, value } = e.target;
@@ -134,10 +164,10 @@ export default function ListeningAssessmentPart2Form({ yearGroupProp }) {
         level: cefrLevel,
       });
       toast.success('Assessment submitted successfully!');
-      setFormData({ 
-        email: '', 
-        studentName: '', 
-        yearGroupAndClass: '', 
+      setFormData({
+        email: '',
+        studentName: '',
+        yearGroupAndClass: '',
         teacherName: '',
         term: preSelectedTerm
       });
@@ -152,7 +182,7 @@ export default function ListeningAssessmentPart2Form({ yearGroupProp }) {
   };
 
   const answered = scores.filter(s => s !== null).length;
-  const progress  = Math.round((answered / questions.length) * 100);
+  const progress = Math.round((answered / questions.length) * 100);
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -250,6 +280,12 @@ export default function ListeningAssessmentPart2Form({ yearGroupProp }) {
             </div>
           </div>
 
+          <AIAssistantConductor
+            questions={questions}
+            onCompleteTextChange={setTranscript}
+            onAnswersArrayChange={setAIAnswers}
+          />
+
           {/* Questions */}
           <div className="card-section">
             <div className="flex items-center justify-between mb-4">
@@ -282,22 +318,31 @@ export default function ListeningAssessmentPart2Form({ yearGroupProp }) {
                     // Junior questions continue numbering from Part 1 (13 questions), so start at 14
                     const qNum = isJunior ? i + 14 : i + 1;
                     return (
-                      <tr key={i} className={scores[i] !== null ? 'bg-blue-50/40' : ''}>
-                        <td className="text-slate-500 font-medium text-sm align-top pt-4">{qNum}</td>
-                        <td className="font-medium text-slate-800">{q}</td>
-                        {[0, 1, 2].map(val => (
-                          <td key={val} className="text-center">
-                            <input
-                              type="radio"
-                              name={`q-${i}`}
-                              value={val}
-                              checked={scores[i] === val}
-                              onChange={() => handleScore(i, val)}
-                              className="w-4 h-4 accent-blue-600 cursor-pointer"
-                            />
+                      <React.Fragment key={i}>
+                        <tr className={scores[i] !== null ? 'bg-blue-50/40' : ''}>
+                          <td className="text-slate-500 font-medium text-sm align-top pt-4">{qNum}</td>
+                          <td className="text-slate-800 pt-4">
+                            <div className="font-medium">{q}</div>
+                            {aiAnswers[i] && (
+                              <div className="mt-2 text-sm text-indigo-700 bg-indigo-50/50 p-2.5 rounded-lg border border-indigo-100 shadow-inner mb-3">
+                                <span className="font-bold mr-1">Student Answer (AI):</span> "{aiAnswers[i]}"
+                              </div>
+                            )}
                           </td>
-                        ))}
-                      </tr>
+                          {[0, 1, 2].map(val => (
+                            <td key={val} className="text-center pt-4">
+                              <input
+                                type="radio"
+                                name={`q-${i}`}
+                                value={val}
+                                checked={scores[i] === val}
+                                onChange={() => handleScore(i, val)}
+                                className="w-4 h-4 accent-blue-600 cursor-pointer"
+                              />
+                            </td>
+                          ))}
+                        </tr>
+                      </React.Fragment>
                     );
                   })}
                 </tbody>
@@ -352,9 +397,9 @@ export default function ListeningAssessmentPart2Form({ yearGroupProp }) {
 
           {/* Submit */}
           <div className="flex gap-3">
-            <button 
-              type="submit" 
-              disabled={loading} 
+            <button
+              type="submit"
+              disabled={loading}
               className={`flex-1 px-8 py-4 bg-gradient-to-r ${isJunior ? 'from-blue-600 to-indigo-600 shadow-blue-600/20' : 'from-orange-500 to-red-600 shadow-orange-600/20'} text-white font-bold rounded-2xl hover:brightness-110 active:scale-[0.98] transition-all disabled:opacity-50 disabled:pointer-events-none shadow-xl flex items-center justify-center gap-2 text-base`}
             >
               {loading ? (
@@ -370,9 +415,9 @@ export default function ListeningAssessmentPart2Form({ yearGroupProp }) {
                 </>
               )}
             </button>
-            <button 
-              type="button" 
-              onClick={() => navigate('/assessment/listening')} 
+            <button
+              type="button"
+              onClick={() => navigate('/assessment/listening')}
               className="px-8 py-4 bg-white text-slate-600 font-bold rounded-2xl border-2 border-slate-200 hover:bg-slate-50 hover:border-slate-300 active:scale-[0.98] transition-all flex items-center justify-center gap-2 text-base shadow-sm"
             >
               Cancel

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { assessmentAPI } from '../services/api';
+import AIAssistantConductor from '../components/AIAssistantConductor';
 import landmarkImg1 from '../assets/landmark_wall.png';
 import landmarkImg2 from '../assets/landmark_colosseum.png';
 import landmarkImg3 from '../assets/landmark_taj.png';
@@ -43,6 +44,23 @@ export default function WritingAssessmentLandmarkForm() {
   const [notes, setNotes] = useState('');
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
+  const [aiAnswers, setAiAnswers] = useState([]);
+
+  useEffect(() => {
+    if (aiAnswers && aiAnswers.some((ans) => ans && ans.trim())) {
+      const summary = aiAnswers
+        .map((ans, idx) => (ans && ans.trim() ? `[Q${idx + 1} AI Answer]: ${ans.trim()}` : null))
+        .filter(Boolean)
+        .join('\n');
+      if (summary) {
+        setNotes((prev) => {
+          if (!prev) return summary;
+          if (prev.includes('[Q')) return summary;
+          return `${prev}\n\n${summary}`;
+        });
+      }
+    }
+  }, [aiAnswers]);
 
   useEffect(() => {
     if (preSelectedTerm) {
@@ -159,14 +177,27 @@ export default function WritingAssessmentLandmarkForm() {
           </div>
         </div>
 
+        {/* AI Assessment Conductor */}
+        <AIAssistantConductor
+          questions={WRITING_QUESTIONS}
+          onAnswersArrayChange={setAiAnswers}
+        />
+
         {/* Pictures and Questions */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-8">
           <h2 className="text-lg font-bold text-gray-900 mb-4">Questions</h2>
-          <ol className="list-inside space-y-2 text-gray-700 mb-6">
+          <div className="space-y-3 mb-6">
             {WRITING_QUESTIONS.map((q, idx) => (
-              <li key={idx} className="font-medium text-lg">{q}</li>
+              <div key={idx} className="text-gray-700">
+                <div className="font-semibold text-base text-slate-900">{q}</div>
+                {aiAnswers && aiAnswers[idx] && (
+                  <div className="mt-2 text-sm text-indigo-700 bg-indigo-50/50 p-2.5 rounded-lg border border-indigo-100 shadow-inner">
+                    <span className="font-bold mr-1">Student Answer (AI):</span> "{aiAnswers[idx]}"
+                  </div>
+                )}
+              </div>
             ))}
-          </ol>
+          </div>
 
           {/* Pictures */}
           <div className="grid grid-cols-3 gap-4 mb-6">

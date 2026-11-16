@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { assessmentAPI } from '../services/api';
+import AIAssistantConductor from '../components/AIAssistantConductor';
 import readin2nd1 from '../assets/readin2nd1.jpg.jpeg';
 import readin2nd2 from '../assets/readin2nd2.jpg.jpeg';
 import reading2nd3 from '../assets/reading2nd3.jpg.jpeg';
@@ -30,6 +31,13 @@ function getPictureUrlSenior(picNum) {
   return pictures[picNum % pictures.length];
 }
 
+const READING_QUESTIONS_SENIOR = [
+  'Paragraph 1: In a small international school nestled in the heart of Tokyo, a group of 17-year-old students gathered in the bustling cafeteria, their laughter and chatter a blend of various accents and languages. These students had grown up in a unique environment, navigating the complexities of living in a culture different from their parents\' and the one they were born into.',
+  'Paragraph 2: Ava, originally from Brazil, moved to Japan with her family when she was just eight. As she shared stories of her recent trip back to São Paulo, her classmates listened intently, fascinated by her tales of vibrant street festivals and tropical beaches. Meanwhile, Amir, whose parents came from Egypt but who spent his early years in London, nodded along, relating Ava\'s experiences to his own summer visits to Cairo, filled with bustling bazaars and aromatic spices. Despite their diverse backgrounds, the common thread of living in Japan tied them together.',
+  'Paragraph 3: Their lives were a tapestry of cultural experiences, from celebrating Japanese festivals to observing Ramadan with their families. This multicultural environment had its challenges, too. Sometimes, Ava felt like she was living in a state of in-betweenness, not entirely fitting in with her Brazilian roots nor fully embracing Japanese customs. However, with each other\'s support, they found solace in their shared experiences, carving out a unique identity that was neither here nor there but entirely their own.',
+  'Paragraph 4: These third culture students, had developed a profound understanding of the value of diversity. They learned to appreciate different perspectives and adapt to ever-changing environments, skills they knew would serve them well in life. As they prepared for university applications and life beyond their school, they carried with them not just academic knowledge but also a deeper wisdom that came from growing up between worlds.'
+];
+
 export default function ReadingAssessmentSeniorForm() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -46,6 +54,23 @@ export default function ReadingAssessmentSeniorForm() {
   const [score, setScore] = useState(null);
   const [teacherNotes, setTeacherNotes] = useState('');
   const [loading, setLoading] = useState(false);
+  const [aiAnswers, setAiAnswers] = useState([]);
+
+  useEffect(() => {
+    if (aiAnswers && aiAnswers.some((ans) => ans && ans.trim())) {
+      const summary = aiAnswers
+        .map((ans, idx) => (ans && ans.trim() ? `[Para ${idx + 1} AI Read]: ${ans.trim()}` : null))
+        .filter(Boolean)
+        .join('\n');
+      if (summary) {
+        setTeacherNotes((prev) => {
+          if (!prev) return summary;
+          if (prev.includes('[Para')) return summary;
+          return `${prev}\n\n${summary}`;
+        });
+      }
+    }
+  }, [aiAnswers]);
 
   useEffect(() => {
     if (preSelectedTerm) {
@@ -159,12 +184,25 @@ export default function ReadingAssessmentSeniorForm() {
           </div>
         </div>
 
+        {/* AI Assessment Conductor */}
+        <AIAssistantConductor
+          questions={READING_QUESTIONS_SENIOR}
+          onAnswersArrayChange={setAiAnswers}
+        />
+
         {/* Story Section */}
         <div className="bg-gray-100 rounded-lg p-8 mb-8">
           <h2 className="text-xl font-bold text-gray-900 mb-4">The Story</h2>
           <div className="bg-white p-6 rounded-lg mb-6 text-gray-800 leading-relaxed border-l-4 border-teal-500">
             {READING_STORY_SENIOR.split('\n\n').map((paragraph, idx) => (
-              <p key={idx} className="mb-4">{paragraph}</p>
+              <div key={idx} className="mb-4 last:mb-0">
+                <p className={`${idx === 0 ? 'font-bold text-gray-900 mb-2' : 'mb-2'}`}>{paragraph}</p>
+                {idx > 0 && aiAnswers && aiAnswers[idx - 1] && (
+                  <div className="mt-2 mb-3 text-sm text-indigo-700 bg-indigo-50/50 p-3 rounded-xl border border-indigo-100 shadow-inner">
+                    <span className="font-bold mr-1">Student Answer (AI):</span> "{aiAnswers[idx - 1]}"
+                  </div>
+                )}
+              </div>
             ))}
           </div>
 

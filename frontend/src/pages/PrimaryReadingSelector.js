@@ -77,6 +77,106 @@ const OPTIONS = [
     ),
     route: "/assessment/kg2-reading",
   },
+  {
+    id: "grade1-year2",
+    subtitle: "Stage 4 · Year 2",
+    title: "Grade 1 / Year 2 Reading Assessment",
+    tag: "Grade 1 · Year 2 · Age 6–7",
+    desc: "5 decodable reading passages, 1-minute timer, accuracy score (/10), fluency checks, and CEFR decoding levels.",
+    color: "bg-emerald-500",
+    lightColor: "bg-emerald-50 text-emerald-500 border-emerald-200",
+    icon: (
+      <svg
+        className="w-5 h-5"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        strokeWidth={1.8}
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"
+        />
+      </svg>
+    ),
+    route: "/assessment/grade1-reading",
+  },
+  {
+    id: "grade2-year3",
+    subtitle: "Stage 5 · Year 3",
+    title: "Grade 2 / Year 3 Reading Assessment",
+    tag: "Grade 2 · Year 3 · Age 7–8",
+    desc: "4 decodable story passages (Lina & Sami), 30–40s timed oral reading, accuracy score (/10), fluency check, and CEFR decoding levels.",
+    color: "bg-emerald-500",
+    lightColor: "bg-emerald-50 text-emerald-500 border-emerald-200",
+    icon: (
+      <svg
+        className="w-5 h-5"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        strokeWidth={1.8}
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M4.26 10.147a60.438 60.438 0 01-.491 6.347A48.62 48.62 0 0112 20.904a48.62 48.62 0 018.232-4.41 60.46 60.46 0 00-.491-6.347m-15.482 0a50.636 50.636 0 00-2.658-.813A59.906 59.906 0 0112 3.493a59.903 59.903 0 0110.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.717 50.717 0 0112 13.489a50.702 50.702 0 017.74-3.342"
+        />
+      </svg>
+    ),
+    route: "/assessment/grade2-reading",
+  },
+  {
+    id: "grade3-year4",
+    subtitle: "Stage 6 · Year 4",
+    title: "Grade 3 / Year 4 Reading Assessment",
+    tag: "Grade 3 · Year 4 · Age 8–9",
+    desc: "5 decodable story passages (Mina & Rafi bakery story), 30–40s timed oral reading, accuracy score (/10), fluency check, and CEFR decoding levels.",
+    color: "bg-emerald-500",
+    lightColor: "bg-emerald-50 text-emerald-500 border-emerald-200",
+    icon: (
+      <svg
+        className="w-5 h-5"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        strokeWidth={1.8}
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"
+        />
+      </svg>
+    ),
+    route: "/assessment/grade3-reading",
+  },
+  {
+    id: "grade4-year5",
+    subtitle: "Stage 7 · Year 5",
+    title: "Grade 4 / Year 5 Reading Assessment",
+    tag: "Grade 4 · Year 5 · Age 9–10",
+    desc: "The Blue Kite (Wind Day) story reading, 10–15s per line, accuracy error tracking (/100 words), fluency check, and CEFR decoding levels.",
+    color: "bg-emerald-500",
+    lightColor: "bg-emerald-50 text-emerald-500 border-emerald-200",
+    icon: (
+      <svg
+        className="w-5 h-5"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        strokeWidth={1.8}
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"
+        />
+      </svg>
+    ),
+    route: "/assessment/grade4-reading",
+  },
 ];
 
 export default function PrimaryReadingSelector() {
@@ -123,7 +223,7 @@ export default function PrimaryReadingSelector() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-5 max-w-5xl">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 max-w-7xl">
           {OPTIONS.map((o) => (
             <button
               key={o.id}

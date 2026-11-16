@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { assessmentAPI } from '../services/api';
+import AIAssistantConductor from '../components/AIAssistantConductor';
 import writingImg1 from '../assets/writing1.jpg.jpeg';
 import writingImg2 from '../assets/writing2.jpg.jpeg';
 import writingImg3 from '../assets/writing3.jpg.jpeg';
@@ -41,6 +42,23 @@ export default function WritingAssessmentForm() {
   const [notes, setNotes] = useState('');
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
+  const [aiAnswers, setAiAnswers] = useState([]);
+
+  useEffect(() => {
+    if (aiAnswers && aiAnswers.some((ans) => ans && ans.trim())) {
+      const summary = aiAnswers
+        .map((ans, idx) => (ans && ans.trim() ? `[Q${idx + 1} AI Answer]: ${ans.trim()}` : null))
+        .filter(Boolean)
+        .join('\n');
+      if (summary) {
+        setNotes((prev) => {
+          if (!prev) return summary;
+          if (prev.includes('[Q')) return summary;
+          return `${prev}\n\n${summary}`;
+        });
+      }
+    }
+  }, [aiAnswers]);
 
   useEffect(() => {
     if (preSelectedTerm) {
@@ -143,6 +161,12 @@ export default function WritingAssessmentForm() {
           </div>
         </div>
 
+        {/* AI Assessment Conductor */}
+        <AIAssistantConductor
+          questions={QUESTIONS}
+          onAnswersArrayChange={setAiAnswers}
+        />
+
         {/* Picture prompts */}
         <div className="card-section">
           <h2 className="section-heading">
@@ -151,14 +175,21 @@ export default function WritingAssessmentForm() {
             </svg>
             Picture Prompts & Questions
           </h2>
-          <ol className="space-y-1 mb-5">
+          <div className="space-y-3 mb-5">
             {QUESTIONS.map((q, i) => (
-              <li key={i} className="text-sm text-slate-700 flex gap-2">
-                <span className="font-semibold text-slate-400 flex-shrink-0">{i + 1}.</span>
-                {q}
-              </li>
+              <div key={i} className="text-sm text-slate-700">
+                <div className="flex gap-2">
+                  <span className="font-semibold text-slate-400 flex-shrink-0">{i + 1}.</span>
+                  <span className="font-medium text-slate-800">{q}</span>
+                </div>
+                {aiAnswers && aiAnswers[i] && (
+                  <div className="mt-2 text-sm text-indigo-700 bg-indigo-50/50 p-2.5 rounded-lg border border-indigo-100 shadow-inner">
+                    <span className="font-bold mr-1">Student Answer (AI):</span> "{aiAnswers[i]}"
+                  </div>
+                )}
+              </div>
             ))}
-          </ol>
+          </div>
           <div className="grid grid-cols-3 gap-3">
             {PICTURES.map((src, i) => (
               <div key={i} className="rounded-xl overflow-hidden border border-slate-200 aspect-video bg-slate-100">

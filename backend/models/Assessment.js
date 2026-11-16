@@ -1,94 +1,75 @@
 const mongoose = require("mongoose");
 
-const assessmentSchema = new mongoose.Schema({
-  assessmentType: {
-    type: String,
-    enum: [
-      "EAL & ELL",
-      "Listening Part 1",
-      "Listening Part 2",
-      "Speaking Assessment",
-      "Reading Assessment",
-      "Writing Assessment",
-      "FS1 Listening Assessment",
-      "FS1 Speaking Assessment",
-      "FS1 Reading Assessment",
-      "FS1 Writing Assessment",
-      "FS1 Phonic Assessment",
-      "FS2 - KG1 Listening Assessment",
-      "FS2 Listening Assessment",
-      "FS2 - KG1 Speaking Assessment",
-      "FS2 Speaking Assessment",
-      "FS2 - KG1 Reading Assessment",
-      "FS2 Reading Assessment",
-      "FS2 - KG1 Writing Assessment",
-      "FS2 Writing Assessment",
-      "FS2 - KG1 Phonic Assessment",
-      "FS2 Phonic Assessment",
-      "KG2 / Year 1 Listening Assessment",
-      "KG2 Listening Assessment",
-      "Year 1 Listening Assessment",
-      "KG2 / Year 1 Speaking Assessment",
-      "KG2 Speaking Assessment",
-      "Year 1 Speaking Assessment",
-      "KG2 / Year 1 Reading Assessment",
-      "KG2 Reading Assessment",
-      "Year 1 Reading Assessment",
-      "KG2 / Year 1 Writing Assessment",
-      "KG2 Writing Assessment",
-      "Year 1 Writing Assessment",
-      "KG2 / Year 1 Phonic Assessment",
-      "KG2 Phonic Assessment",
-      "Year 1 Phonic Assessment",
-      "Primary Listening Assessment",
-      "Primary Speaking Assessment",
-      "Primary Reading Assessment",
-      "Primary Writing Assessment",
-      "Primary Phonic Assessment",
-    ],
-    default: "EAL & ELL",
-    required: true,
-  },
-  schoolTier: {
-    type: String,
-    enum: ["primary", "secondary"],
-    default: function () {
-      const type = (this.assessmentType || "").toLowerCase();
-      if (
-        type.includes("fs") ||
-        type.includes("kg") ||
-        type.includes("year 1") ||
-        type.includes("phonic") ||
-        type.startsWith("primary")
-      ) {
-        return "primary";
-      }
-      return "secondary";
+const assessmentSchema = new mongoose.Schema(
+  {
+    assessmentType: {
+      type: String,
+      default: "EAL & ELL",
+      required: true,
+      trim: true,
     },
-  },
-  schoolTier: {
-    type: String,
-    enum: ["primary", "secondary"],
-    default: function () {
-      const type = (this.assessmentType || "").toLowerCase();
-      if (
-        type.includes("fs") ||
-        type.includes("kg") ||
-        type.includes("year 1") ||
-        type.includes("phonic") ||
-        type.startsWith("primary")
-      ) {
-        return "primary";
-      }
-      return "secondary";
+    schoolTier: {
+      type: String,
+      enum: ["primary", "secondary"],
+      default: function () {
+        const type = (this.assessmentType || "").toLowerCase();
+        const yg = (this.yearGroupAndClass || "").toLowerCase();
+        if (
+          type.includes("fs") ||
+          type.includes("kg") ||
+          type.includes("phonic") ||
+          type.startsWith("primary") ||
+          type.includes("year 1") ||
+          type.includes("year 2") ||
+          type.includes("year 3") ||
+          type.includes("year 4") ||
+          type.includes("year 5") ||
+          type.includes("year 6") ||
+          type.includes("grade 1") ||
+          type.includes("grade 2") ||
+          type.includes("grade 3") ||
+          type.includes("grade 4") ||
+          type.includes("grade 5") ||
+          type.includes("grade 6") ||
+          yg.includes("fs") ||
+          yg.includes("kg") ||
+          yg.includes("year 1") ||
+          yg.includes("year 2") ||
+          yg.includes("year 3") ||
+          yg.includes("year 4") ||
+          yg.includes("year 5") ||
+          yg.includes("year 6") ||
+          yg.includes("grade 1") ||
+          yg.includes("grade 2") ||
+          yg.includes("grade 3") ||
+          yg.includes("grade 4") ||
+          yg.includes("grade 5") ||
+          yg.includes("grade 6")
+        ) {
+          return "primary";
+        }
+        return "secondary";
+      },
     },
-  },
-  yearGroupType: {
-    type: String,
-    enum: ["junior", "senior"],
-    comment:
-      "Used to distinguish between Year 7-9 (junior) and Year 10-13 (senior) for Listening Part 2, Speaking Assessment, and Reading Assessment",
-  },
+    skillType: {
+      type: String,
+      enum: ["listening", "speaking", "reading", "writing", "phonic", "general"],
+      default: function () {
+        const t = (this.assessmentType || "").toLowerCase();
+        if (t.includes("listen")) return "listening";
+        if (t.includes("speak")) return "speaking";
+        if (t.includes("read")) return "reading";
+        if (t.includes("write") || t.includes("writing")) return "writing";
+        if (t.includes("phonic")) return "phonic";
+        return "general";
+      },
+    },
+    yearGroupType: {
+      type: String,
+      enum: ["junior", "senior"],
+      comment:
+        "Used to distinguish between Year 7-9 (junior) and Year 10-13 (senior) for Listening Part 2, Speaking Assessment, and Reading Assessment",
+    },
   term: {
     type: String,
     enum: ["T1", "T2", "T3"],
@@ -202,31 +183,33 @@ const assessmentSchema = new mongoose.Schema({
     type: String,
     trim: true,
   },
-  // Listening Assessment Part 1 specific fields (13 questions, 0-2 scoring)
+  // Listening Assessment fields (Secondary Part 1/2 & Primary FS1 to Grade 4)
   listeningAssessmentAnswers: [
     {
-      questionId: Number,
-      score: {
-        type: Number,
-        enum: [0, 1, 2],
-      },
+      questionId: mongoose.Schema.Types.Mixed,
+      question: String,
+      studentResponse: String,
+      score: mongoose.Schema.Types.Mixed,
+      acceptable: Boolean,
+      notes: String,
     },
   ],
   cefrLevel: {
     type: String,
-    enum: ["A1", "A2", "B1", "B2", "C1", "C2"],
+    trim: true,
   },
-  // Speaking Assessment specific fields (6 questions, 0-2 scoring)
+  // Speaking Assessment fields (Secondary Junior/Senior & Primary FS1 to Grade 4)
   speakingAssessmentAnswers: [
     {
-      questionId: Number,
-      score: {
-        type: Number,
-        enum: [0, 1, 2],
-      },
+      questionId: mongoose.Schema.Types.Mixed,
+      question: String,
+      studentResponse: String,
+      score: mongoose.Schema.Types.Mixed,
+      notes: String,
+      acceptable: Boolean,
     },
   ],
-  // Reading Assessment specific field
+  // Reading Assessment specific fields
   readingScore: {
     type: String,
   },
@@ -234,7 +217,8 @@ const assessmentSchema = new mongoose.Schema({
     type: String,
     trim: true,
   },
-  // Writing Assessment specific field
+  itemsEvaluated: [mongoose.Schema.Types.Mixed],
+  // Writing Assessment specific fields
   writingScore: {
     type: String,
   },
@@ -246,7 +230,49 @@ const assessmentSchema = new mongoose.Schema({
     type: String,
     trim: true,
   },
+  formationQuality: {
+    type: String,
+    trim: true,
+  },
+  pencilGrip: {
+    type: String,
+    trim: true,
+  },
+  keyWordsUsed: [{ type: String, trim: true }],
+  keywordsUsed: [{ type: String, trim: true }],
+  detailedResponses: [mongoose.Schema.Types.Mixed],
+  fs2WritingAnswers: [mongoose.Schema.Types.Mixed],
+  writingAnswers: [mongoose.Schema.Types.Mixed],
+  detectedKeywords: [{ type: String, trim: true }],
+  aiKeywordsDetected: [{ type: String, trim: true }],
+  // Phonics Assessment specific fields
+  phase2Sets: [mongoose.Schema.Types.Mixed],
+  phase3Sets: [mongoose.Schema.Types.Mixed],
+  phase4Sets: [mongoose.Schema.Types.Mixed],
+  phase5Sets: [mongoose.Schema.Types.Mixed],
+  graphemesNeedingRevisit: [{ type: String, trim: true }],
+  wordsNeedingRevisit: [{ type: String, trim: true }],
+  // Common notes, recommendations, and scoring
+  teachingFocus: {
+    type: String,
+    trim: true,
+  },
+  notes: {
+    type: String,
+    trim: true,
+  },
+  comments: {
+    type: String,
+    trim: true,
+  },
   teacherComments: {
+    type: String,
+    trim: true,
+  },
+  score: {
+    type: mongoose.Schema.Types.Mixed,
+  },
+  recommendedLevel: {
     type: String,
     trim: true,
   },
@@ -267,11 +293,13 @@ const assessmentSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
-});
+}, { strict: false });
 
-// Index for efficient teacher-scoped queries
+// Index for efficient teacher-scoped and tier-scoped queries
 assessmentSchema.index({ createdBy: 1, createdAt: -1 });
 assessmentSchema.index({ createdBy: 1, assessmentType: 1 });
+assessmentSchema.index({ schoolTier: 1, createdAt: -1 });
+assessmentSchema.index({ skillType: 1, createdAt: -1 });
 assessmentSchema.index({ email: 1, createdAt: -1 });
 
 module.exports = mongoose.model("Assessment", assessmentSchema);

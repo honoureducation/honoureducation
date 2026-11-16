@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { assessmentAPI } from '../services/api';
+import AIAssistantConductor from '../components/AIAssistantConductor';
 import speaking1 from '../assets/speaking1.jpg.jpeg';
 import speaking2 from '../assets/speaking2.jpg.jpeg';
 import speaking3 from '../assets/speaking3.jpg.jpeg';
@@ -38,12 +39,50 @@ export default function SpeakingAssessmentSeniorForm() {
   const [cefrLevel, setCefrLevel] = useState('');
   const [teacherComments, setTeacherComments] = useState('');
   const [loading, setLoading] = useState(false);
+  const [, setTranscript] = useState('');
+  const [aiAnswers, setAIAnswers] = useState([]);
 
   useEffect(() => {
     if (preSelectedTerm) {
       setFormData(prev => ({ ...prev, term: preSelectedTerm }));
     }
   }, [preSelectedTerm]);
+
+  // Auto-scoring based on AI transcript
+  useEffect(() => {
+    let changed = false;
+    const nextScores = [...scores];
+
+    aiAnswers.forEach((ans, i) => {
+      if (ans && ans.trim().length > 0) {
+        const words = ans.trim().split(/\s+/).length;
+        // Simple heuristic: > 3 words is full comprehension (2), less is some (1)
+        let inferredScore = words >= 3 ? 2 : 1;
+
+        if (nextScores[i] !== inferredScore) {
+          nextScores[i] = inferredScore;
+          changed = true;
+        }
+      }
+    });
+
+    if (changed) {
+      setScores(nextScores);
+
+      const total = nextScores.reduce((sum, s) => sum + (s !== null ? s : 0), 0);
+      setTotalScore(total);
+
+      let nextCefrLevel = '';
+      if (total <= 2) nextCefrLevel = 'A1';
+      else if (total <= 4) nextCefrLevel = 'A2';
+      else if (total <= 6) nextCefrLevel = 'B1';
+      else if (total <= 8) nextCefrLevel = 'B2';
+      else if (total <= 10) nextCefrLevel = 'C1';
+      else nextCefrLevel = 'C2';
+      setCefrLevel(nextCefrLevel);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [aiAnswers]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -148,14 +187,14 @@ export default function SpeakingAssessmentSeniorForm() {
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Breadcrumbs */}
           <nav className="flex items-center gap-2 text-sm text-slate-500 mb-4 font-medium">
-            <button 
+            <button
               onClick={() => navigate('/assessments')}
               className="hover:text-blue-600 transition-colors"
             >
               Assessments
             </button>
             <span className="text-slate-300">/</span>
-            <button 
+            <button
               onClick={() => navigate('/assessment/speaking')}
               className="hover:text-blue-600 transition-colors"
             >
@@ -164,7 +203,7 @@ export default function SpeakingAssessmentSeniorForm() {
             <span className="text-slate-300">/</span>
             <span className="text-slate-900 font-semibold">Senior</span>
           </nav>
-          
+
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
             <div>
               <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Speaking Assessment</h1>
@@ -199,7 +238,7 @@ export default function SpeakingAssessmentSeniorForm() {
                   alt={`Assessment scene ${i + 1}`}
                   className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
                   onError={(e) => {
-                    e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="300"%3E%3Crect fill="%23e5e7eb" width="400" height="300"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="Arial" font-size="16" fill="%236b7280"%3EImage ' + (i+1) + '%3C/text%3E%3C/svg%3E';
+                    e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="300"%3E%3Crect fill="%23e5e7eb" width="400" height="300"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="Arial" font-size="16" fill="%236b7280"%3EImage ' + (i + 1) + '%3C/text%3E%3C/svg%3E';
                   }}
                 />
               </div>
@@ -281,6 +320,12 @@ export default function SpeakingAssessmentSeniorForm() {
             </div>
           </div>
 
+          <AIAssistantConductor
+            questions={SPEAKING_QUESTIONS_SENIOR.map(q => q.question)}
+            onCompleteTextChange={setTranscript}
+            onAnswersArrayChange={setAIAnswers}
+          />
+
           {/* Questions Table */}
           <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
             <div className="p-6 border-b border-slate-100">
@@ -304,7 +349,14 @@ export default function SpeakingAssessmentSeniorForm() {
                 <tbody className="divide-y divide-slate-100">
                   {SPEAKING_QUESTIONS_SENIOR.map((q, index) => (
                     <tr key={q.id} className="hover:bg-slate-50/30 transition-colors">
-                      <td className="px-6 py-5 text-sm font-semibold text-slate-700 leading-relaxed">{q.question}</td>
+                      <td className="px-6 py-5">
+                        <div className="text-sm font-semibold text-slate-700 leading-relaxed">{q.question}</div>
+                        {aiAnswers[index] && (
+                          <div className="mt-3 text-sm text-indigo-700 bg-indigo-50/50 p-3 rounded-xl border border-indigo-100 shadow-inner">
+                            <span className="font-bold mr-1">Student Answer (AI):</span> "{aiAnswers[index]}"
+                          </div>
+                        )}
+                      </td>
                       <td className="px-6 py-5 text-center">
                         <label className="relative flex items-center justify-center cursor-pointer group">
                           <input
@@ -378,22 +430,22 @@ export default function SpeakingAssessmentSeniorForm() {
                 ))}
               </div>
             </div>
-            
+
             <div className="bg-slate-900 rounded-2xl shadow-xl p-6 flex flex-col justify-between text-white relative overflow-hidden group">
               <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-16 -mt-16 blur-2xl group-hover:bg-white/10 transition-colors" />
               <div>
                 <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Assessment Summary</h3>
                 <p className="text-slate-300 text-[10px]">Auto-calculated based on scores</p>
               </div>
-              
+
               <div className="space-y-4 my-6">
                 <div className="flex items-end justify-between">
                   <span className="text-xs font-medium text-slate-400 uppercase tracking-widest">Total Points</span>
                   <span className="text-3xl font-black text-white">{totalScore}<span className="text-xs font-bold text-slate-500 ml-1">/ 12</span></span>
                 </div>
                 <div className="h-2 w-full bg-slate-800 rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-gradient-to-r from-orange-500 to-red-500 transition-all duration-500" 
+                  <div
+                    className="h-full bg-gradient-to-r from-orange-500 to-red-500 transition-all duration-500"
                     style={{ width: `${(totalScore / 12) * 100}%` }}
                   />
                 </div>

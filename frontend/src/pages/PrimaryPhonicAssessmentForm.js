@@ -2,8 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams, useLocation, Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { assessmentAPI } from '../services/api';
+import AIAssistantConductor from '../components/AIAssistantConductor';
 import fs1SheetImg from '../assets/fs1-phonic-sheet.png';
 import fs2SheetImg from '../assets/fs2-phonic-sheet.png';
+import kg2SheetImg from '../assets/kg2-year1-phonic-sheet.png';
+import kg2Phase45SheetImg from '../assets/kg2-year1-phonic-phase45-sheet.png';
 
 // ==========================================
 // PHASE 2 DATA (5 Sets)
@@ -78,7 +81,72 @@ const PHASE_3_SETS = [
 ];
 
 // ==========================================
-// CEFR RUBRIC TABLE FROM FS1 PHONIC ASSESSMENT
+// PHASE 4 DATA (Initial, Final, Complex Blends & Polysyllabic)
+// Exact from uploaded KG2 / Year 1 Phase 4 sheet
+// ==========================================
+const PHASE_4_SETS = [
+  {
+    id: 'p4-initial',
+    setLabel: 'Initial blends (CCVC)',
+    sounds: [
+      'bl', 'br', 'cl', 'cr', 'dr', 'fl', 'fr', 'gl', 'gr', 
+      'pl', 'pr', 'sc', 'sk', 'sl', 'sm', 'sn', 'sp', 'st', 'sw', 'tr', 'tw'
+    ],
+    exampleWords: ['black', 'frog', 'clap', 'tree', 'swim'],
+  },
+  {
+    id: 'p4-final',
+    setLabel: 'Final blends (CVCC)',
+    sounds: ['-ft', '-lk', '-lp', '-mp', '-nd', '-nk', '-nt', '-sk', '-sp', '-st'],
+    exampleWords: ['hand', 'milk', 'jump', 'lamp', 'nest'],
+  },
+  {
+    id: 'p4-complex',
+    setLabel: 'Complex blends (CCVCC / CCCVCC)',
+    sounds: ['str', 'spr', 'scr', 'spl', 'thr'],
+    exampleWords: ['strap', 'spring', 'scrub', 'splash', 'three'],
+  },
+  {
+    id: 'p4-polysyllabic',
+    setLabel: 'Polysyllabic words',
+    sounds: ['Using known graphemes in longer words'],
+    exampleWords: ['sandpit', 'lunchbox', 'desktop', 'pondweed'],
+  },
+];
+
+// ==========================================
+// PHASE 5 DATA (New Graphemes, Alternative Spellings & Tricky Words)
+// Exact from uploaded KG2 / Year 1 Phase 5 sheet
+// ==========================================
+const PHASE_5_SETS = [
+  {
+    id: 'p5-new-graphemes',
+    setLabel: 'New graphemes',
+    sounds: ['ay', 'ou', 'ie', 'ea', 'oy', 'ir', 'ue', 'aw', 'wh', 'ph'],
+    exampleWords: ['day', 'out', 'pie', 'sea', 'boy', 'girl', 'blue', 'saw', 'when', 'photo'],
+  },
+  {
+    id: 'p5-split-digraphs',
+    setLabel: 'Alternative spellings',
+    sounds: ['a-e', 'e-e', 'i-e', 'o-e', 'u-e'],
+    exampleWords: ['cake', 'these', 'time', 'home', 'cube'],
+  },
+  {
+    id: 'p5-more-alternatives',
+    setLabel: 'More alternatives',
+    sounds: ['ow/ou', 'ea/ee', 'ie/igh', 'y/i', 'ey/ee'],
+    exampleWords: ['snow/out', 'head/see', 'pie/night', 'gym/ink', 'money/see'],
+  },
+  {
+    id: 'p5-tricky',
+    setLabel: 'Tricky words',
+    sounds: ['said', 'have', 'like', 'some', 'come', 'little', 'one', 'do', 'were', 'there', 'out', 'what'],
+    exampleWords: ['High-frequency words'],
+  },
+];
+
+// ==========================================
+// CEFR RUBRIC TABLE FROM FS1 / KG2 PHONIC ASSESSMENT (PHASE 2 & 3)
 // ==========================================
 const PHONIC_RUBRIC_LEVELS = [
   {
@@ -125,18 +193,88 @@ const PHONIC_RUBRIC_LEVELS = [
   },
 ];
 
+// ==========================================
+// CEFR RUBRIC TABLE FROM KG2 / YEAR 1 PHONIC ASSESSMENT (PHASE 4 & 5)
+// Exact from uploaded Phase 4 & 5 sheet
+// ==========================================
+const PHONIC_RUBRIC_PHASE45 = [
+  {
+    level: 'A1.0–A1.2',
+    description:
+      'Struggles to read Phase 2 sounds. Limited ability to blend simple CVC words.',
+    badgeBg: 'bg-orange-100 text-orange-800 border-orange-200',
+    activeBg: 'bg-orange-50 border-orange-400 text-orange-900',
+  },
+  {
+    level: 'A2.0–A2.2',
+    description:
+      'Can read Phase 2 securely. Makes mistakes with Phase 3 sounds (digraphs like ch, sh, ai, igh).',
+    badgeBg: 'bg-amber-100 text-amber-800 border-amber-200',
+    activeBg: 'bg-amber-50 border-amber-400 text-amber-900',
+  },
+  {
+    level: 'A2.3–B1.1',
+    description:
+      'Knows Phase 2 and Phase 3 securely. Makes mistakes with Phase 4 blends (CCVC, CVCC, polysyllabic words).',
+    badgeBg: 'bg-blue-100 text-blue-800 border-blue-200',
+    activeBg: 'bg-blue-50 border-blue-400 text-blue-900',
+  },
+  {
+    level: 'B1.2–B1.3',
+    description:
+      'Reads Phases 2–4 with only a few mistakes. Beginning to handle Phase 5 alternative spellings.',
+    badgeBg: 'bg-indigo-100 text-indigo-800 border-indigo-200',
+    activeBg: 'bg-indigo-50 border-indigo-400 text-indigo-900',
+  },
+  {
+    level: 'B2–C1',
+    description:
+      'Reads fluently across Phases 2–5, including tricky words and alternative graphemes.',
+    badgeBg: 'bg-emerald-100 text-emerald-800 border-emerald-200',
+    activeBg: 'bg-emerald-50 border-emerald-400 text-emerald-900',
+  },
+];
+
 export default function PrimaryPhonicAssessmentForm() {
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const preSelectedTerm = searchParams.get('term') || 'T1';
 
+  const isPhase45Initial =
+    location.pathname.includes('phase45') ||
+    location.pathname.includes('phase4') ||
+    location.pathname.includes('phase5') ||
+    searchParams.get('phase') === '45' ||
+    searchParams.get('stage') === 'phase45';
+
+  const isKG2Initial =
+    location.pathname.includes('kg2') ||
+    location.pathname.includes('year1') ||
+    searchParams.get('grade') === 'kg2' ||
+    searchParams.get('grade') === 'year1' ||
+    searchParams.get('stage') === 'kg2' ||
+    searchParams.get('stage') === 'year1';
+
   const isFS2Initial =
     location.pathname.includes('fs2') ||
     searchParams.get('grade') === 'fs2' ||
     searchParams.get('stage') === 'fs2';
 
-  const [selectedStage, setSelectedStage] = useState(isFS2Initial ? 'FS2 - KG1' : 'FS1');
+  const initialStage = isPhase45Initial
+    ? 'KG2 / Year 1 (Phase 4 & 5)'
+    : isKG2Initial
+    ? 'KG2 / Year 1'
+    : isFS2Initial
+    ? 'FS2 - KG1'
+    : 'FS1';
+
+  const [selectedStage, setSelectedStage] = useState(initialStage);
+
+  const isPhase45Stage =
+    selectedStage === 'KG2 / Year 1 (Phase 4 & 5)' ||
+    selectedStage.includes('Phase 4') ||
+    selectedStage.includes('Phase 5');
 
   useEffect(() => {
     localStorage.setItem('assessmentSchoolTier', 'primary');
@@ -146,30 +284,67 @@ export default function PrimaryPhonicAssessmentForm() {
   const [formData, setFormData] = useState({
     email: '',
     studentName: '',
-    yearGroupAndClass: isFS2Initial ? 'FS2 - KG1' : 'FS1',
+    yearGroupAndClass: initialStage,
     teacherName: '',
     term: preSelectedTerm,
   });
 
   const handleStageSwitch = (newStage) => {
     setSelectedStage(newStage);
+    const isNewStagePhase45 =
+      newStage === 'KG2 / Year 1 (Phase 4 & 5)' ||
+      newStage.includes('Phase 4') ||
+      newStage.includes('Phase 5');
+
+    if (isNewStagePhase45 && selectedLevel === 'Pre-A1') {
+      setSelectedLevel(null);
+    }
+
     setFormData((prev) => ({
       ...prev,
       yearGroupAndClass:
-        prev.yearGroupAndClass === 'FS1' || prev.yearGroupAndClass === 'FS2 - KG1'
+        prev.yearGroupAndClass === 'FS1' ||
+        prev.yearGroupAndClass === 'FS2 - KG1' ||
+        prev.yearGroupAndClass === 'KG2 / Year 1' ||
+        prev.yearGroupAndClass === 'KG2 / Year 1 (Phase 4 & 5)'
           ? newStage
           : prev.yearGroupAndClass,
     }));
   };
 
-  // Track check per set: 'pass' | 'revisit' | null
+  // Track check per set for Phase 2 & 3: 'pass' | 'revisit' | null
   const [phase2Checks, setPhase2Checks] = useState(Array(PHASE_2_SETS.length).fill(null));
   const [phase3Checks, setPhase3Checks] = useState(Array(PHASE_3_SETS.length).fill(null));
+
+  // Track check per set for Phase 4 & 5
+  const [phase4Checks, setPhase4Checks] = useState(Array(PHASE_4_SETS.length).fill(null));
+  const [phase5Checks, setPhase5Checks] = useState(Array(PHASE_5_SETS.length).fill(null));
 
   // Graphemes highlighted by teacher as needing revisiting
   // (per instruction: "Highlight the incorrect sounds and words read to identify which graphemes need revisiting")
   const [revisitSounds, setRevisitSounds] = useState([]);
   const [revisitWords, setRevisitWords] = useState([]);
+  const [aiAnswers, setAiAnswers] = useState([]);
+
+  const conductorQuestions = isPhase45Stage
+    ? [
+        ...PHASE_4_SETS.map((s) => `Say sounds and words for ${s.setLabel}: ${s.sounds.slice(0, 6).join(', ')} — words: ${s.exampleWords.join(', ')}`),
+        ...PHASE_5_SETS.map((s) => `Say sounds and words for ${s.setLabel}: ${s.sounds.slice(0, 6).join(', ')} — words: ${s.exampleWords.join(', ')}`),
+      ]
+    : [
+        ...PHASE_2_SETS.map((s) => `Say sounds and words for ${s.setLabel}: ${s.sounds.join(', ')} — words: ${s.exampleWords.join(', ')}`),
+        ...PHASE_3_SETS.map((s) => `Say sounds and words for ${s.setLabel}: ${s.sounds.join(', ')} — words: ${s.exampleWords.join(', ')}`),
+      ];
+
+  const conductorRubrics = isPhase45Stage
+    ? [
+        ...PHASE_4_SETS.map((s) => ({ keyPhrases: s.exampleWords, relatablePhrases: s.sounds })),
+        ...PHASE_5_SETS.map((s) => ({ keyPhrases: s.exampleWords, relatablePhrases: s.sounds })),
+      ]
+    : [
+        ...PHASE_2_SETS.map((s) => ({ keyPhrases: s.exampleWords, relatablePhrases: s.sounds })),
+        ...PHASE_3_SETS.map((s) => ({ keyPhrases: s.exampleWords, relatablePhrases: s.sounds })),
+      ];
 
   const [selectedLevel, setSelectedLevel] = useState(null);
   const [notes, setNotes] = useState('');
@@ -213,8 +388,28 @@ export default function PrimaryPhonicAssessmentForm() {
   const p2PassCount = phase2Checks.filter((c) => c === 'pass').length;
   const p3PassCount = phase3Checks.filter((c) => c === 'pass').length;
 
+  // Count Phase 4 & 5 passes
+  const p4PassCount = phase4Checks.filter((c) => c === 'pass').length;
+  const p5PassCount = phase5Checks.filter((c) => c === 'pass').length;
+
   // Auto recommend CEFR level
   const getRecommendedLevel = () => {
+    if (isPhase45Stage) {
+      if (p4PassCount === 4 && p5PassCount === 4 && revisitSounds.length === 0) {
+        return 'B2–C1';
+      }
+      if (p4PassCount === 4 && p5PassCount >= 2) {
+        return 'B1.2–B1.3';
+      }
+      if (p4PassCount >= 3) {
+        return 'A2.3–B1.1';
+      }
+      if (p4PassCount >= 1) {
+        return 'A2.0–A2.2';
+      }
+      return 'A1.0–A1.2';
+    }
+
     if (p2PassCount === 5 && p3PassCount === 5 && revisitSounds.length === 0) {
       return 'B2–C1';
     }
@@ -272,10 +467,33 @@ export default function PrimaryPhonicAssessmentForm() {
       check: phase3Checks[idx] || 'not-checked',
     }));
 
-    const assessmentType =
-      selectedStage === 'FS2 - KG1'
-        ? 'FS2 - KG1 Phonic Assessment'
-        : 'FS1 Phonic Assessment';
+    const phase4Sets = PHASE_4_SETS.map((set, idx) => ({
+      setLabel: set.setLabel,
+      sounds: set.sounds,
+      exampleWords: set.exampleWords,
+      check: phase4Checks[idx] || 'not-checked',
+    }));
+
+    const phase5Sets = PHASE_5_SETS.map((set, idx) => ({
+      setLabel: set.setLabel,
+      sounds: set.sounds,
+      exampleWords: set.exampleWords,
+      check: phase5Checks[idx] || 'not-checked',
+    }));
+
+    const assessmentType = isPhase45Stage
+      ? 'KG2 / Year 1 Phonics Assessment (Phase 4 & 5)'
+      : selectedStage.includes('KG2')
+      ? 'KG2 / Year 1 Phonics Assessment (Phase 2 & 3)'
+      : selectedStage === 'FS2 - KG1'
+      ? 'FS2 - KG1 Phonic Assessment'
+      : 'FS1 Phonic Assessment';
+
+    const totalScore = isPhase45Stage
+      ? p4PassCount + p5PassCount
+      : p2PassCount + p3PassCount;
+
+    const totalPossible = isPhase45Stage ? 8 : 10;
 
     const assessmentPayload = {
       studentName: formData.studentName.trim(),
@@ -284,14 +502,15 @@ export default function PrimaryPhonicAssessmentForm() {
       teacherName: formData.teacherName.trim(),
       term: formData.term || 'T1',
       assessmentType,
+      schoolTier: 'primary',
+      skillType: 'phonic',
       cefrLevel: selectedLevel,
       level: selectedLevel,
       recommendedLevel,
-      score: p2PassCount + p3PassCount,
-      totalScore: p2PassCount + p3PassCount,
-      totalPossible: 10,
-      phase2Sets,
-      phase3Sets,
+      score: totalScore,
+      totalScore,
+      totalPossible,
+      ...(isPhase45Stage ? { phase4Sets, phase5Sets } : { phase2Sets, phase3Sets }),
       graphemesNeedingRevisit: revisitSounds,
       wordsNeedingRevisit: revisitWords,
       notes,
@@ -330,12 +549,12 @@ export default function PrimaryPhonicAssessmentForm() {
             Back to Assessment Selector
           </Link>
 
-          {/* FS1 vs FS2 - KG1 Stage Selector Toggle */}
-          <div className="inline-flex bg-slate-200/90 p-1.5 rounded-2xl shadow-inner gap-1 self-start sm:self-auto">
+          {/* Stage Selector Toggle */}
+          <div className="inline-flex bg-slate-200/90 p-1.5 rounded-2xl shadow-inner gap-1 flex-wrap self-start sm:self-auto">
             <button
               type="button"
               onClick={() => handleStageSwitch('FS1')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-200 ${
+              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-200 ${
                 selectedStage === 'FS1'
                   ? 'bg-white text-amber-700 shadow-sm scale-[1.02]'
                   : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/50'
@@ -356,7 +575,7 @@ export default function PrimaryPhonicAssessmentForm() {
             <button
               type="button"
               onClick={() => handleStageSwitch('FS2 - KG1')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-200 ${
+              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-200 ${
                 selectedStage === 'FS2 - KG1'
                   ? 'bg-white text-amber-700 shadow-sm scale-[1.02]'
                   : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/50'
@@ -373,6 +592,48 @@ export default function PrimaryPhonicAssessmentForm() {
                 Reception
               </span>
             </button>
+
+            <button
+              type="button"
+              onClick={() => handleStageSwitch('KG2 / Year 1')}
+              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-200 ${
+                selectedStage === 'KG2 / Year 1'
+                  ? 'bg-white text-amber-700 shadow-sm scale-[1.02]'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/50'
+              }`}
+            >
+              <span>🎒 KG2 / Year 1 (Phase 2 & 3)</span>
+              <span
+                className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
+                  selectedStage === 'KG2 / Year 1'
+                    ? 'bg-amber-100 text-amber-800'
+                    : 'bg-slate-300 text-slate-700'
+                }`}
+              >
+                Foundation
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleStageSwitch('KG2 / Year 1 (Phase 4 & 5)')}
+              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-200 ${
+                selectedStage === 'KG2 / Year 1 (Phase 4 & 5)'
+                  ? 'bg-white text-amber-700 shadow-sm scale-[1.02]'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/50'
+              }`}
+            >
+              <span>⚡ KG2 / Year 1 (Phase 4 & 5)</span>
+              <span
+                className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
+                  selectedStage === 'KG2 / Year 1 (Phase 4 & 5)'
+                    ? 'bg-amber-100 text-amber-800'
+                    : 'bg-slate-300 text-slate-700'
+                }`}
+              >
+                Higher Blends
+              </span>
+            </button>
           </div>
         </div>
 
@@ -384,13 +645,15 @@ export default function PrimaryPhonicAssessmentForm() {
               <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider">
                 <span>🔤 {selectedStage} Phonics</span>
                 <span>•</span>
-                <span>Phase 2 & Phase 3 Graphemes</span>
+                <span>{isPhase45Stage ? 'Phase 4 & Phase 5 Blends & Graphemes' : 'Phase 2 & Phase 3 Graphemes'}</span>
               </div>
               <h1 className="text-3xl sm:text-4xl font-black tracking-tight">
                 {selectedStage} Phonic Assessment
               </h1>
               <p className="text-amber-100 text-sm max-w-2xl font-medium">
-                Systematic synthetic phonics evaluation covering letter-sound correspondence, consonant and vowel digraphs, CVC blending, and CEFR decoding levels for {selectedStage}.
+                {isPhase45Stage
+                  ? 'Systematic synthetic phonics evaluation covering initial/final/complex consonant blends (CCVC/CVCC), polysyllabic words, split digraphs, alternative spellings, and tricky sight words.'
+                  : `Systematic synthetic phonics evaluation covering letter-sound correspondence, consonant and vowel digraphs, CVC blending, and CEFR decoding levels for ${selectedStage}.`}
               </p>
             </div>
 
@@ -417,16 +680,29 @@ export default function PrimaryPhonicAssessmentForm() {
               <h2 className="text-base font-black text-purple-950 uppercase tracking-wider">
                 Assessment Use:
               </h2>
-              <ul className="text-sm text-purple-900 font-medium space-y-1.5 list-disc list-inside">
-                <li>Teacher points to each sound. Pupil says it aloud.</li>
-                <li>
-                  Teacher gives simple CVC word (e.g. sat, dog, bell) Mark with <span className="font-bold text-emerald-700">✓ If correct</span>, <span className="font-bold text-rose-700">X If not</span>.
-                </li>
-                <li>
-                  <span className="font-bold underline decoration-purple-300">Highlight the incorrect sounds and words read</span> to identify which graphemes need revisiting.
-                </li>
-                <li>If majority are correct move to phase 3 and do the same as above.</li>
-              </ul>
+              {isPhase45Stage ? (
+                <ul className="text-sm text-purple-900 font-medium space-y-1.5 list-disc list-inside">
+                  <li>Teacher points to each sound / blend. Pupil says it aloud.</li>
+                  <li>
+                    Teacher gives example word (e.g. black, jump, strap, cake). Mark with <span className="font-bold text-emerald-700">✓ If correct</span>, <span className="font-bold text-rose-700">X If not</span>.
+                  </li>
+                  <li>
+                    <span className="font-bold underline decoration-purple-300">Highlight the incorrect sounds and words read</span> to identify which graphemes and blends need revisiting.
+                  </li>
+                  <li>If majority of Phase 4 are correct move to Phase 5 alternative spellings and tricky words.</li>
+                </ul>
+              ) : (
+                <ul className="text-sm text-purple-900 font-medium space-y-1.5 list-disc list-inside">
+                  <li>Teacher points to each sound. Pupil says it aloud.</li>
+                  <li>
+                    Teacher gives simple CVC word (e.g. sat, dog, bell) Mark with <span className="font-bold text-emerald-700">✓ If correct</span>, <span className="font-bold text-rose-700">X If not</span>.
+                  </li>
+                  <li>
+                    <span className="font-bold underline decoration-purple-300">Highlight the incorrect sounds and words read</span> to identify which graphemes need revisiting.
+                  </li>
+                  <li>If majority are correct move to phase 3 and do the same as above.</li>
+                </ul>
+              )}
               <div className="text-xs text-purple-700 bg-purple-100/70 border border-purple-200 rounded-xl px-3 py-1.5 mt-2 flex items-center gap-1.5">
                 <span className="font-bold">Tip:</span>
                 <span>Click on any sound or example word below to highlight it in red if the student struggled with it.</span>
@@ -516,20 +792,34 @@ export default function PrimaryPhonicAssessmentForm() {
             </div>
           </div>
 
-          {/* Table 1: Phase 2 Assessment */}
+          {/* AI Assessment Conductor */}
+          <AIAssistantConductor
+            questions={conductorQuestions}
+            rubrics={conductorRubrics}
+            onAnswersArrayChange={setAiAnswers}
+          />
+
+          {/* Table 1: Phase 4 Assessment (or Phase 2 if not Phase 4 & 5 stage) */}
           <div className="bg-white rounded-3xl border border-slate-200 shadow-xs overflow-hidden">
             <div className="bg-amber-50 border-b border-amber-200/80 px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
                 <span className="text-[11px] font-black uppercase tracking-wider text-amber-800 bg-amber-200/70 px-2.5 py-0.5 rounded-full mr-2">
                   Part 1
                 </span>
-                <span className="text-base font-black text-slate-900">Phase 2 Phonics</span>
+                <span className="text-base font-black text-slate-900">
+                  {isPhase45Stage ? 'Phase 4 Phonics (Consonant Blends & Polysyllabic Words)' : 'Phase 2 Phonics'}
+                </span>
                 <p className="text-xs text-slate-500 font-medium mt-0.5">
-                  Point to each sound and ask pupil to say aloud, then test example words.
+                  {isPhase45Stage
+                    ? 'Point to each sound / blend and ask pupil to say aloud, then test example words.'
+                    : 'Point to each sound and ask pupil to say aloud, then test example words.'}
                 </p>
               </div>
               <div className="text-xs font-bold text-amber-800">
-                Phase 2 Progress: <span className="font-black text-slate-900">{p2PassCount} / 5 Sets Mastered</span>
+                {isPhase45Stage ? 'Phase 4 Progress: ' : 'Phase 2 Progress: '}
+                <span className="font-black text-slate-900">
+                  {isPhase45Stage ? `${p4PassCount} / 4 Sets Mastered` : `${p2PassCount} / 5 Sets Mastered`}
+                </span>
               </div>
             </div>
 
@@ -537,15 +827,19 @@ export default function PrimaryPhonicAssessmentForm() {
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="bg-slate-50/80 text-[11px] font-black uppercase tracking-wider text-slate-500 border-b border-slate-200">
-                    <th className="py-3 px-4 w-28">Phase 2</th>
-                    <th className="py-3 px-4">Sounds (Click to flag error)</th>
+                    <th className="py-3 px-4 w-32 sm:w-48">
+                      {isPhase45Stage ? 'Phase 4' : 'Phase 2'}
+                    </th>
+                    <th className="py-3 px-4">
+                      {isPhase45Stage ? 'Examples of Sounds / Blends (Click to flag error)' : 'Sounds (Click to flag error)'}
+                    </th>
                     <th className="py-3 px-4">Example Words (Click to flag error)</th>
                     <th className="py-3 px-4 w-44 text-center">Check (✓/X)</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 text-sm">
-                  {PHASE_2_SETS.map((set, idx) => {
-                    const status = phase2Checks[idx];
+                  {(isPhase45Stage ? PHASE_4_SETS : PHASE_2_SETS).map((set, idx) => {
+                    const status = isPhase45Stage ? phase4Checks[idx] : phase2Checks[idx];
                     return (
                       <tr
                         key={set.id}
@@ -607,6 +901,11 @@ export default function PrimaryPhonicAssessmentForm() {
                               );
                             })}
                           </div>
+                          {aiAnswers && aiAnswers[idx] && aiAnswers[idx].trim().length > 0 && (
+                            <div className="mt-2 text-xs text-indigo-700 bg-indigo-50/50 p-2 rounded-xl border border-indigo-100 shadow-inner">
+                              <span className="font-bold mr-1">Student Answer (AI):</span> "{aiAnswers[idx]}"
+                            </div>
+                          )}
                         </td>
 
                         {/* Check Controls */}
@@ -615,9 +914,15 @@ export default function PrimaryPhonicAssessmentForm() {
                             <button
                               type="button"
                               onClick={() => {
-                                const updated = [...phase2Checks];
-                                updated[idx] = 'pass';
-                                setPhase2Checks(updated);
+                                if (isPhase45Stage) {
+                                  const updated = [...phase4Checks];
+                                  updated[idx] = 'pass';
+                                  setPhase4Checks(updated);
+                                } else {
+                                  const updated = [...phase2Checks];
+                                  updated[idx] = 'pass';
+                                  setPhase2Checks(updated);
+                                }
                               }}
                               className={`px-3 py-1 rounded-lg text-xs font-black transition-all flex items-center gap-1 ${
                                 status === 'pass'
@@ -631,9 +936,15 @@ export default function PrimaryPhonicAssessmentForm() {
                             <button
                               type="button"
                               onClick={() => {
-                                const updated = [...phase2Checks];
-                                updated[idx] = 'revisit';
-                                setPhase2Checks(updated);
+                                if (isPhase45Stage) {
+                                  const updated = [...phase4Checks];
+                                  updated[idx] = 'revisit';
+                                  setPhase4Checks(updated);
+                                } else {
+                                  const updated = [...phase2Checks];
+                                  updated[idx] = 'revisit';
+                                  setPhase2Checks(updated);
+                                }
                               }}
                               className={`px-3 py-1 rounded-lg text-xs font-black transition-all flex items-center gap-1 ${
                                 status === 'revisit'
@@ -654,20 +965,27 @@ export default function PrimaryPhonicAssessmentForm() {
             </div>
           </div>
 
-          {/* Table 2: Phase 3 Assessment */}
+          {/* Table 2: Phase 5 Assessment (or Phase 3 if not Phase 4 & 5 stage) */}
           <div className="bg-white rounded-3xl border border-slate-200 shadow-xs overflow-hidden">
             <div className="bg-orange-50 border-b border-orange-200/80 px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
                 <span className="text-[11px] font-black uppercase tracking-wider text-orange-800 bg-orange-200/70 px-2.5 py-0.5 rounded-full mr-2">
                   Part 2
                 </span>
-                <span className="text-base font-black text-slate-900">Phase 3 Phonics</span>
+                <span className="text-base font-black text-slate-900">
+                  {isPhase45Stage ? 'Phase 5 Phonics (New Graphemes, Split Digraphs & Tricky Words)' : 'Phase 3 Phonics'}
+                </span>
                 <p className="text-xs text-slate-500 font-medium mt-0.5">
-                  If majority of Phase 2 are correct, proceed to test Phase 3 digraphs and vowel patterns.
+                  {isPhase45Stage
+                    ? 'If majority of Phase 4 are correct, proceed to test Phase 5 alternative spellings and tricky words.'
+                    : 'If majority of Phase 2 are correct, proceed to test Phase 3 digraphs and vowel patterns.'}
                 </p>
               </div>
               <div className="text-xs font-bold text-orange-800">
-                Phase 3 Progress: <span className="font-black text-slate-900">{p3PassCount} / 5 Sets Mastered</span>
+                {isPhase45Stage ? 'Phase 5 Progress: ' : 'Phase 3 Progress: '}
+                <span className="font-black text-slate-900">
+                  {isPhase45Stage ? `${p5PassCount} / 4 Sets Mastered` : `${p3PassCount} / 5 Sets Mastered`}
+                </span>
               </div>
             </div>
 
@@ -675,15 +993,19 @@ export default function PrimaryPhonicAssessmentForm() {
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="bg-slate-50/80 text-[11px] font-black uppercase tracking-wider text-slate-500 border-b border-slate-200">
-                    <th className="py-3 px-4 w-44">Phase 3</th>
-                    <th className="py-3 px-4">Sounds (Click to flag error)</th>
+                    <th className="py-3 px-4 w-44">
+                      {isPhase45Stage ? 'Phase 5' : 'Phase 3'}
+                    </th>
+                    <th className="py-3 px-4">
+                      {isPhase45Stage ? 'Sounds / Graphemes (Click to flag error)' : 'Sounds (Click to flag error)'}
+                    </th>
                     <th className="py-3 px-4">Example Words (Click to flag error)</th>
                     <th className="py-3 px-4 w-44 text-center">Check (✓/X)</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 text-sm">
-                  {PHASE_3_SETS.map((set, idx) => {
-                    const status = phase3Checks[idx];
+                  {(isPhase45Stage ? PHASE_5_SETS : PHASE_3_SETS).map((set, idx) => {
+                    const status = isPhase45Stage ? phase5Checks[idx] : phase3Checks[idx];
                     return (
                       <tr
                         key={set.id}
@@ -745,6 +1067,14 @@ export default function PrimaryPhonicAssessmentForm() {
                               );
                             })}
                           </div>
+                          {(() => {
+                            const aiIdx = (isPhase45Stage ? PHASE_4_SETS.length : PHASE_2_SETS.length) + idx;
+                            return aiAnswers && aiAnswers[aiIdx] && aiAnswers[aiIdx].trim().length > 0 ? (
+                              <div className="mt-2 text-xs text-indigo-700 bg-indigo-50/50 p-2 rounded-xl border border-indigo-100 shadow-inner">
+                                <span className="font-bold mr-1">Student Answer (AI):</span> "{aiAnswers[aiIdx]}"
+                              </div>
+                            ) : null;
+                          })()}
                         </td>
 
                         {/* Check Controls */}
@@ -753,9 +1083,15 @@ export default function PrimaryPhonicAssessmentForm() {
                             <button
                               type="button"
                               onClick={() => {
-                                const updated = [...phase3Checks];
-                                updated[idx] = 'pass';
-                                setPhase3Checks(updated);
+                                if (isPhase45Stage) {
+                                  const updated = [...phase5Checks];
+                                  updated[idx] = 'pass';
+                                  setPhase5Checks(updated);
+                                } else {
+                                  const updated = [...phase3Checks];
+                                  updated[idx] = 'pass';
+                                  setPhase3Checks(updated);
+                                }
                               }}
                               className={`px-3 py-1 rounded-lg text-xs font-black transition-all flex items-center gap-1 ${
                                 status === 'pass'
@@ -769,9 +1105,15 @@ export default function PrimaryPhonicAssessmentForm() {
                             <button
                               type="button"
                               onClick={() => {
-                                const updated = [...phase3Checks];
-                                updated[idx] = 'revisit';
-                                setPhase3Checks(updated);
+                                if (isPhase45Stage) {
+                                  const updated = [...phase5Checks];
+                                  updated[idx] = 'revisit';
+                                  setPhase5Checks(updated);
+                                } else {
+                                  const updated = [...phase3Checks];
+                                  updated[idx] = 'revisit';
+                                  setPhase3Checks(updated);
+                                }
                               }}
                               className={`px-3 py-1 rounded-lg text-xs font-black transition-all flex items-center gap-1 ${
                                 status === 'revisit'
@@ -855,7 +1197,7 @@ export default function PrimaryPhonicAssessmentForm() {
 
             {/* Rubric Cards */}
             <div className="space-y-2.5">
-              {PHONIC_RUBRIC_LEVELS.map((item) => {
+              {(isPhase45Stage ? PHONIC_RUBRIC_PHASE45 : PHONIC_RUBRIC_LEVELS).map((item) => {
                 const isSelected = selectedLevel === item.level;
                 const isAuto = recommendedLevel === item.level;
 
@@ -970,7 +1312,15 @@ export default function PrimaryPhonicAssessmentForm() {
             </div>
             <div className="p-4 overflow-y-auto flex-1 flex justify-center bg-slate-100">
               <img
-                src={selectedStage === 'FS1' ? fs1SheetImg : fs2SheetImg}
+                src={
+                  selectedStage === 'KG2 / Year 1 (Phase 4 & 5)'
+                    ? kg2Phase45SheetImg
+                    : selectedStage === 'KG2 / Year 1'
+                    ? kg2SheetImg
+                    : selectedStage === 'FS2 - KG1'
+                    ? fs2SheetImg
+                    : fs1SheetImg
+                }
                 alt={`${selectedStage} Phonic Assessment Document`}
                 className="max-w-full h-auto rounded-xl shadow-lg border border-slate-300"
               />
