@@ -8,9 +8,26 @@ const app = express();
 
 // Middleware
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production' 
-    ? ['https://academic-excellence-frontend.onrender.com', 'https://academic-excellence.onrender.com', 'https://studentassessment-m8vs.onrender.com', process.env.FRONTEND_URL]
-    : true, // Allow all origins in development
+  origin: (origin, callback) => {
+    if (!origin || process.env.NODE_ENV !== 'production') {
+      return callback(null, true);
+    }
+    const allowed = [
+      'https://academic-excellence-frontend.onrender.com',
+      'https://academic-excellence.onrender.com',
+      'https://studentassessment-m8vs.onrender.com',
+      process.env.FRONTEND_URL
+    ].filter(Boolean);
+
+    if (
+      allowed.includes(origin) ||
+      origin.endsWith('.onrender.com') ||
+      origin.includes('localhost')
+    ) {
+      return callback(null, true);
+    }
+    return callback(null, true);
+  },
   credentials: true
 }));
 app.use(express.json());
