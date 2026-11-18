@@ -4,6 +4,12 @@ import {
   evaluateAnswer,
   LISTENING_PART_1_QUESTIONS,
 } from "../utils/listeningRubric";
+import {
+  VOICE_OPTIONS,
+  getPreferredVoiceId,
+  setPreferredVoiceId,
+  pickAmericanVoice,
+} from "../utils/voiceUtils";
 
 const FEMALE_VOICE_KEYWORDS = [
   "female",
@@ -107,30 +113,17 @@ export default function AIAssistantConductor({
   const synth = typeof window !== "undefined" ? window.speechSynthesis : null;
   const baseTextRef = useRef("");
 
-  const [availableFemaleVoices, setAvailableFemaleVoices] = useState([]);
+  const [preferredVoiceId, setPreferredVoiceIdState] = useState(getPreferredVoiceId);
   const [selectedVoice, setSelectedVoice] = useState(null);
 
-  // Discover and configure female voices
+  // Discover and configure American voices (Female / Male)
   useEffect(() => {
     if (!synth) return;
     const loadVoices = () => {
       const allVoices = synth.getVoices() || [];
       if (allVoices.length > 0) {
-        const enVoices = allVoices.filter(
-          (v) => v.lang && v.lang.toLowerCase().startsWith("en")
-        );
-        const pool = enVoices.length > 0 ? enVoices : allVoices;
-        const femaleCandidates = pool.filter((v) => {
-          const name = (v.name || "").toLowerCase();
-          return FEMALE_VOICE_KEYWORDS.some((kw) => name.includes(kw));
-        });
-
-        setAvailableFemaleVoices(
-          femaleCandidates.length > 0 ? femaleCandidates : pool
-        );
-
-        const best = pickBestFemaleVoice(allVoices);
-        setSelectedVoice((prev) => (prev ? prev : best));
+        const { voice } = pickAmericanVoice(allVoices, preferredVoiceId);
+        setSelectedVoice(voice);
       }
     };
 
@@ -138,10 +131,19 @@ export default function AIAssistantConductor({
     if (synth.onvoiceschanged !== undefined) {
       synth.onvoiceschanged = loadVoices;
     }
+
+    const handleVoiceChange = (e) => {
+      if (e?.detail?.voiceId) {
+        setPreferredVoiceIdState(e.detail.voiceId);
+      }
+    };
+    window.addEventListener("app-voice-changed", handleVoiceChange);
+
     return () => {
       if (synth) synth.onvoiceschanged = null;
+      window.removeEventListener("app-voice-changed", handleVoiceChange);
     };
-  }, [synth]);
+  }, [synth, preferredVoiceId]);
 
   // Reset or adjust answers array when questions change (e.g. switching stages or tabs)
   useEffect(() => {
@@ -170,15 +172,17 @@ export default function AIAssistantConductor({
     setIsSpeaking(true);
     const utterance = new SpeechSynthesisUtterance(questions[index]);
 
-    const activeVoice =
-      selectedVoice || pickBestFemaleVoice(synth.getVoices() || []);
-    if (activeVoice) {
-      utterance.voice = activeVoice;
+    const allVoices = synth.getVoices() || [];
+    const { voice, pitch, rate } = pickAmericanVoice(allVoices, preferredVoiceId);
+
+    if (selectedVoice) {
+      utterance.voice = selectedVoice;
+    } else if (voice) {
+      utterance.voice = voice;
     }
 
-    // Warm, articulate female educator cadence
-    utterance.pitch = 1.05;
-    utterance.rate = 0.95;
+    utterance.pitch = pitch;
+    utterance.rate = rate;
 
     utterance.onend = () => setIsSpeaking(false);
     utterance.onerror = () => setIsSpeaking(false);
@@ -280,17 +284,43 @@ export default function AIAssistantConductor({
           </div>
         </div>
 
-        {/* Female Voice Indicator & Quick Selector */}
+        {/* American Voice Indicator & Selector */}
         <div className="flex items-center gap-2">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold bg-pink-50 text-pink-700 border border-pink-200 shadow-xs">
+          <div
+            className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold border shadow-xs ${
+              preferredVoiceId === "american-male"
+                ? "bg-blue-50 text-blue-700 border-blue-200"
+                : "bg-pink-50 text-pink-700 border-pink-200"
+            }`}
+          >
             <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-pink-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-pink-500"></span>
+              <span
+                className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${
+                  preferredVoiceId === "american-male"
+                    ? "bg-blue-400"
+                    : "bg-pink-400"
+                }`}
+              ></span>
+              <span
+                className={`relative inline-flex rounded-full h-2 w-2 ${
+                  preferredVoiceId === "american-male"
+                    ? "bg-blue-500"
+                    : "bg-pink-500"
+                }`}
+              ></span>
             </span>
-            <span className="tracking-wide">Female Voice AI</span>
+            <span className="tracking-wide">
+              {preferredVoiceId === "american-male"
+                ? "👨‍🏫 American Male Voice"
+                : "👩‍🏫 American Female Voice"}
+            </span>
             {selectedVoice && (
               <span
-                className="text-pink-600 font-normal pl-1.5 border-l border-pink-200 max-w-[130px] truncate"
+                className={`font-normal pl-1.5 border-l max-w-[130px] truncate ${
+                  preferredVoiceId === "american-male"
+                    ? "text-blue-600 border-blue-200"
+                    : "text-pink-600 border-pink-200"
+                }`}
                 title={selectedVoice.name}
               >
                 {selectedVoice.name
@@ -299,25 +329,23 @@ export default function AIAssistantConductor({
               </span>
             )}
           </div>
-          {availableFemaleVoices.length > 1 && (
-            <select
-              value={selectedVoice ? selectedVoice.name : ""}
-              onChange={(e) => {
-                const found = availableFemaleVoices.find(
-                  (v) => v.name === e.target.value
-                );
-                if (found) setSelectedVoice(found);
-              }}
-              className="text-xs bg-white text-slate-700 font-medium border border-slate-200 rounded-lg px-2 py-1.5 outline-none hover:border-pink-300 focus:border-pink-500 cursor-pointer shadow-2xs"
-              title="Select Female Voice"
-            >
-              {availableFemaleVoices.map((v) => (
-                <option key={v.name} value={v.name}>
-                  {v.name}
-                </option>
-              ))}
-            </select>
-          )}
+
+          <select
+            value={preferredVoiceId}
+            onChange={(e) => {
+              const nextId = e.target.value;
+              setPreferredVoiceIdState(nextId);
+              setPreferredVoiceId(nextId);
+            }}
+            className="text-xs bg-white text-slate-700 font-bold border border-slate-200 rounded-lg px-2.5 py-1.5 outline-none hover:border-cyan-300 focus:border-cyan-500 cursor-pointer shadow-2xs"
+            title="Switch Voice"
+          >
+            {VOICE_OPTIONS.map((opt) => (
+              <option key={opt.id} value={opt.id}>
+                {opt.flag} {opt.label}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
 

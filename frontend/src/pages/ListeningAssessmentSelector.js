@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import VoiceSelector from '../components/VoiceSelector';
 
 const OPTIONS = [
   {
@@ -72,12 +73,20 @@ export default function ListeningAssessmentSelector() {
             <span className="breadcrumb-sep">/</span>
             <span className="text-slate-700 font-medium">Listening ({selectedTerm})</span>
           </nav>
-          <h1 className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">
-            Listening Assessment
-          </h1>
-          <p className="text-slate-500 text-sm mt-1">
-            Select the assessment type for <span className="font-bold text-cyan-500">{selectedTerm}</span> to begin.
-          </p>
+
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mt-2">
+            <div>
+              <h1 className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">
+                Listening Assessment
+              </h1>
+              <p className="text-slate-500 text-sm mt-1">
+                Select the assessment type for <span className="font-bold text-cyan-500">{selectedTerm}</span> to begin.
+              </p>
+            </div>
+
+            {/* AI American Accent Voice Selector */}
+            <VoiceSelector />
+          </div>
         </div>
       </div>
 

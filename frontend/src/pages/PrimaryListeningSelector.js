@@ -1,5 +1,6 @@
 import React, { useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import VoiceSelector from "../components/VoiceSelector";
 
 const OPTIONS = [
   {
@@ -208,17 +209,24 @@ export default function PrimaryListeningSelector() {
               Primary Listening ({selectedTerm})
             </span>
           </nav>
-          <div className="flex items-center gap-2.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-cyan-500"></span>
-            <h1 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">
-              Primary Listening Assessment
-            </h1>
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mt-2">
+            <div>
+              <div className="flex items-center gap-2.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-cyan-500"></span>
+                <h1 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">
+                  Primary Listening Assessment
+                </h1>
+              </div>
+              <p className="text-slate-500 text-sm mt-1">
+                Select the primary school stage for{" "}
+                <span className="font-bold text-cyan-600">{selectedTerm}</span> to
+                begin.
+              </p>
+            </div>
+
+            {/* AI American Accent Voice Selector */}
+            <VoiceSelector />
           </div>
-          <p className="text-slate-500 text-sm mt-1">
-            Select the primary school stage for{" "}
-            <span className="font-bold text-cyan-600">{selectedTerm}</span> to
-            begin.
-          </p>
         </div>
       </div>
 
