@@ -2,12 +2,9 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const path = require('path');
-const dns = require('dns');
 require('dotenv').config();
 
 const app = express();
-
-dns.setServers(['1.1.1.1', '1.0.0.1', '8.8.8.8']);
 
 // Middleware
 app.use(cors({
@@ -21,9 +18,10 @@ app.use(express.json());
 // MongoDB Connection
 const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/student-assessment';
 
-mongoose.connect(mongoURI, { serverSelectionTimeoutMS: 2000 })
-  .then(() => console.log('MongoDB connected successfully'))
+mongoose.connect(mongoURI, { serverSelectionTimeoutMS: 8000 })
+  .then(() => console.log('✅ MongoDB connected successfully to database:', mongoose.connection.name))
   .catch(err => {
+    console.log('ℹ️ MongoDB connection note:', err.message);
     console.log('ℹ️ MongoDB not detected (offline/demo mode enabled).');
     console.log('👉 You can log in using: teacher@school.edu / teacher123');
   });

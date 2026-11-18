@@ -1,21 +1,21 @@
 const mongoose = require('mongoose');
-const dns = require('dns');
 require('dotenv').config();
-
-dns.setServers(['8.8.8.8', '8.8.4.4']);
 
 const mongoURI = process.env.MONGODB_URI;
 
-console.log('Testing MongoDB connection...');
-console.log('URI:', mongoURI.replace(/:[^:@]*@/, ':****@')); // Hide password in logs
+console.log('Testing connection with .env MONGODB_URI...');
 
-mongoose.connect(mongoURI)
-  .then(() => {
-    console.log('✅ MongoDB connected successfully!');
+mongoose.connect(mongoURI, { serverSelectionTimeoutMS: 8000 })
+  .then(async () => {
+    console.log('🎉 SUCCESS! Connected to MongoDB Atlas from .env!');
     console.log('Database:', mongoose.connection.db.databaseName);
+    const collections = await mongoose.connection.db.listCollections().toArray();
+    console.log('Collections in database:');
+    collections.forEach(c => console.log(' - ' + c.name));
+    await mongoose.disconnect();
     process.exit(0);
   })
   .catch(err => {
-    console.log('❌ MongoDB connection error:', err.message);
+    console.log('❌ Connection error:', err.message);
     process.exit(1);
   });

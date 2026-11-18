@@ -195,24 +195,120 @@ export const LISTENING_PART_1_QUESTIONS = [
 export const QUESTIONS_TEXT = LISTENING_PART_1_QUESTIONS.map(q => q.question);
 
 /**
+ * Computes Levenshtein edit distance between two strings
+ */
+export function levenshteinDistance(s1, s2) {
+  if (s1 === s2) return 0;
+  if (!s1 || !s2) return Math.max(s1 ? s1.length : 0, s2 ? s2.length : 0);
+  const a = s1.toLowerCase();
+  const b = s2.toLowerCase();
+  const m = a.length;
+  const n = b.length;
+  const dp = Array.from({ length: m + 1 }, () => new Array(n + 1).fill(0));
+  for (let i = 0; i <= m; i++) dp[i][0] = i;
+  for (let j = 0; j <= n; j++) dp[0][j] = j;
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      dp[i][j] = Math.min(
+        dp[i - 1][j] + 1,
+        dp[i][j - 1] + 1,
+        dp[i - 1][j - 1] + cost
+      );
+    }
+  }
+  return dp[m][n];
+}
+
+/**
+ * Fast fuzzy matching for spoken words — accommodates accents, dropped letters, and slight STT errors
+ */
+export function isFuzzyWordMatch(word, target) {
+  const w = (word || "").toLowerCase();
+  const t = (target || "").toLowerCase();
+  if (w === t) return true;
+  if (Math.abs(w.length - t.length) > 2) return false;
+  if (t.length <= 4) {
+    return t.length >= 3 && levenshteinDistance(w, t) <= 1;
+  }
+  if (t.length <= 8) {
+    return levenshteinDistance(w, t) <= (t.length >= 7 ? 2 : 1);
+  }
+  return levenshteinDistance(w, t) <= 2;
+}
+
+const NUMBER_WORDS_MAP = {
+  zero: "0",
+  one: "1",
+  two: "2",
+  three: "3",
+  four: "4",
+  five: "5",
+  six: "6",
+  seven: "7",
+  eight: "8",
+  nine: "9",
+  ten: "10",
+  eleven: "11",
+  twelve: "12",
+  thirteen: "13",
+  fourteen: "14",
+  fifteen: "15",
+  sixteen: "16",
+  seventeen: "17",
+  eighteen: "18",
+  nineteen: "19",
+  twenty: "20",
+};
+
+/**
  * Phonetic & common speech-to-text sound-alike normalizer.
  * Fixes common browser speech engine misinterpretations for ESL accents.
  */
 function normalizeSpokenText(text) {
-  if (!text) return '';
+  if (!text) return "";
   let clean = text.toLowerCase();
 
+  // Contraction & colloquial expansions
+  const contractions = [
+    { regex: /\bi['’]m\b|\bim\b/g, replace: "i am" },
+    { regex: /\bcan['’]t\b|\bcant\b/g, replace: "cannot" },
+    { regex: /\bdon['’]t\b|\bdont\b/g, replace: "do not" },
+    { regex: /\bdidn['’]t\b|\bdidnt\b/g, replace: "did not" },
+    { regex: /\bit['’]s\b|\bits\b/g, replace: "it is" },
+    { regex: /\bthey['’]re\b|\btheyre\b/g, replace: "they are" },
+    { regex: /\bwe['’]re\b|\bwere\b/g, replace: "we are" },
+    { regex: /\bwanna\b/g, replace: "want to" },
+    { regex: /\bgonna\b/g, replace: "going to" },
+    { regex: /\bdunno\b/g, replace: "do not know" },
+    { regex: /\bcos\b|\bcuz\b/g, replace: "because" },
+    { regex: /\byeah\b|\byep\b|\bya\b/g, replace: "yes" },
+    { regex: /\bnope\b|\bnah\b/g, replace: "no" },
+    { regex: /\bmum\b|\bmommy\b|\bmummy\b/g, replace: "mom" },
+    { regex: /\bdaddy\b|\bpapa\b/g, replace: "dad" },
+  ];
+
+  contractions.forEach(({ regex, replace }) => {
+    clean = clean.replace(regex, replace);
+  });
+
   const soundAlikes = [
-    { regex: /\babu\s+daby\b|\babudhabi\b|\babu\s+dhabee\b/g, replace: 'abu dhabi' },
-    { regex: /\bmath\b/g, replace: 'maths' },
-    { regex: /\bfort\s+night\b/g, replace: 'fortnite' },
-    { regex: /\bplay\s+station\b/g, replace: 'playstation' },
-    { regex: /\bone\s+foot\b/g, replace: 'on foot' },
-    { regex: /\bby\s+call\b/g, replace: 'by car' },
-    { regex: /\byear\s+old\b/g, replace: 'years old' },
-    { regex: /\bfoot\s+ball\b/g, replace: 'football' },
-    { regex: /\bv\s+game\b|\bvideo\s+game\b/g, replace: 'videogames' },
-    { regex: /\buni\b/g, replace: 'university' }
+    { regex: /\babu\s+daby\b|\babudhabi\b|\babu\s+dhabee\b/g, replace: "abu dhabi" },
+    { regex: /\bmath\b/g, replace: "maths" },
+    { regex: /\bfort\s+night\b/g, replace: "fortnite" },
+    { regex: /\bplay\s+station\b/g, replace: "playstation" },
+    { regex: /\bone\s+foot\b/g, replace: "on foot" },
+    { regex: /\bby\s+call\b|\bby\s+care\b/g, replace: "by car" },
+    { regex: /\byear\s+old\b/g, replace: "years old" },
+    { regex: /\bfoot\s+ball\b|\bfootbal\b/g, replace: "football" },
+    { regex: /\bv\s+game\b|\bvideo\s+game\b/g, replace: "videogames" },
+    { regex: /\buni\b/g, replace: "university" },
+    { regex: /\bfavorit\b|\bfavourit\b|\bfav\b/g, replace: "favourite" },
+    { regex: /\bscool\b|\bskool\b/g, replace: "school" },
+    { regex: /\blibary\b/g, replace: "library" },
+    { regex: /\bsience\b/g, replace: "science" },
+    { regex: /\bbusy\b(?=\s+stop|\s+drive)/g, replace: "bus" },
+    { regex: /\bengland\b|\bbritain\b|\buk\b/g, replace: "united kingdom" },
   ];
 
   soundAlikes.forEach(({ regex, replace }) => {
@@ -220,6 +316,31 @@ function normalizeSpokenText(text) {
   });
 
   return clean;
+}
+
+/**
+ * Checks if a phrase matches in spoken text (exact, contiguous with filler tolerance, or single-word fuzzy)
+ */
+function matchesPhraseFuzzy(text, phrase, wordsList) {
+  const normPhrase = (phrase || "").toLowerCase().trim();
+  if (!normPhrase) return false;
+
+  // Direct exact substring match
+  const escaped = normPhrase.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const directRegex = new RegExp(`(?:^|\\b)${escaped}(?:\\b|$)`, "i");
+  if (directRegex.test(text)) return true;
+
+  // Multi-word phrase check (allow 0 or 1 filler word in between)
+  const parts = normPhrase.split(/\s+/).filter(Boolean);
+  if (parts.length > 1) {
+    const pattern = parts
+      .map((p) => p.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
+      .join("(?:\\s+\\w+){0,1}\\s+");
+    return new RegExp(`(?:^|\\b)${pattern}(?:\\b|$)`, "i").test(text);
+  }
+
+  // Single word fuzzy matching across spoken word tokens
+  return wordsList.some((w) => isFuzzyWordMatch(w, normPhrase));
 }
 
 /**
@@ -234,29 +355,56 @@ export function evaluateAnswer(questionIndex, answerText, customItem = null) {
       detectedKeywords: [],
       relatableKeywords: [],
       wordCount: 0,
-      confidence: 'none',
-      reason: 'No response recorded'
+      confidence: "none",
+      reason: "No response recorded",
     };
   }
 
   const raw = answerText.trim();
   const normalized = normalizeSpokenText(raw);
-  const words = normalized.replace(/[^\w\s]/g, ' ').split(/\s+/).filter(Boolean);
+
+  // Clean filler words ("um", "uh", "like", "you know") for cleaner semantic analysis
+  const withoutFillers = normalized.replace(
+    /\b(um+|uh+|er+|ah+|like|you\s+know|basically|actually|well|i\s+mean)\b/gi,
+    " "
+  );
+  const words = withoutFillers
+    .replace(/[^\w\s]/g, " ")
+    .split(/\s+/)
+    .filter(Boolean);
   const wordCount = words.length;
 
-  const item = customItem || (LISTENING_PART_1_QUESTIONS && LISTENING_PART_1_QUESTIONS[questionIndex]);
+  // Also build normalized string where number words are converted to digits
+  let normalizedWithDigits = normalized;
+  Object.entries(NUMBER_WORDS_MAP).forEach(([word, digit]) => {
+    normalizedWithDigits = normalizedWithDigits.replace(
+      new RegExp(`\\b${word}\\b`, "g"),
+      digit
+    );
+  });
+
+  const item =
+    customItem ||
+    (LISTENING_PART_1_QUESTIONS && LISTENING_PART_1_QUESTIONS[questionIndex]);
+
   if (!item) {
     return {
-      score: wordCount >= 3 ? 2 : (wordCount > 0 ? 1 : 0),
+      score: wordCount >= 3 ? 2 : wordCount > 0 ? 1 : 0,
       detectedKeywords: [],
       relatableKeywords: [],
       wordCount,
-      confidence: wordCount >= 3 ? 'medium' : (wordCount > 0 ? 'low' : 'none'),
-      reason: wordCount >= 3 ? 'Spoken response provided' : (wordCount > 0 ? 'Brief response' : 'No response')
+      confidence: wordCount >= 3 ? "medium" : wordCount > 0 ? "low" : "none",
+      reason:
+        wordCount >= 3
+          ? "Spoken response provided"
+          : wordCount > 0
+          ? "Brief response"
+          : "No response",
     };
   }
 
-  const rawKeyPhrases = item.keyPhrases || item.aiKeywords || item.keywords || [];
+  const rawKeyPhrases =
+    item.keyPhrases || item.aiKeywords || item.keywords || [];
   const rawRelatablePhrases = item.relatablePhrases || [];
 
   const detectedKeywords = [];
@@ -265,9 +413,10 @@ export function evaluateAnswer(questionIndex, answerText, customItem = null) {
   // Match main key phrases (sorted by length descending for greedy match)
   const sortedPhrases = [...rawKeyPhrases].sort((a, b) => b.length - a.length);
   for (const phrase of sortedPhrases) {
-    const escaped = phrase.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const regex = new RegExp(`(?:^|\\b)${escaped}(?:\\b|$)`, 'i');
-    if (regex.test(normalized)) {
+    if (
+      matchesPhraseFuzzy(normalized, phrase, words) ||
+      matchesPhraseFuzzy(normalizedWithDigits, phrase, words)
+    ) {
       if (!detectedKeywords.includes(phrase)) {
         detectedKeywords.push(phrase);
       }
@@ -275,12 +424,18 @@ export function evaluateAnswer(questionIndex, answerText, customItem = null) {
   }
 
   // Match relatable / semantic phrases
-  const sortedRelatable = [...rawRelatablePhrases].sort((a, b) => b.length - a.length);
+  const sortedRelatable = [...rawRelatablePhrases].sort(
+    (a, b) => b.length - a.length
+  );
   for (const phrase of sortedRelatable) {
-    const escaped = phrase.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const regex = new RegExp(`(?:^|\\b)${escaped}(?:\\b|$)`, 'i');
-    if (regex.test(normalized)) {
-      if (!relatableKeywords.includes(phrase) && !detectedKeywords.includes(phrase)) {
+    if (
+      matchesPhraseFuzzy(normalized, phrase, words) ||
+      matchesPhraseFuzzy(normalizedWithDigits, phrase, words)
+    ) {
+      if (
+        !relatableKeywords.includes(phrase) &&
+        !detectedKeywords.includes(phrase)
+      ) {
         relatableKeywords.push(phrase);
       }
     }
@@ -288,19 +443,23 @@ export function evaluateAnswer(questionIndex, answerText, customItem = null) {
 
   // Detect general categories (pronouns, time markers)
   const detectedCategories = [];
-  (item.categoryKeywords || []).forEach(cat => {
+  (item.categoryKeywords || []).forEach((cat) => {
     const list = GENERAL_CATEGORIES[cat] || [];
-    list.forEach(w => {
-      const regex = new RegExp(`(?:^|\\b)${w}(?:\\b|$)`, 'i');
-      if (regex.test(normalized) && !detectedCategories.includes(w)) {
+    list.forEach((w) => {
+      const regex = new RegExp(`(?:^|\\b)${w}(?:\\b|$)`, "i");
+      if (
+        (regex.test(normalized) || regex.test(normalizedWithDigits)) &&
+        !detectedCategories.includes(w)
+      ) {
         detectedCategories.push(w);
       }
     });
   });
 
-  const hasNumbers = /\b\d{1,2}\b/.test(normalized);
+  // Number / Age detection
+  const hasNumbers = /\b\d{1,2}\b/.test(normalizedWithDigits);
   if (!customItem && questionIndex === 1 && hasNumbers) {
-    const num = normalized.match(/\b\d{1,2}\b/)[0];
+    const num = normalizedWithDigits.match(/\b\d{1,2}\b/)[0];
     if (!detectedKeywords.includes(`${num} years`)) {
       detectedKeywords.push(`${num} years`);
     }
@@ -309,52 +468,64 @@ export function evaluateAnswer(questionIndex, answerText, customItem = null) {
   const totalMatches = detectedKeywords.length + relatableKeywords.length;
 
   let score = 0;
-  let reason = '';
+  let reason = "";
 
   if (wordCount === 0) {
     score = 0;
-    reason = 'No response';
+    reason = "No response";
   } else if (!customItem && questionIndex === 0) {
     // Q1: Name
     if (totalMatches > 0 || wordCount >= 1) {
       score = 2;
-      reason = 'Full comprehension: Name provided';
+      reason = "Full comprehension: Name provided";
     } else {
       score = 1;
-      reason = 'Some comprehension';
+      reason = "Some comprehension";
     }
   } else if (!customItem && questionIndex === 1) {
     // Q2: Age
     if (totalMatches > 0 || hasNumbers) {
       score = 2;
-      reason = 'Full comprehension: Age provided';
+      reason = "Full comprehension: Age provided";
     } else if (wordCount > 0) {
       score = 1;
-      reason = 'Some comprehension';
+      reason = "Some comprehension";
     }
   } else if (!customItem && questionIndex === 4) {
     // Q5: Brothers & Sisters
-    if (totalMatches >= 1 && (wordCount >= 2 || normalized.includes('yes') || normalized.includes('no'))) {
+    if (
+      totalMatches >= 1 &&
+      (wordCount >= 2 ||
+        normalized.includes("yes") ||
+        normalized.includes("no") ||
+        normalized.includes("only child") ||
+        normalized.includes("none"))
+    ) {
       score = 2;
-      reason = 'Full comprehension: Family details provided';
+      reason = "Full comprehension: Family details provided";
     } else if (totalMatches >= 1 || wordCount >= 1) {
       score = 1;
-      reason = 'Some comprehension: Brief family answer';
+      reason = "Some comprehension: Brief family answer";
     }
   } else if (totalMatches >= 2 || (totalMatches >= 1 && wordCount >= 3)) {
     // Target keywords or relatable phrasing in full context
     score = 2;
-    reason = `Full comprehension (${totalMatches} relevant keyword/concept${totalMatches > 1 ? 's' : ''} matched)`;
+    reason = `Full comprehension (${totalMatches} relevant keyword/concept${
+      totalMatches > 1 ? "s" : ""
+    } matched)`;
   } else if (totalMatches >= 1) {
     // Good response with a relatable keyword
     score = wordCount >= 2 ? 2 : 1;
-    reason = wordCount >= 2 ? 'Full comprehension: Direct relatable answer' : 'Some comprehension: Keyword mentioned';
+    reason =
+      wordCount >= 2
+        ? "Full comprehension: Direct relatable answer"
+        : "Some comprehension: Keyword mentioned";
   } else if (detectedCategories.length > 0 || wordCount >= 3) {
     score = 1;
-    reason = 'Some comprehension: General context detected';
+    reason = "Some comprehension: General context detected";
   } else {
     score = wordCount >= 1 ? 1 : 0;
-    reason = wordCount >= 1 ? 'Minimal response' : 'No response';
+    reason = wordCount >= 1 ? "Minimal response" : "No response";
   }
 
   return {
@@ -362,8 +533,8 @@ export function evaluateAnswer(questionIndex, answerText, customItem = null) {
     detectedKeywords,
     relatableKeywords,
     wordCount,
-    confidence: totalMatches > 0 ? 'high' : (wordCount > 2 ? 'medium' : 'low'),
-    reason
+    confidence: totalMatches > 0 ? "high" : wordCount > 2 ? "medium" : "low",
+    reason,
   };
 }
 
