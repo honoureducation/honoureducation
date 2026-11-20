@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import StudentPicker from '../components/StudentPicker';
+import { studentLabel, studentYearClass } from '../utils/students';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { assessmentAPI } from '../services/api';
-import AIAssistantConductor from '../components/AIAssistantConductor';
+import WritingQuestions from '../components/WritingQuestions';
 import writingImg1 from '../assets/writing1.jpg.jpeg';
 import writingImg2 from '../assets/writing2.jpg.jpeg';
 import writingImg3 from '../assets/writing3.jpg.jpeg';
@@ -12,7 +14,7 @@ const PICTURES = [writingImg1, writingImg2, writingImg3];
 const QUESTIONS = [
   'Who and what can you see?',
   'What are they doing?',
-  'Can you write a story for these picturessss?',
+  'Can you write a story for these pictures?',
 ];
 
 const SCORING = [
@@ -44,10 +46,19 @@ export default function WritingAssessmentForm() {
   const [errors, setErrors] = useState({});
   const [aiAnswers, setAiAnswers] = useState([]);
 
+  // Typed answer for each writing question
+  const handleWritingAnswer = (index, text) => {
+    setAiAnswers((prev) => {
+      const next = [...prev];
+      next[index] = text;
+      return next;
+    });
+  };
+
   useEffect(() => {
     if (aiAnswers && aiAnswers.some((ans) => ans && ans.trim())) {
       const summary = aiAnswers
-        .map((ans, idx) => (ans && ans.trim() ? `[Q${idx + 1} AI Answer]: ${ans.trim()}` : null))
+        .map((ans, idx) => (ans && ans.trim() ? `[Q${idx + 1} Answer]: ${ans.trim()}` : null))
         .filter(Boolean)
         .join('\n');
       if (summary) {
@@ -161,11 +172,6 @@ export default function WritingAssessmentForm() {
           </div>
         </div>
 
-        {/* AI Assessment Conductor */}
-        <AIAssistantConductor
-          questions={QUESTIONS}
-          onAnswersArrayChange={setAiAnswers}
-        />
 
         {/* Picture prompts */}
         <div className="card-section">
@@ -173,23 +179,8 @@ export default function WritingAssessmentForm() {
             <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
             </svg>
-            Picture Prompts & Questions
+            Picture Prompts
           </h2>
-          <div className="space-y-3 mb-5">
-            {QUESTIONS.map((q, i) => (
-              <div key={i} className="text-sm text-slate-700">
-                <div className="flex gap-2">
-                  <span className="font-semibold text-slate-400 flex-shrink-0">{i + 1}.</span>
-                  <span className="font-medium text-slate-800">{q}</span>
-                </div>
-                {aiAnswers && aiAnswers[i] && (
-                  <div className="mt-2 text-sm text-indigo-700 bg-indigo-50/50 p-2.5 rounded-lg border border-indigo-100 shadow-inner">
-                    <span className="font-bold mr-1">Student Answer (AI):</span> "{aiAnswers[i]}"
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
           <div className="grid grid-cols-3 gap-3">
             {PICTURES.map((src, i) => (
               <div key={i} className="rounded-xl overflow-hidden border border-slate-200 aspect-video bg-slate-100">
@@ -198,6 +189,14 @@ export default function WritingAssessmentForm() {
             ))}
           </div>
         </div>
+
+        {/* Questions — read aloud by AI, answers typed by the student */}
+        <WritingQuestions
+          questions={QUESTIONS}
+          answers={aiAnswers}
+          onAnswerChange={handleWritingAnswer}
+          note="Allow 10 minutes for the student to write."
+        />
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Student info */}
@@ -208,6 +207,18 @@ export default function WritingAssessmentForm() {
               </svg>
               Student Information
             </h2>
+            <StudentPicker
+              tier="secondary"
+              value={formData.studentName}
+              onSelect={(s) => {
+                setFormData((p) => ({
+                  ...p,
+                  studentName: studentLabel(s),
+                  yearGroupAndClass: studentYearClass(s),
+                  email: s.email || p.email || localStorage.getItem('userEmail') || '',
+                }));
+              }}
+            />
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="form-label">Email <span className="text-red-500">*</span></label>

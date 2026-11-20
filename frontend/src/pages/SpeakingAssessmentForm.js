@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import StudentPicker from '../components/StudentPicker';
+import { studentLabel, studentYearClass } from '../utils/students';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { assessmentAPI } from '../services/api';
-import AIAssistantConductor from '../components/AIAssistantConductor';
+import QuestionVoiceControls from '../components/QuestionVoiceControls';
 import car1 from '../assets/car1.png'; // Using car2 as a temporary placeholder since car1 is missing
 import car2 from '../assets/car2.png';
 import car3 from '../assets/car3.png';
@@ -39,8 +41,16 @@ export default function SpeakingAssessmentForm() {
   const [cefrLevel, setCefrLevel] = useState('');
   const [teacherComments, setTeacherComments] = useState('');
   const [loading, setLoading] = useState(false);
-  const [, setTranscript] = useState('');
-  const [aiAnswers, setAIAnswers] = useState([]);
+  // Spoken answers captured per question (via the question's own Answer button)
+  const [aiAnswers, setAIAnswers] = useState(Array(SPEAKING_QUESTIONS.length).fill(''));
+
+  const handleAnswerChange = (index, text) => {
+    setAIAnswers((prev) => {
+      const next = [...prev];
+      next[index] = text;
+      return next;
+    });
+  };
 
   useEffect(() => {
     if (preSelectedTerm) {
@@ -135,7 +145,9 @@ export default function SpeakingAssessmentForm() {
     try {
       const speakingAssessmentAnswers = scores.map((score, index) => ({
         questionId: index + 1,
-        score: parseInt(score)
+        question: SPEAKING_QUESTIONS[index].question,
+        score: parseInt(score),
+        studentResponse: aiAnswers[index] || ''
       }));
 
       const assessmentData = {
@@ -167,6 +179,7 @@ export default function SpeakingAssessmentForm() {
         term: preSelectedTerm
       });
       setScores(Array(SPEAKING_QUESTIONS.length).fill(null));
+      setAIAnswers(Array(SPEAKING_QUESTIONS.length).fill(''));
       setTotalScore(0);
       setCefrLevel('');
       setTeacherComments('');
@@ -252,6 +265,18 @@ export default function SpeakingAssessmentForm() {
               </svg>
               Student Details
             </h2>
+            <StudentPicker
+              tier="secondary"
+              value={formData.studentName}
+              onSelect={(s) => {
+                setFormData((p) => ({
+                  ...p,
+                  studentName: studentLabel(s),
+                  yearGroupAndClass: studentYearClass(s),
+                  email: s.email || p.email || localStorage.getItem('userEmail') || '',
+                }));
+              }}
+            />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Student Email</label>
@@ -317,12 +342,6 @@ export default function SpeakingAssessmentForm() {
             </div>
           </div>
 
-          <AIAssistantConductor
-            questions={SPEAKING_QUESTIONS.map(q => q.question)}
-            onCompleteTextChange={setTranscript}
-            onAnswersArrayChange={setAIAnswers}
-          />
-
           {/* Questions Table */}
           <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
             <div className="p-6 border-b border-slate-100">
@@ -348,11 +367,11 @@ export default function SpeakingAssessmentForm() {
                     <tr key={q.id} className="hover:bg-slate-50/30 transition-colors">
                       <td className="px-6 py-5">
                         <div className="text-sm font-semibold text-slate-700 leading-relaxed">{q.question}</div>
-                        {aiAnswers[index] && (
-                          <div className="mt-3 text-sm text-indigo-700 bg-indigo-50/50 p-3 rounded-xl border border-indigo-100 shadow-inner">
-                            <span className="font-bold mr-1">Student Answer (AI):</span> "{aiAnswers[index]}"
-                          </div>
-                        )}
+                        <QuestionVoiceControls
+                          question={q.question}
+                          answer={aiAnswers[index] || ''}
+                          onAnswerChange={(text) => handleAnswerChange(index, text)}
+                        />
                       </td>
                       <td className="px-6 py-5 text-center">
                         <label className="relative flex items-center justify-center cursor-pointer group">

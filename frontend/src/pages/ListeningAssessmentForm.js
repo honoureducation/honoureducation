@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import StudentPicker from '../components/StudentPicker';
+import { studentLabel, studentYearClass } from '../utils/students';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { assessmentAPI } from '../services/api';
@@ -189,6 +191,18 @@ export default function ListeningAssessmentForm() {
               </svg>
               Student Information
             </h2>
+            <StudentPicker
+              tier="secondary"
+              value={formData.studentName}
+              onSelect={(s) => {
+                setFormData((p) => ({
+                  ...p,
+                  studentName: studentLabel(s),
+                  yearGroupAndClass: studentYearClass(s),
+                  email: s.email || p.email || localStorage.getItem('userEmail') || '',
+                }));
+              }}
+            />
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="form-label">Email <span className="text-red-500">*</span></label>
@@ -277,19 +291,6 @@ export default function ListeningAssessmentForm() {
                                     </span>
                                   )}
                                 </div>
-                                {evalResult && evalResult.detectedKeywords.length > 0 && (
-                                  <div className="flex items-center gap-1.5 flex-wrap pt-1 border-t border-slate-100">
-                                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Detected:</span>
-                                    {evalResult.detectedKeywords.map((kw, kwIdx) => (
-                                      <span key={kwIdx} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                                        <svg className="w-3 h-3 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                                          <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                                        </svg>
-                                        {kw}
-                                      </span>
-                                    ))}
-                                  </div>
-                                )}
                               </div>
                             )}
                           </td>

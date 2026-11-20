@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import StudentPicker from '../components/StudentPicker';
+import { studentLabel, studentYearClass } from '../utils/students';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { assessmentAPI } from '../services/api';
-import AIAssistantConductor from '../components/AIAssistantConductor';
+import WritingQuestions from '../components/WritingQuestions';
 import landmarkImg1 from '../assets/landmark_wall.png';
 import landmarkImg2 from '../assets/landmark_colosseum.png';
 import landmarkImg3 from '../assets/landmark_taj.png';
@@ -46,10 +48,19 @@ export default function WritingAssessmentLandmarkForm() {
   const [errors, setErrors] = useState({});
   const [aiAnswers, setAiAnswers] = useState([]);
 
+  // Typed answer for each writing question
+  const handleWritingAnswer = (index, text) => {
+    setAiAnswers((prev) => {
+      const next = [...prev];
+      next[index] = text;
+      return next;
+    });
+  };
+
   useEffect(() => {
     if (aiAnswers && aiAnswers.some((ans) => ans && ans.trim())) {
       const summary = aiAnswers
-        .map((ans, idx) => (ans && ans.trim() ? `[Q${idx + 1} AI Answer]: ${ans.trim()}` : null))
+        .map((ans, idx) => (ans && ans.trim() ? `[Q${idx + 1} Answer]: ${ans.trim()}` : null))
         .filter(Boolean)
         .join('\n');
       if (summary) {
@@ -177,27 +188,10 @@ export default function WritingAssessmentLandmarkForm() {
           </div>
         </div>
 
-        {/* AI Assessment Conductor */}
-        <AIAssistantConductor
-          questions={WRITING_QUESTIONS}
-          onAnswersArrayChange={setAiAnswers}
-        />
 
         {/* Pictures and Questions */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-          <h2 className="text-lg font-bold text-gray-900 mb-4">Questions</h2>
-          <div className="space-y-3 mb-6">
-            {WRITING_QUESTIONS.map((q, idx) => (
-              <div key={idx} className="text-gray-700">
-                <div className="font-semibold text-base text-slate-900">{q}</div>
-                {aiAnswers && aiAnswers[idx] && (
-                  <div className="mt-2 text-sm text-indigo-700 bg-indigo-50/50 p-2.5 rounded-lg border border-indigo-100 shadow-inner">
-                    <span className="font-bold mr-1">Student Answer (AI):</span> "{aiAnswers[idx]}"
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
+          <h2 className="text-lg font-bold text-gray-900 mb-4">Picture Prompts</h2>
 
           {/* Pictures */}
           <div className="grid grid-cols-3 gap-4 mb-6">
@@ -216,12 +210,32 @@ export default function WritingAssessmentLandmarkForm() {
           </div>
         </div>
 
+        {/* Questions — read aloud by AI, answers typed by the student */}
+        <WritingQuestions
+          questions={WRITING_QUESTIONS}
+          answers={aiAnswers}
+          onAnswerChange={handleWritingAnswer}
+          note="Allow 10 minutes for the student to write."
+        />
+
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-8">
           {/* Student Information Section */}
           <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-blue-500">
             <h2 className="text-xl font-bold text-gray-900 mb-4">Student Information</h2>
+            <StudentPicker
+              tier="secondary"
+              value={formData.studentName}
+              onSelect={(s) => {
+                setFormData((p) => ({
+                  ...p,
+                  studentName: studentLabel(s),
+                  yearGroupAndClass: studentYearClass(s),
+                  email: s.email || p.email || localStorage.getItem('userEmail') || '',
+                }));
+              }}
+            />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">Email</label>

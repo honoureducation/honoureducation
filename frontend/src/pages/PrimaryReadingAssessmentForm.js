@@ -1,4 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import StudentPicker from '../components/StudentPicker';
+import { studentLabel, studentYearClass } from '../utils/students';
+import StageSelector, { PRIMARY_STAGES } from '../components/StageSelector';
 import { useNavigate, useSearchParams, useLocation, Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { assessmentAPI } from '../services/api';
@@ -30,6 +33,15 @@ import grade3ReadingGlove from '../assets/grade3-reading-glove.png';
 import grade3ReadingStone from '../assets/grade3-reading-stone.png';
 import grade3ReadingMilk from '../assets/grade3-reading-milk.png';
 import grade4ReadingSheet from '../assets/grade4-year5-reading-sheet.jpg';
+import grade4ReadingKite from '../assets/grade4-reading-kite.png';
+import grade4ReadingTape from '../assets/grade4-reading-tape.png';
+import grade4ReadingWindsock from '../assets/grade4-reading-windsock.png';
+import grade4ReadingHands from '../assets/grade4-reading-hands.png';
+import grade4ReadingRibbon from '../assets/grade4-reading-ribbon.png';
+import grade5ReadingSheet from '../assets/grade5-year6-reading-sheet.png';
+import grade5ReadingMarket from '../assets/grade5-reading-market.png';
+import grade5ReadingCheeseRoll from '../assets/grade5-reading-cheese-roll.png';
+import grade5ReadingMapBook from '../assets/grade5-reading-map-book.png';
 
 // ==========================================
 // 6 CVC WORDS & PICTURES (FS1 & FS2 READING)
@@ -336,6 +348,7 @@ const GRADE3_STIMULUS_PICTURES = [
     caption: 'Bakery story and illustrations',
     image: grade3ReadingStoryPanel,
     desc: 'Full story panel showing the bakery text alongside all story characters and props.',
+    hideInStory: true,
   },
 ];
 
@@ -440,6 +453,15 @@ const GRADE4_READING_PASSAGES = [
   },
 ];
 
+// Pictures shown beside the story on the Grade 4 / Year 5 sheet
+const GRADE4_STIMULUS_PICTURES = [
+  { id: 1, title: 'Picture 1: The Blue Kite', passageRef: 'Paragraph 1', caption: 'Blue kite', image: grade4ReadingKite, desc: 'Sami and Hana took their blue kite to the park.', fit: 'contain' },
+  { id: 2, title: 'Picture 2: Tape', passageRef: 'Paragraph 1 & 2', caption: 'Tape', image: grade4ReadingTape, desc: 'They packed tape and used a strip of tape to fix a tiny tear.', fit: 'contain' },
+  { id: 3, title: 'Picture 3: Windsock', passageRef: 'Paragraph 1', caption: 'Windsock', image: grade4ReadingWindsock, desc: 'The windsock by the football pitch pointed east.', fit: 'contain' },
+  { id: 4, title: 'Picture 4: Hands', passageRef: 'Paragraph 3 & 4', caption: 'Hands', image: grade4ReadingHands, desc: 'Mrs Jones showed them a simple trick with her hands; the crowd gave a quick clap.', fit: 'contain' },
+  { id: 5, title: 'Picture 5: Ribbon Tail', passageRef: 'Paragraph 1 & 4', caption: 'Ribbon tail', image: grade4ReadingRibbon, desc: 'A spare ribbon tail — and a new tail with star shapes.', fit: 'contain' },
+];
+
 // ==========================================
 // CEFR RUBRIC TABLE FOR GRADE 4 / YEAR 5 READING
 // Exact from uploaded Grade 4 / Year 5 sheet
@@ -466,6 +488,132 @@ const GRADE4_READING_RUBRIC = [
   {
     level: 'B1.2–B1.3',
     description: 'Reads in phrases with steady pace; 1–5 errors per 100 words; confident decoding of familiar and some unfamiliar words.',
+    badgeBg: 'bg-indigo-100 text-indigo-800 border-indigo-200',
+    activeBg: 'bg-indigo-50 border-indigo-400 text-indigo-900',
+  },
+  {
+    level: 'B2–C1',
+    description: 'Accurate, fluent, expressive reading; handles unfamiliar words; 0–1 errors per 100 words.',
+    badgeBg: 'bg-emerald-100 text-emerald-800 border-emerald-200',
+    activeBg: 'bg-emerald-50 border-emerald-400 text-emerald-900',
+  },
+];
+
+// ==========================================
+// 4 PARAGRAPHS FROM GRADE 5 / YEAR 6 READING ASSESSMENT
+// Exact from uploaded sheet: "The Moonlight Market"
+// ==========================================
+const GRADE5_READING_PASSAGES = [
+  {
+    id: 1,
+    box: 'Paragraph 1',
+    passage:
+      'Asha and Rafi walked to the village green just before dusk. Stalls lined the path like bright little huts, each with a sign and a small lamp. A brass bell rang and a drum thumped a slow beat. Children played tag, parents sipped tea, and the air smelt of warm bread and sweet jam buns.',
+    hint: 'Setting the Scene · 20–30s/line · Key phonics: dusk, stalls, brass, thumped, smelt',
+    image: null,
+    keywords: [
+      'Asha', 'Rafi', 'walked', 'village green', 'dusk', 'stalls', 'lined the path',
+      'bright little huts', 'sign', 'small lamp', 'brass bell', 'rang', 'drum', 'thumped',
+      'slow beat', 'children', 'played tag', 'parents', 'sipped tea', 'smelt',
+      'warm bread', 'sweet jam buns',
+    ],
+  },
+  {
+    id: 2,
+    box: 'Paragraph 2',
+    passage:
+      'At the first stall a quiet chef stirred a fresh fish stew. Steam rose in soft swirls, and the splash from the ladle made Asha grin. Next came shells and chalk charms on a cloth. A friendly man let Rafi press a stamp into a thin strip of tin, and the sharp click echoed along the path of stalls.',
+    hint: 'Stalls & Senses · 20–30s/line · Digraphs: chef, fresh, fish, shells, chalk, charms, thin',
+    image: null,
+    keywords: [
+      'first stall', 'quiet chef', 'stirred', 'fresh fish stew', 'steam rose', 'soft swirls',
+      'splash', 'ladle', 'grin', 'shells', 'chalk charms', 'cloth', 'friendly man',
+      'press a stamp', 'thin strip', 'tin', 'sharp click', 'echoed', 'path of stalls',
+    ],
+  },
+  {
+    id: 3,
+    box: 'Paragraph 3',
+    passage:
+      'Night slipped in, and strings of lights shone above the green. Asha tried a reading challenge at the library tent, tracing each line with care. She checked tricky digraphs and long vowel teams on a small chart, then read a short tale aloud. Rafi joined a word hunt, matching clues to signs on shops around the square.',
+    hint: 'Reading Challenge · 20–30s/line · Long vowel teams: night, lights, shone, tracing, tale, clues',
+    image: null,
+    keywords: [
+      'night slipped in', 'strings of lights', 'shone', 'green', 'reading challenge',
+      'library tent', 'tracing', 'each line', 'care', 'checked', 'tricky digraphs',
+      'long vowel teams', 'small chart', 'short tale', 'aloud', 'word hunt', 'matching',
+      'clues', 'signs', 'shops', 'square',
+    ],
+  },
+  {
+    id: 4,
+    box: 'Paragraph 4',
+    passage:
+      'When the moon crept high, the wind grew cool and the music slowed. Asha shared a roll with rich cheese, and Rafi spent his last coin on a book about maps. They crossed the stone bridge, listening to the hush of the stream. The market lights winked behind them, and both felt a steady glow of pride, knowing they had learned, tried, and made brave choices all evening.',
+    hint: 'Resolution · 20–30s/line · Check crept, shared, crossed, listening, steady glow, choices',
+    image: null,
+    keywords: [
+      'moon crept high', 'wind grew cool', 'music slowed', 'shared', 'roll', 'rich cheese',
+      'last coin', 'book about maps', 'crossed', 'stone bridge', 'listening', 'hush',
+      'stream', 'market lights', 'winked', 'steady glow', 'pride', 'learned', 'tried',
+      'brave choices', 'evening',
+    ],
+  },
+];
+
+const GRADE5_STIMULUS_PICTURES = [
+  {
+    id: 1,
+    title: 'Picture 1: The Moonlight Market',
+    passageRef: 'Paragraph 1 & 2',
+    caption: 'Stalls lining the path',
+    image: grade5ReadingMarket,
+    desc: 'Stalls lined the path like bright little huts, each with a sign and a small lamp.',
+  },
+  {
+    id: 2,
+    title: 'Picture 2: A Roll with Rich Cheese',
+    passageRef: 'Paragraph 4',
+    caption: 'A roll with rich cheese',
+    image: grade5ReadingCheeseRoll,
+    desc: 'Asha shared a roll with rich cheese.',
+  },
+  {
+    id: 3,
+    title: 'Picture 3: A Book about Maps',
+    passageRef: 'Paragraph 4',
+    caption: 'A book about maps',
+    image: grade5ReadingMapBook,
+    desc: 'Rafi spent his last coin on a book about maps.',
+  },
+];
+
+// ==========================================
+// CEFR RUBRIC TABLE FOR GRADE 5 / YEAR 6 READING
+// Exact from uploaded Grade 5 / Year 6 sheet
+// ==========================================
+const GRADE5_READING_RUBRIC = [
+  {
+    level: 'A1.0–A1.2',
+    description: 'Very limited decoding and blending; frequent pauses; more than 15 errors per 100 words.',
+    badgeBg: 'bg-orange-100 text-orange-800 border-orange-200',
+    activeBg: 'bg-orange-50 border-orange-400 text-orange-900',
+  },
+  {
+    level: 'A2.0–A2.2',
+    description: 'Many errors; often misreads common digraphs; choppy phrasing; 11–15 errors per 100 words.',
+    badgeBg: 'bg-amber-100 text-amber-800 border-amber-200',
+    activeBg: 'bg-amber-50 border-amber-400 text-amber-900',
+  },
+  {
+    level: 'A2.3–B1.1',
+    description: 'Some errors; blends most words; occasional mistakes on longer words; 6–10 errors per 100 words.',
+    badgeBg: 'bg-blue-100 text-blue-800 border-blue-200',
+    activeBg: 'bg-blue-50 border-blue-400 text-blue-900',
+  },
+  {
+    level: 'B1.2–B1.3',
+    description: 'Few errors; reads in phrases with steady pace; self-corrects; 1–5 errors per 100 words.',
     badgeBg: 'bg-indigo-100 text-indigo-800 border-indigo-200',
     activeBg: 'bg-indigo-50 border-indigo-400 text-indigo-900',
   },
@@ -531,7 +679,7 @@ const KG2_READING_RUBRIC = [
   },
   {
     level: 'A2.0–A2.2',
-    description: 'Makes over 5 mistakes per line. Misses digraphs ("special friends") and Phase 2 sounds.',
+    description: 'Makes over 5 mistakes per line. Misses digraphs and Phase 2 sounds.',
     badgeBg: 'bg-amber-100 text-amber-800 border-amber-200',
     activeBg: 'bg-amber-50 border-amber-400 text-amber-900',
   },
@@ -555,24 +703,28 @@ const KG2_READING_RUBRIC = [
   },
 ];
 
-const KEY_WORDS = [
-  'hen', 'dog', 'sit', 'web', 'bug', 'ladybird', 'cobweb', 'sun', 
-  'chicken', 'boy', 'chair', 'spider', 'red', 'yellow'
-];
-
 export default function PrimaryReadingAssessmentForm() {
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const preSelectedTerm = searchParams.get('term') || 'T1';
 
+  const isGrade5Initial =
+    location.pathname.includes('grade5') ||
+    location.pathname.includes('year6') ||
+    searchParams.get('grade') === 'grade5' ||
+    searchParams.get('grade') === 'year6' ||
+    searchParams.get('stage') === 'grade5' ||
+    searchParams.get('stage') === 'year6';
+
   const isGrade4Initial =
-    location.pathname.includes('grade4') ||
+    !isGrade5Initial &&
+    (location.pathname.includes('grade4') ||
     location.pathname.includes('year5') ||
     searchParams.get('grade') === 'grade4' ||
     searchParams.get('grade') === 'year5' ||
     searchParams.get('stage') === 'grade4' ||
-    searchParams.get('stage') === 'year5';
+    searchParams.get('stage') === 'year5');
 
   const isGrade3Initial =
     !isGrade4Initial &&
@@ -626,7 +778,9 @@ export default function PrimaryReadingAssessmentForm() {
       searchParams.get('grade') === 'fs2' ||
       searchParams.get('stage') === 'fs2');
 
-  const initialStage = isGrade4Initial
+  const initialStage = isGrade5Initial
+    ? 'Grade 5 / Year 6'
+    : isGrade4Initial
     ? 'Grade 4 / Year 5'
     : isGrade3Initial
     ? 'Grade 3 / Year 4'
@@ -644,10 +798,16 @@ export default function PrimaryReadingAssessmentForm() {
   const [showSheetModal, setShowSheetModal] = useState(false);
   const [previewImage, setPreviewImage] = useState(null);
 
+  const isGrade5Stage =
+    selectedStage === 'Grade 5 / Year 6' ||
+    selectedStage.includes('Grade 5') ||
+    selectedStage.includes('Year 6');
+
   const isGrade4Stage =
-    selectedStage === 'Grade 4 / Year 5' ||
-    selectedStage.includes('Grade 4') ||
-    selectedStage.includes('Year 5');
+    !isGrade5Stage &&
+    (selectedStage === 'Grade 4 / Year 5' ||
+      selectedStage.includes('Grade 4') ||
+      selectedStage.includes('Year 5'));
 
   const isGrade3Stage =
     !isGrade4Stage &&
@@ -674,9 +834,12 @@ export default function PrimaryReadingAssessmentForm() {
     isGrade1Stage ||
     isGrade2Stage ||
     isGrade3Stage ||
-    isGrade4Stage;
+    isGrade4Stage ||
+    isGrade5Stage;
 
-  const activePassages = isGrade4Stage
+  const activePassages = isGrade5Stage
+    ? GRADE5_READING_PASSAGES
+    : isGrade4Stage
     ? GRADE4_READING_PASSAGES
     : isGrade3Stage
     ? GRADE3_READING_PASSAGES
@@ -684,7 +847,11 @@ export default function PrimaryReadingAssessmentForm() {
     ? GRADE2_READING_PASSAGES
     : KG2_READING_PASSAGES;
 
-  const activeStimulusPictures = isGrade3Stage
+  const activeStimulusPictures = isGrade5Stage
+    ? GRADE5_STIMULUS_PICTURES
+    : isGrade4Stage
+    ? GRADE4_STIMULUS_PICTURES
+    : isGrade3Stage
     ? GRADE3_STIMULUS_PICTURES
     : isGrade2Stage
     ? GRADE2_STIMULUS_PICTURES
@@ -714,7 +881,8 @@ export default function PrimaryReadingAssessmentForm() {
         prev.yearGroupAndClass === 'Grade 1 / Year 2' ||
         prev.yearGroupAndClass === 'Grade 2 / Year 3' ||
         prev.yearGroupAndClass === 'Grade 3 / Year 4' ||
-        prev.yearGroupAndClass === 'Grade 4 / Year 5'
+        prev.yearGroupAndClass === 'Grade 4 / Year 5' ||
+        prev.yearGroupAndClass === 'Grade 5 / Year 6'
           ? newStage
           : prev.yearGroupAndClass,
     }));
@@ -724,7 +892,7 @@ export default function PrimaryReadingAssessmentForm() {
   const [itemStatuses, setItemStatuses] = useState(Array(READING_ITEMS.length).fill(null));
   const [itemNotes, setItemNotes] = useState(Array(READING_ITEMS.length).fill(''));
   const [selectedLevel, setSelectedLevel] = useState(null);
-  const [usedKeywords, setUsedKeywords] = useState([]);
+  const [usedKeywords] = useState([]);
   const [teachingFocusNotes, setTeachingFocusNotes] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -734,45 +902,59 @@ export default function PrimaryReadingAssessmentForm() {
   const [kg2Accuracy, setKg2Accuracy] = useState('10');
   const [kg2Fluency, setKg2Fluency] = useState('Smooth');
   const [kg2Comments, setKg2Comments] = useState('');
-  const [aiAnswers, setAiAnswers] = useState([]);
+  const [, setAiAnswers] = useState([]);
+  const [readingResults, setReadingResults] = useState([]);
 
-  const conductorQuestions = isGrade4Stage
-    ? GRADE4_READING_PASSAGES.map((p) => `${p.box}: ${p.passage}`)
-    : isGrade3Stage
-    ? GRADE3_READING_PASSAGES.map((p) => `${p.box}: ${p.passage}`)
-    : isGrade2Stage
-    ? GRADE2_READING_PASSAGES.map((p) => `${p.box}: ${p.passage}`)
-    : isPassageStage
-    ? KG2_READING_PASSAGES.map((p) => `${p.box}: ${p.passage}`)
-    : READING_ITEMS.map((item) => `Read aloud the word: ${item.word}`);
+  // Reading conductor items: the AI only instructs the pupil to read — it never
+  // reads the text (or the target word) aloud itself.
+  const conductorReadingItems = isPassageStage
+    ? activePassages.map((p) => ({ label: p.box, text: p.passage }))
+    : READING_ITEMS.map((item, idx) => ({
+        label: `Picture ${idx + 1}`,
+        text: item.word,
+        kind: 'word',
+        instruction: `Picture ${idx + 1}. Look at the picture and read the word out loud. Say each sound, then blend them together.`,
+      }));
 
-  const conductorRubrics = isGrade4Stage
-    ? GRADE4_READING_PASSAGES.map((p) => ({
-        keyPhrases: p.keywords,
-        relatablePhrases: [
-          'Sami', 'Hana', 'Mrs Jones', 'younger boy', 'neighbour',
-          'packed', 'checked', 'walked', 'launched', 'lifted', 'snagged', 'eased', 'fixed', 'showed',
-          'face the wind', 'dipping', 'rising', 'invited', 'counted', 'clapped', 'wound the string',
-          'blue kite', 'tape', 'ribbon tail', 'compass', 'windsock', 'reel', 'knots', 'bench', 'string',
-          'red kite', 'hill', 'clouds', 'windy Saturday', 'park', 'football pitch', 'open hill',
-          'no trees', 'gust', 'smooth arc', 'crowd', 'path', 'home',
-          'windy', 'sharp gust', 'tiny tear', 'smooth arc', 'wide eyes', 'flicked tail', 'thicken clouds', 'star shapes',
-          'forty-five',
-        ],
-      }))
-    : isGrade3Stage
-    ? GRADE3_READING_PASSAGES.map((p) => ({
-        keyPhrases: p.keywords,
-        relatablePhrases: ['Mina', 'Rafi', 'bread', 'bakery', 'stone', 'milk'],
-      }))
-    : isGrade2Stage
-    ? GRADE2_READING_PASSAGES.map((p) => ({
-        keyPhrases: p.keywords,
-        relatablePhrases: ['Lina', 'Sami', 'story', 'apples', 'spoon'],
-      }))
+  // How the reading passage is laid out — mirrors each official sheet
+  const passageLayout =
+    isGrade2Stage || isGrade3Stage || isGrade4Stage ? 'side' : isGrade5Stage ? 'below' : 'table';
+  const storyTitle = isGrade5Stage
+    ? 'The Moonlight Market'
+    : isGrade4Stage
+    ? 'The Blue Kite — Wind Day'
     : null;
+  const storyPictures = activeStimulusPictures.filter((p) => !p.hideInStory);
 
-  const activeRubric = isGrade4Stage
+  const renderAiCheck = (idx) =>
+    readingResults[idx]?.analysis?.hasReading ? (
+      <div className="mt-2 text-xs text-indigo-700 bg-indigo-50/70 px-3 py-2 rounded-lg border border-indigo-100">
+        <span className="font-bold mr-1">AI Reading Check:</span>
+        {readingResults[idx].summary}
+      </div>
+    ) : null;
+
+  const renderStoryPicture = (pic, sizeClass) => (
+    <button
+      type="button"
+      key={pic.id}
+      onClick={() => setPreviewImage(pic)}
+      title={pic.title || pic.caption}
+      className={`group relative rounded-xl overflow-hidden border border-slate-200 bg-white hover:border-emerald-500 hover:shadow-md transition-all shrink-0 ${sizeClass}`}
+    >
+      <img
+        src={pic.image}
+        alt={pic.caption}
+        className={`w-full h-full group-hover:scale-105 transition-transform ${
+          pic.fit === 'contain' ? 'object-contain p-1.5' : 'object-cover'
+        }`}
+      />
+    </button>
+  );
+
+  const activeRubric = isGrade5Stage
+    ? GRADE5_READING_RUBRIC
+    : isGrade4Stage
     ? GRADE4_READING_RUBRIC
     : isGrade3Stage
     ? GRADE3_READING_RUBRIC
@@ -783,7 +965,9 @@ export default function PrimaryReadingAssessmentForm() {
     : READING_RUBRIC_LEVELS;
 
   const activeSheet =
-    isGrade4Stage
+    isGrade5Stage
+      ? grade5ReadingSheet
+      : isGrade4Stage
       ? grade4ReadingSheet
       : isGrade3Stage
       ? grade3ReadingSheet
@@ -847,12 +1031,6 @@ export default function PrimaryReadingAssessmentForm() {
     setPassageNotes(next);
   };
 
-  const toggleKeyword = (word) => {
-    setUsedKeywords(prev => 
-      prev.includes(word) ? prev.filter(w => w !== word) : [...prev, word]
-    );
-  };
-
   const fluentCount = itemStatuses.filter(s => s === 'fluent').length;
   const supportCount = itemStatuses.filter(s => s === 'support').length;
   const errorCount = itemStatuses.filter(s => s === 'error').length;
@@ -876,7 +1054,9 @@ export default function PrimaryReadingAssessmentForm() {
 
     setLoading(true);
     const assessmentType =
-      selectedStage === 'Grade 4 / Year 5'
+      selectedStage === 'Grade 5 / Year 6'
+        ? 'Grade 5 / Year 6 Reading Assessment'
+        : selectedStage === 'Grade 4 / Year 5'
         ? 'Grade 4 / Year 5 Reading Assessment'
         : selectedStage === 'Grade 3 / Year 4'
         ? 'Grade 3 / Year 4 Reading Assessment'
@@ -892,6 +1072,11 @@ export default function PrimaryReadingAssessmentForm() {
 
     try {
       const selectedRubric = activeRubric.find(r => r.level === selectedLevel);
+      const aiReadingCheck = (readingResults || [])
+        .filter((r) => r.analysis && r.analysis.hasReading)
+        .map((r) => r.summary)
+        .join('\n');
+      const aiNote = aiReadingCheck ? `\n\n[AI Reading Check]\n${aiReadingCheck}` : '';
 
       const payload = {
         assessmentType,
@@ -915,12 +1100,17 @@ export default function PrimaryReadingAssessmentForm() {
             ? activePassages.map((p, idx) => ({
                 word: p.box,
                 status: passageStatuses[idx] || 'evaluated',
-                notes: passageNotes[idx] || p.passage,
+                notes:
+                  [passageNotes[idx], readingResults[idx]?.analysis?.hasReading ? readingResults[idx].summary : '']
+                    .filter(Boolean)
+                    .join(' | ') || p.passage,
               }))
             : READING_ITEMS.map((item, idx) => ({
                 word: item.word,
                 status: itemStatuses[idx] || 'unassessed',
-                notes: itemNotes[idx] || '',
+                notes: [itemNotes[idx], readingResults[idx]?.analysis?.hasReading ? readingResults[idx].summary : '']
+                  .filter(Boolean)
+                  .join(' | '),
               })),
         teachingFocus:
           isPassageStage
@@ -929,8 +1119,8 @@ export default function PrimaryReadingAssessmentForm() {
         keywordsIdentified: usedKeywords,
         notes:
           isPassageStage
-            ? `${selectedRubric?.description || ''}. Accuracy: ${kg2Accuracy}/10, Fluency: ${kg2Fluency}. Comments: ${kg2Comments}`
-            : selectedRubric?.description || '',
+            ? `${selectedRubric?.description || ''}. Accuracy: ${kg2Accuracy}/10, Fluency: ${kg2Fluency}. Comments: ${kg2Comments}${aiNote}`
+            : `${selectedRubric?.description || ''}${aiNote}`,
       };
 
       await assessmentAPI.createAssessment(payload);
@@ -952,7 +1142,7 @@ export default function PrimaryReadingAssessmentForm() {
       <div className="max-w-5xl mx-auto space-y-8">
 
         {/* Navigation Breadcrumb & Stage Switcher */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="space-y-4">
           <Link
             to="/assessments?tier=primary"
             className="inline-flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-slate-800 transition-colors"
@@ -963,127 +1153,12 @@ export default function PrimaryReadingAssessmentForm() {
             Back to Assessments
           </Link>
 
-          {/* Stage Selector (FS1, FS2 - KG1, KG2 / Year 1) */}
-          <div className="inline-flex bg-slate-200/90 p-1.5 rounded-2xl shadow-inner gap-1 flex-wrap self-start sm:self-auto">
-            <button
-              type="button"
-              onClick={() => handleStageSwitch('FS1')}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-200 ${
-                selectedStage === 'FS1'
-                  ? 'bg-white text-emerald-700 shadow-sm scale-[1.02]'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/50'
-              }`}
-            >
-              <span>🌸 FS1</span>
-              <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
-                selectedStage === 'FS1' ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-300 text-slate-700'
-              }`}>
-                Nursery
-              </span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleStageSwitch('FS2 - KG1')}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-200 ${
-                selectedStage === 'FS2 - KG1'
-                  ? 'bg-white text-emerald-700 shadow-sm scale-[1.02]'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/50'
-              }`}
-            >
-              <span>🌼 FS2 - KG1</span>
-              <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
-                selectedStage === 'FS2 - KG1' ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-300 text-slate-700'
-              }`}>
-                Reception
-              </span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleStageSwitch('KG2 / Year 1')}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-200 ${
-                selectedStage === 'KG2 / Year 1'
-                  ? 'bg-white text-emerald-700 shadow-sm scale-[1.02]'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/50'
-              }`}
-            >
-              <span>🎓 KG2 / Year 1</span>
-              <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
-                selectedStage === 'KG2 / Year 1' ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-300 text-slate-700'
-              }`}>
-                Year 1
-              </span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleStageSwitch('Grade 1 / Year 2')}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-200 ${
-                selectedStage === 'Grade 1 / Year 2'
-                  ? 'bg-white text-emerald-700 shadow-sm scale-[1.02]'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/50'
-              }`}
-            >
-              <span>⭐ Grade 1 / Year 2</span>
-              <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
-                selectedStage === 'Grade 1 / Year 2' ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-300 text-slate-700'
-              }`}>
-                Year 2
-              </span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleStageSwitch('Grade 2 / Year 3')}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-200 ${
-                selectedStage === 'Grade 2 / Year 3'
-                  ? 'bg-white text-emerald-700 shadow-sm scale-[1.02]'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/50'
-              }`}
-            >
-              <span>🎓 Grade 2 / Year 3</span>
-              <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
-                selectedStage === 'Grade 2 / Year 3' ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-300 text-slate-700'
-              }`}>
-                Year 3
-              </span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleStageSwitch('Grade 3 / Year 4')}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-200 ${
-                selectedStage === 'Grade 3 / Year 4'
-                  ? 'bg-white text-emerald-700 shadow-sm scale-[1.02]'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/50'
-              }`}
-            >
-              <span>🚀 Grade 3 / Year 4</span>
-              <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
-                selectedStage === 'Grade 3 / Year 4' ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-300 text-slate-700'
-              }`}>
-                Year 4
-              </span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleStageSwitch('Grade 4 / Year 5')}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-200 ${
-                selectedStage === 'Grade 4 / Year 5'
-                  ? 'bg-white text-emerald-700 shadow-sm scale-[1.02]'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/50'
-              }`}
-            >
-              <span>🌟 Grade 4 / Year 5</span>
-              <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
-                selectedStage === 'Grade 4 / Year 5' ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-300 text-slate-700'
-              }`}>
-                Year 5
-              </span>
-            </button>
-          </div>
+          <StageSelector
+            stages={[...PRIMARY_STAGES, 'Grade 5 / Year 6']}
+            value={selectedStage}
+            onChange={handleStageSwitch}
+            theme="emerald"
+          />
         </div>
 
         {/* Title Header Card */}
@@ -1105,7 +1180,11 @@ export default function PrimaryReadingAssessmentForm() {
                 {selectedStage} Reading Assessment
               </h1>
               <p className="text-slate-500 text-sm mt-2 max-w-2xl">
-                {selectedStage === 'Grade 3 / Year 4'
+                {isGrade5Stage
+                  ? 'The Moonlight Market story (4 paragraphs), 20-30s line timing, accuracy, fluency evaluation, and CEFR level scoring.'
+                  : isGrade4Stage
+                  ? 'The Blue Kite story (4 paragraphs), 10-15s line timing, accuracy, fluency evaluation, and CEFR level scoring.'
+                  : selectedStage === 'Grade 3 / Year 4'
                   ? 'Mina & Rafi bakery story (5 lines/passages), 30-40s line timing, accuracy (/10), fluency evaluation, and CEFR level scoring.'
                   : selectedStage === 'Grade 2 / Year 3'
                   ? 'Lina & Sami narrative story (4 lines/passages), 30-40s line timing, accuracy (/10), fluency evaluation, and CEFR level scoring.'
@@ -1141,20 +1220,17 @@ export default function PrimaryReadingAssessmentForm() {
                 </svg>
                 Instructions for assessor:
               </h3>
-              <button
-                type="button"
-                onClick={() => setShowSheetModal(true)}
-                className="text-xs font-bold text-emerald-600 hover:text-emerald-700 underline"
-              >
-                View Printable Sheet ↗
-              </button>
             </div>
-            {isGrade3Stage || isGrade2Stage ? (
+            {isGrade2Stage || isGrade3Stage || isGrade4Stage || isGrade5Stage ? (
+              /* Story stages — exact wording from the Grade 2–5 sheets */
               <ul className="space-y-1.5 text-xs text-slate-600 font-medium list-disc list-inside">
                 <li>Present the story and ask the pupil to read aloud.</li>
-                <li>Allow 30-40 seconds per line.</li>
-                <li>Stop if the child struggles to read and move to phonics assessments.</li>
-                <li>Use Teacher Notes below to record accuracy (/10), fluency, and comments.</li>
+                <li>
+                  Allow{' '}
+                  {isGrade5Stage ? '20-30' : isGrade4Stage ? '10-15' : '30-40'}{' '}
+                  seconds per line.
+                </li>
+                <li>Use the Teacher Notes box to mark accuracy, fluency, and comments.</li>
               </ul>
             ) : isPassageStage ? (
               <ul className="space-y-1.5 text-xs text-slate-600 font-medium list-disc list-inside">
@@ -1256,6 +1332,18 @@ export default function PrimaryReadingAssessmentForm() {
               Student & Assessment Details
             </h2>
 
+            <StudentPicker
+              tier="primary"
+              value={formData.studentName}
+              onSelect={(s) => {
+                if (['FS1', 'FS2 - KG1', 'KG2 / Year 1', 'Grade 1 / Year 2', 'Grade 2 / Year 3', 'Grade 3 / Year 4', 'Grade 4 / Year 5', 'Grade 5 / Year 6'].includes(s.yearGroup)) handleStageSwitch(s.yearGroup);
+                setFormData((p) => ({
+                  ...p,
+                  studentName: studentLabel(s),
+                  yearGroupAndClass: studentYearClass(s),
+                }));
+              }}
+            />
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <div>
                 <label className="block text-xs font-extrabold text-slate-700 mb-1.5">
@@ -1321,10 +1409,11 @@ export default function PrimaryReadingAssessmentForm() {
 
           {/* AI Assessment Conductor */}
           <AIAssistantConductor
-            questions={conductorQuestions}
-            rubrics={conductorRubrics}
+            mode="reading"
+            readingItems={conductorReadingItems}
             title={`${selectedStage} Reading Conductor`}
             onAnswersArrayChange={setAiAnswers}
+            onReadingResultsChange={setReadingResults}
           />
 
           {isPassageStage ? (
@@ -1334,7 +1423,9 @@ export default function PrimaryReadingAssessmentForm() {
                 <div>
                   <h2 className="text-base font-black text-slate-900 flex items-center gap-2">
                     <span className="w-7 h-7 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-xs font-extrabold">2</span>
-                    {isGrade4Stage
+                    {isGrade5Stage
+                      ? "The Moonlight Market (4 Paragraphs · 20–30s per line)"
+                      : isGrade4Stage
                       ? "The Blue Kite — Wind Day (4 Paragraphs · 10–15s per line)"
                       : isGrade3Stage
                       ? "Mina & Rafi Bakery Story Lines (5 Lines · 30–40s per line)"
@@ -1343,99 +1434,152 @@ export default function PrimaryReadingAssessmentForm() {
                       : "Reading Passages & Related Stimulus (5 Texts · 1 Minute per text)"}
                   </h2>
                   <p className="text-xs text-slate-500 mt-1">
-                    {isGrade4Stage
-                      ? "Present the story and ask the pupil to read aloud. Allow 10–15 seconds per line. Mark accuracy, fluency, and error rate."
+                    {isGrade5Stage
+                      ? "Present the story and ask the pupil to read aloud. Allow 20–30 seconds per line. Use the Teacher Notes box to mark accuracy, fluency, and comments."
+                      : isGrade4Stage
+                      ? "Present the story and ask the pupil to read aloud. Allow 10–15 seconds per line. Use the Teacher Notes box to mark accuracy, fluency, and comments."
                       : isGrade3Stage || isGrade2Stage
-                      ? "Present the story and ask the pupil to read aloud. Allow 30–40 seconds per line. Stop if the child struggles and move to phonics."
+                      ? "Present the story and ask the pupil to read aloud. Allow 30–40 seconds per line. Use the Teacher Notes box to mark accuracy, fluency, and comments."
                       : "Present one text box at a time. Show accompanying pictures to aid visual comprehension. Pupil reads aloud. Stop if the child struggles to read and move to phonics assessments."}
                   </p>
                 </div>
                 <div className="text-xs font-semibold text-slate-500 bg-slate-50 px-3.5 py-1.5 rounded-xl border border-slate-200 self-start sm:self-auto">
-                  {isGrade4Stage
-                    ? "4 Story Paragraphs · Official Sheet"
+                  {isGrade5Stage
+                    ? "4 Story Paragraphs · 3 Pictures"
+                    : isGrade4Stage
+                    ? "4 Story Paragraphs · 5 Pictures"
                     : isGrade3Stage
-                    ? "5 Story Lines · 6 Illustrations"
+                    ? "5 Story Lines · 5 Pictures"
                     : isGrade2Stage
                     ? "4 Story Lines · 4 Illustrations"
                     : "5 Texts · 3 Stimulus Pictures"}
                 </div>
               </div>
 
-              {/* Official Stimulus Pictures from Assessment Sheet */}
-              {!isGrade4Stage && (
-                <div className="bg-gradient-to-br from-emerald-50/60 to-slate-50 border-2 border-emerald-100 rounded-3xl p-5 mb-6 shadow-2xs">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
-                    <div className="flex items-center gap-2">
-                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-600"></span>
-                      <h3 className="text-xs font-black uppercase tracking-wider text-slate-800">
-                        Visual Stimulus Prompts (From Official Assessment Sheet)
-                      </h3>
-                    </div>
-                    <span className="text-[11px] font-bold text-emerald-700 bg-emerald-100/70 px-2.5 py-1 rounded-lg">
-                      🔍 Click any picture to enlarge for student presentation
-                    </span>
-                  </div>
-                  <div className={`grid grid-cols-2 ${isGrade3Stage ? 'sm:grid-cols-3' : isGrade2Stage ? 'sm:grid-cols-4' : 'sm:grid-cols-3'} gap-4`}>
-                    {activeStimulusPictures.map((pic) => (
-                      <div
-                        key={pic.id}
-                        onClick={() => setPreviewImage(pic)}
-                        className="group cursor-pointer bg-white rounded-2xl p-3 border-2 border-slate-200/80 hover:border-emerald-500 hover:shadow-lg transition-all flex flex-col items-center"
-                      >
-                        <div className="w-full aspect-square bg-slate-100 rounded-xl overflow-hidden mb-2.5 border border-slate-100 relative">
-                          <img
-                            src={pic.image}
-                            alt={pic.caption}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
-                          />
-                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/15 transition-colors flex items-center justify-center">
-                            <span className="opacity-0 group-hover:opacity-100 bg-white/95 backdrop-blur-xs text-slate-800 text-[11px] font-black px-2.5 py-1 rounded-lg shadow-sm transition-opacity">
-                              🔍 View Full Image
-                            </span>
-                          </div>
-                        </div>
-                        <span className="text-xs font-black text-slate-800 text-center line-clamp-1">
-                          "{pic.caption}"
-                        </span>
-                        <span className="text-[10px] font-extrabold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md mt-1 border border-emerald-200/60">
-                          {pic.passageRef}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
+              {/* Reading Passage — presented like the official assessment sheet */}
+              <div className="rounded-3xl border border-slate-200 overflow-hidden">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-5 py-3 bg-slate-50 border-b border-slate-200">
+                  <h3 className="text-xs font-black uppercase tracking-wider text-slate-700 flex items-center gap-2">
+                    <svg className="w-4 h-4 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+                    </svg>
+                    Reading Passage
+                  </h3>
+                  <span className="text-[11px] font-semibold text-slate-400">
+                    Pupil reads aloud · click a picture to enlarge
+                  </span>
                 </div>
-              )}
 
-              {/* Text Passages List */}
-              <div className="space-y-4">
+                <div className="p-4 sm:p-6 bg-white">
+                  {passageLayout === 'table' ? (
+                    /* KG2 / Year 1 & Grade 1 / Year 2 — Text Box table + pictures below */
+                    <>
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-left border border-slate-200">
+                          <thead className="bg-slate-50">
+                            <tr>
+                              <th className="py-2.5 px-4 text-sm font-black text-slate-800 w-28 border-b border-r border-slate-200">Text Box</th>
+                              <th className="py-2.5 px-4 text-sm font-black text-slate-800 border-b border-slate-200">Reading Passage</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {activePassages.map((p, idx) => (
+                              <tr key={p.id} className="border-b border-slate-200 last:border-b-0 align-top">
+                                <td className="py-4 px-4 text-sm font-bold text-slate-800 border-r border-slate-200">{p.box}</td>
+                                <td className="py-4 px-4">
+                                  <p className="text-lg sm:text-xl text-slate-900 leading-relaxed">{p.passage}</p>
+                                  {renderAiCheck(idx)}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                      <div className="grid grid-cols-3 gap-3 sm:gap-4 mt-5">
+                        {storyPictures.map((pic) => renderStoryPicture(pic, 'aspect-[4/3]'))}
+                      </div>
+                    </>
+                  ) : passageLayout === 'side' ? (
+                    /* Grade 2–4 — story text with pictures down the right, like the sheet */
+                    <div className="bg-slate-100/80 rounded-2xl border border-slate-200 p-5 sm:p-6">
+                      {storyTitle && (
+                        <h4 className="text-lg font-black text-slate-900 mb-3">{storyTitle}</h4>
+                      )}
+                      <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-5">
+                        <div className="space-y-5">
+                          {activePassages.map((p, idx) => (
+                            <div key={p.id}>
+                              <p className="text-base sm:text-lg text-slate-800 leading-relaxed">{p.passage}</p>
+                              {renderAiCheck(idx)}
+                            </div>
+                          ))}
+                        </div>
+                        <div className="flex flex-row flex-wrap sm:flex-col sm:flex-nowrap sm:justify-around gap-3">
+                          {storyPictures.map((pic) => renderStoryPicture(pic, 'w-20 h-20 sm:w-24 sm:h-24'))}
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    /* Grade 5 — story text with pictures below */
+                    <>
+                      <div className="bg-slate-100/80 rounded-2xl border border-slate-200 p-5 sm:p-6">
+                        {storyTitle && (
+                          <h4 className="text-lg font-black text-slate-900 mb-3">{storyTitle}</h4>
+                        )}
+                        <div className="space-y-5">
+                          {activePassages.map((p, idx) => (
+                            <div key={p.id}>
+                              <p className="text-base sm:text-lg text-slate-800 leading-relaxed">{p.passage}</p>
+                              {renderAiCheck(idx)}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-3 gap-3 sm:gap-4 mt-5">
+                        {storyPictures.map((pic) => renderStoryPicture(pic, 'aspect-[4/3]'))}
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {/* Teacher Marking — one compact row per text */}
+              <div className="space-y-3">
+                <h3 className="text-xs font-black uppercase tracking-wider text-slate-700 flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-600"></span>
+                  Teacher Marking
+                </h3>
                 {activePassages.map((item, idx) => {
                   const status = passageStatuses[idx];
-
                   return (
                     <div
                       key={item.id}
-                      className={`rounded-2xl border-2 p-5 transition-all ${
+                      className={`rounded-2xl border-2 p-4 transition-all ${
                         status === 'accurate'
-                          ? 'border-emerald-500 bg-emerald-50/30 shadow-xs'
+                          ? 'border-emerald-500 bg-emerald-50/30'
                           : status === 'hesitant'
                           ? 'border-amber-400 bg-amber-50/30'
                           : status === 'struggled'
                           ? 'border-rose-400 bg-rose-50/30'
-                          : 'border-slate-200 bg-slate-50/50 hover:border-slate-300'
+                          : 'border-slate-200 bg-slate-50/50'
                       }`}
                     >
-                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-3">
-                        <div className="flex items-center gap-2.5">
-                          <span className="px-3 py-1 bg-emerald-100 text-emerald-800 text-xs font-black uppercase rounded-lg">
-                            {item.box}
-                          </span>
-                          <span className="text-[11px] font-semibold text-slate-400">
-                            {item.hint}
-                          </span>
+                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className="px-3 py-1 bg-emerald-100 text-emerald-800 text-xs font-black uppercase rounded-lg shrink-0">
+                              {item.box}
+                            </span>
+                            <span className="text-xs text-slate-500 truncate">
+                              {item.passage.split(' ').slice(0, 8).join(' ')}…
+                            </span>
+                          </div>
+                          {item.hint && (
+                            <span className="text-[11px] font-semibold text-slate-400 block mt-1">{item.hint}</span>
+                          )}
                         </div>
 
-                        {/* Quick Marking Buttons */}
-                        <div className="flex items-center gap-2 text-xs font-bold self-start md:self-auto">
+                        <div className="flex items-center gap-2 text-xs font-bold self-start md:self-auto shrink-0">
                           <button
                             type="button"
                             onClick={() => handlePassageStatusChange(idx, 'accurate')}
@@ -1472,68 +1616,13 @@ export default function PrimaryReadingAssessmentForm() {
                         </div>
                       </div>
 
-                      {/* The Reading Passage Text + Related Visual Stimulus */}
-                      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-center">
-                        <div className={item.image ? "lg:col-span-9" : "lg:col-span-12"}>
-                          <div className="p-4 bg-white rounded-xl border border-slate-200 shadow-inner">
-                            <p className="font-serif text-lg md:text-xl font-bold text-slate-900 tracking-wide leading-relaxed">
-                              {item.passage}
-                            </p>
-                            {aiAnswers && aiAnswers[idx] && aiAnswers[idx].trim().length > 0 && (
-                              <div className="mt-3 text-sm text-indigo-700 bg-indigo-50/50 p-3 rounded-xl border border-indigo-100 shadow-inner">
-                                <span className="font-bold mr-1">Student Answer (AI):</span> "{aiAnswers[idx]}"
-                              </div>
-                            )}
-                          </div>
-                        </div>
-
-                        {item.image && (
-                          <div className="lg:col-span-3 flex flex-row lg:flex-col items-center gap-3 bg-white p-3 rounded-2xl border border-slate-200 shadow-xs">
-                            <div
-                              onClick={() =>
-                                setPreviewImage({
-                                  image: item.image,
-                                  caption: item.imageCaption,
-                                  title: `${item.box}: ${item.imageCaption}`,
-                                  desc: item.imageLabel,
-                                })
-                              }
-                              className="group cursor-pointer relative w-24 h-24 sm:w-28 sm:h-28 rounded-xl overflow-hidden border-2 border-emerald-200 shadow-xs hover:border-emerald-500 hover:shadow-md transition-all bg-white shrink-0"
-                              title="Click to view full image"
-                            >
-                              <img
-                                src={item.image}
-                                alt={item.imageCaption}
-                                className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                              />
-                              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/15 flex items-center justify-center transition-colors">
-                                <span className="opacity-0 group-hover:opacity-100 bg-white/95 text-slate-800 text-[10px] font-black px-2 py-0.5 rounded shadow-sm transition-opacity">
-                                  🔍 View
-                                </span>
-                              </div>
-                            </div>
-                            <div className="text-left lg:text-center">
-                              <span className="text-xs font-black text-slate-800 block">
-                                "{item.imageCaption}"
-                              </span>
-                              <span className="text-[10px] font-extrabold text-emerald-600 block mt-0.5">
-                                Stimulus Picture
-                              </span>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Passage Observation Input */}
-                      <div className="mt-3">
-                        <input
-                          type="text"
-                          value={passageNotes[idx]}
-                          onChange={(e) => handlePassageNoteChange(idx, e.target.value)}
-                          placeholder="Passage notes (e.g., mispronounced 'mud', paused at 'frogs')..."
-                          className="w-full bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-500"
-                        />
-                      </div>
+                      <input
+                        type="text"
+                        value={passageNotes[idx]}
+                        onChange={(e) => handlePassageNoteChange(idx, e.target.value)}
+                        placeholder="Notes (e.g., mispronounced 'mud', paused at 'frogs')..."
+                        className="mt-3 w-full bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-500"
+                      />
                     </div>
                   );
                 })}
@@ -1631,64 +1720,88 @@ export default function PrimaryReadingAssessmentForm() {
                 </div>
               </div>
 
-              {/* Grid of 6 CVC Cards */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {/* Reading Card — presented like the official FS1 / FS2 sheet */}
+              <div className="rounded-3xl border border-slate-200 overflow-hidden mb-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-5 py-3 bg-slate-50 border-b border-slate-200">
+                  <h3 className="text-xs font-black uppercase tracking-wider text-slate-700">
+                    Reading Card
+                  </h3>
+                  <span className="text-[11px] font-semibold text-slate-400">
+                    Point to each picture · pupil says the word and sounds it out
+                  </span>
+                </div>
+                <div className="p-5 sm:p-8 bg-white grid grid-cols-2 sm:grid-cols-3 gap-x-6 gap-y-10">
+                  {READING_ITEMS.map((item, idx) => {
+                    const result = readingResults[idx];
+                    const heard = result?.analysis?.hasReading;
+                    const correct = heard && result.analysis.errorCount === 0;
+                    return (
+                      <div key={item.id} className="flex flex-col items-center">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setPreviewImage({
+                              image: item.image,
+                              caption: item.word,
+                              title: `Picture ${idx + 1}`,
+                              desc: item.label,
+                            })
+                          }
+                          className="h-28 sm:h-36 w-full flex items-center justify-center rounded-xl hover:bg-slate-50 transition-colors"
+                          title="Click to enlarge"
+                        >
+                          <img src={item.image} alt={item.label} className="max-h-full max-w-full object-contain" />
+                        </button>
+                        <p className="mt-3 text-3xl sm:text-4xl text-slate-900 font-medium tracking-[0.35em] pl-[0.35em]">
+                          {item.word}
+                        </p>
+                        {heard && (
+                          <span
+                            className={`mt-2 text-[11px] font-bold px-2 py-0.5 rounded-full border ${
+                              correct
+                                ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                : 'bg-amber-50 text-amber-800 border-amber-200'
+                            }`}
+                          >
+                            {correct ? '✓ Read correctly' : `Heard: "${result.transcript.trim()}"`}
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Teacher Marking — one compact row per word */}
+              <h3 className="text-xs font-black uppercase tracking-wider text-slate-700 flex items-center gap-2 mb-3">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-600"></span>
+                Teacher Marking
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {READING_ITEMS.map((item, idx) => {
                   const status = itemStatuses[idx];
-
                   return (
                     <div
                       key={item.id}
-                      className={`rounded-3xl border-2 p-5 transition-all flex flex-col justify-between ${
+                      className={`rounded-2xl border-2 p-3.5 transition-all ${
                         status === 'fluent'
-                          ? 'border-emerald-500 bg-emerald-50/30 shadow-md'
+                          ? 'border-emerald-500 bg-emerald-50/30'
                           : status === 'support'
                           ? 'border-amber-400 bg-amber-50/30'
                           : status === 'error'
                           ? 'border-rose-400 bg-rose-50/30'
-                          : 'border-slate-200 bg-white hover:border-slate-300'
+                          : 'border-slate-200 bg-white'
                       }`}
                     >
-                      <div>
-                        {/* Image Prompt */}
-                        <div className="w-full h-36 bg-slate-100 rounded-2xl overflow-hidden mb-4 border border-slate-200 flex items-center justify-center p-2">
-                          <img
-                            src={item.image}
-                            alt={item.word}
-                            className="max-h-full max-w-full object-contain"
-                          />
-                        </div>
-
-                        {/* Spaced CVC word letters (e.g. h  e  n) */}
-                        <div className="text-center mb-4">
-                          <div className="flex items-center justify-center gap-3 font-mono text-3xl font-black text-slate-900 tracking-widest">
-                            {item.letters.map((ltr, lIdx) => (
-                              <span 
-                                key={lIdx}
-                                className="w-10 h-12 flex items-center justify-center rounded-xl bg-slate-50 border border-slate-200 shadow-2xs"
-                              >
-                                {ltr}
-                              </span>
-                            ))}
-                          </div>
-                          <span className="text-[11px] font-bold text-slate-400 mt-1.5 block">
-                            Card {item.id}: {item.label}
-                          </span>
-                          {aiAnswers && aiAnswers[idx] && aiAnswers[idx].trim().length > 0 && (
-                            <div className="mt-3 text-xs text-indigo-700 bg-indigo-50/50 p-2.5 rounded-xl border border-indigo-100 shadow-inner">
-                              <span className="font-bold mr-1">Student Answer (AI):</span> "{aiAnswers[idx]}"
-                            </div>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Assessor Observation Quick Buttons */}
-                      <div className="space-y-2.5 pt-3 border-t border-slate-100">
-                        <div className="grid grid-cols-3 gap-1.5 text-xs font-bold">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-mono text-lg font-black text-slate-900 tracking-widest">
+                          {item.word}
+                        </span>
+                        <div className="flex gap-1.5 text-xs font-bold">
                           <button
                             type="button"
                             onClick={() => handleStatusChange(idx, 'fluent')}
-                            className={`py-1.5 px-2 rounded-xl transition-all ${
+                            className={`py-1.5 px-2.5 rounded-xl transition-all ${
                               status === 'fluent'
                                 ? 'bg-emerald-600 text-white font-black shadow-xs'
                                 : 'bg-slate-100 text-slate-600 hover:bg-emerald-100 hover:text-emerald-800'
@@ -1699,7 +1812,7 @@ export default function PrimaryReadingAssessmentForm() {
                           <button
                             type="button"
                             onClick={() => handleStatusChange(idx, 'support')}
-                            className={`py-1.5 px-2 rounded-xl transition-all ${
+                            className={`py-1.5 px-2.5 rounded-xl transition-all ${
                               status === 'support'
                                 ? 'bg-amber-500 text-white font-black shadow-xs'
                                 : 'bg-slate-100 text-slate-600 hover:bg-amber-100 hover:text-amber-800'
@@ -1710,7 +1823,7 @@ export default function PrimaryReadingAssessmentForm() {
                           <button
                             type="button"
                             onClick={() => handleStatusChange(idx, 'error')}
-                            className={`py-1.5 px-2 rounded-xl transition-all ${
+                            className={`py-1.5 px-2.5 rounded-xl transition-all ${
                               status === 'error'
                                 ? 'bg-rose-500 text-white font-black shadow-xs'
                                 : 'bg-slate-100 text-slate-600 hover:bg-rose-100 hover:text-rose-800'
@@ -1719,16 +1832,14 @@ export default function PrimaryReadingAssessmentForm() {
                             ✗ Error
                           </button>
                         </div>
-
-                        {/* Blending / Mis-sound notes */}
-                        <input
-                          type="text"
-                          value={itemNotes[idx]}
-                          onChange={(e) => handleItemNoteChange(idx, e.target.value)}
-                          placeholder="Sound errors / blending note..."
-                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-[11px] font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-500"
-                        />
                       </div>
+                      <input
+                        type="text"
+                        value={itemNotes[idx]}
+                        onChange={(e) => handleItemNoteChange(idx, e.target.value)}
+                        placeholder="Sound errors / blending note..."
+                        className="mt-2.5 w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-[11px] font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-500"
+                      />
                     </div>
                   );
                 })}
@@ -1806,36 +1917,6 @@ export default function PrimaryReadingAssessmentForm() {
                     );
                   })}
 
-                  {/* Key Words Row */}
-                  <tr className="bg-slate-50/90 border-t-2 border-slate-300">
-                    <td className="py-4 px-4 font-black text-slate-800 align-top">
-                      Key words
-                    </td>
-                    <td colSpan={2} className="py-4 px-4">
-                      <p className="text-[11px] text-slate-500 font-semibold mb-2">
-                        Mark words identified by the student:
-                      </p>
-                      <div className="flex flex-wrap gap-1.5">
-                        {KEY_WORDS.map((word, kIdx) => {
-                          const isUsed = usedKeywords.includes(word);
-                          return (
-                            <button
-                              key={kIdx}
-                              type="button"
-                              onClick={() => toggleKeyword(word)}
-                              className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all ${
-                                isUsed
-                                  ? 'bg-emerald-600 text-white font-bold shadow-xs scale-105'
-                                  : 'bg-white border border-slate-200 text-slate-700 hover:border-emerald-300'
-                              }`}
-                            >
-                              {isUsed ? '✓ ' : ''}{word}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </td>
-                  </tr>
                 </tbody>
               </table>
             </div>

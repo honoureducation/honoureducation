@@ -1,4 +1,7 @@
 import React, { useState, useEffect } from "react";
+import StudentPicker from "../components/StudentPicker";
+import { studentLabel, studentYearClass } from "../utils/students";
+import StageSelector from '../components/StageSelector';
 import {
   useNavigate,
   useSearchParams,
@@ -7,7 +10,7 @@ import {
 } from "react-router-dom";
 import { toast } from "react-toastify";
 import { assessmentAPI } from "../services/api";
-import AIAssistantConductor from "../components/AIAssistantConductor";
+import QuestionVoiceControls from "../components/QuestionVoiceControls";
 import familyPhoto from "../assets/fs1-speaking-family.jpg";
 import fs1SpeakingSheet from "../assets/fs1-speaking-sheet.jpg";
 import fs2SpeakingSheet from "../assets/fs2-speaking-sheet.png";
@@ -121,51 +124,6 @@ const GRADE3_SPEAKING_RUBRIC = [
   },
 ];
 
-const GRADE3_KEY_WORDS = [
-  "talking",
-  "speaking",
-  "conversation",
-  "discussing",
-  "listening",
-  "sharing",
-  "sitting",
-  "table",
-  "friends",
-  "people",
-  "communication",
-  "explaining",
-  "asking",
-  "answering",
-  "headphones",
-  "watching",
-  "reading",
-  "learning",
-  "studying",
-  "tablet",
-  "device",
-  "screen",
-  "focus",
-  "concentration",
-  "child",
-  "technology",
-  "audio",
-  "story",
-  "rocket",
-  "space",
-  "launch",
-  "flying",
-  "blasting off",
-  "sky",
-  "adventure",
-  "space travel",
-  "astronaut",
-  "fire",
-  "smoke",
-  "countdown",
-  "mission",
-  "excitement",
-];
-
 // ==========================================
 // 4 PROMPTS FROM GRADE 4 / YEAR 5 SPEAKING ASSESSMENT
 // Exact from uploaded Grade 4 / Year 5 sheet
@@ -225,37 +183,6 @@ const GRADE4_SPEAKING_RUBRIC = [
 ];
 
 // AI Keywords for Conductor comprehension (internal evaluation)
-const GRADE4_KEY_WORDS = [
-  "fish",
-  "coral",
-  "swimming",
-  "colourful",
-  "underwater",
-  "ocean",
-  "reef",
-  "plants",
-  "shark",
-  "danger",
-  "kelp",
-  "deep water",
-  "hunting",
-  "moving",
-  "sea",
-  "first",
-  "next",
-  "then",
-  "after that",
-  "finally",
-  "continues",
-  "happens next",
-  "describe",
-  "explain",
-  "happening",
-  "looks like",
-  "I think",
-  "I like",
-];
-
 // ==========================================
 // CEFR RUBRIC TABLE FOR GRADE 2 / YEAR 3 SPEAKING
 // Exact from uploaded Grade 2 / Year 3 sheet
@@ -300,18 +227,6 @@ const GRADE2_SPEAKING_RUBRIC = [
     activeBg: "bg-emerald-50 border-emerald-400 text-emerald-900",
     indicator: "bg-emerald-600",
   },
-];
-
-const GRADE2_KEY_WORDS = [
-  "children",
-  "teacher",
-  "learning",
-  "reading",
-  "laughing",
-  "enjoying",
-  "books",
-  "listening",
-  "friends",
 ];
 
 // ==========================================
@@ -455,28 +370,6 @@ const KG2_SPEAKING_RUBRIC = [
     activeBg: "bg-emerald-50 border-emerald-400 text-emerald-900",
     indicator: "bg-emerald-600",
   },
-];
-
-const KEY_WORDS = [
-  "Family",
-  "eating",
-  "vegetables",
-  "rice",
-  "eggs",
-  "salad",
-  "girl",
-  "boy",
-  "mum",
-  "dad",
-  "dinner",
-  "lunch",
-  "happy",
-  "chicken",
-  "meat",
-  "drink",
-  "sit",
-  "eat",
-  "hungry",
 ];
 
 export default function PrimarySpeakingAssessmentForm() {
@@ -663,55 +556,15 @@ export default function PrimarySpeakingAssessmentForm() {
     ? grade1StoryImg
     : familyPhoto;
 
-  const activeKeyWords = isGrade4Stage
-    ? GRADE4_KEY_WORDS
-    : isGrade3Stage
-    ? GRADE3_KEY_WORDS
-    : isGrade2Stage
-    ? GRADE2_KEY_WORDS
-    : isGrade1Stage
-    ? [
-        "Paul",
-        "Grandma",
-        "visit",
-        "tennis",
-        "play",
-        "walk",
-        "path",
-        "horse",
-        "beach",
-        "game",
-        "happy",
-      ]
-    : KEY_WORDS;
-
   // Observations and per-question notes
   const [questionNotes, setQuestionNotes] = useState(
     Array(8).fill(""),
   );
-  const [aiAnswers, setAiAnswers] = useState([]);
   const [selectedLevel, setSelectedLevel] = useState(null); // 'Pre-A1' | 'A1.0–A1.2' etc.
-  const [usedKeywords, setUsedKeywords] = useState([]);
+  const [usedKeywords] = useState([]);
   const [teacherGeneralComments, setTeacherGeneralComments] = useState("");
   const [showFullPicture, setShowFullPicture] = useState(false);
   const [loading, setLoading] = useState(false);
-
-  // Sync AI answers to questionNotes if note is empty
-  useEffect(() => {
-    if (aiAnswers && aiAnswers.length > 0) {
-      setQuestionNotes((prev) => {
-        const next = [...prev];
-        let changed = false;
-        aiAnswers.forEach((ans, idx) => {
-          if (ans && ans.trim().length > 0 && !next[idx]) {
-            next[idx] = ans.trim();
-            changed = true;
-          }
-        });
-        return changed ? next : prev;
-      });
-    }
-  }, [aiAnswers]);
 
   useEffect(() => {
     if (preSelectedTerm) {
@@ -740,15 +593,11 @@ export default function PrimarySpeakingAssessmentForm() {
   };
 
   const handleNoteChange = (index, value) => {
-    const nextNotes = [...questionNotes];
-    nextNotes[index] = value;
-    setQuestionNotes(nextNotes);
-  };
-
-  const toggleKeyword = (word) => {
-    setUsedKeywords((prev) =>
-      prev.includes(word) ? prev.filter((w) => w !== word) : [...prev, word],
-    );
+    setQuestionNotes((prev) => {
+      const next = [...prev];
+      next[index] = value;
+      return next;
+    });
   };
 
   const handleSubmit = async (e) => {
@@ -833,7 +682,7 @@ export default function PrimarySpeakingAssessmentForm() {
     <div className="min-h-screen bg-slate-50 py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-5xl mx-auto space-y-8">
         {/* Navigation Breadcrumb & Stage Switcher */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="space-y-4">
           <Link
             to="/assessments?tier=primary"
             className="inline-flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-slate-800 transition-colors"
@@ -854,155 +703,11 @@ export default function PrimarySpeakingAssessmentForm() {
             Back to Assessments
           </Link>
 
-          {/* Stage Selector (FS1, FS2 - KG1, KG2 / Year 1) */}
-          <div className="inline-flex bg-slate-200/90 p-1.5 rounded-2xl shadow-inner gap-1 flex-wrap self-start sm:self-auto">
-            <button
-              type="button"
-              onClick={() => handleStageSwitch("FS1")}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-200 ${
-                selectedStage === "FS1"
-                  ? "bg-white text-violet-700 shadow-sm scale-[1.02]"
-                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/50"
-              }`}
-            >
-              <span>🌸 FS1</span>
-              <span
-                className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
-                  selectedStage === "FS1"
-                    ? "bg-violet-100 text-violet-800"
-                    : "bg-slate-300 text-slate-700"
-                }`}
-              >
-                Nursery
-              </span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleStageSwitch("FS2 - KG1")}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-200 ${
-                selectedStage === "FS2 - KG1"
-                  ? "bg-white text-violet-700 shadow-sm scale-[1.02]"
-                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/50"
-              }`}
-            >
-              <span>🌼 FS2 - KG1</span>
-              <span
-                className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
-                  selectedStage === "FS2 - KG1"
-                    ? "bg-violet-100 text-violet-800"
-                    : "bg-slate-300 text-slate-700"
-                }`}
-              >
-                Reception
-              </span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleStageSwitch("KG2 / Year 1")}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-200 ${
-                selectedStage === "KG2 / Year 1"
-                  ? "bg-white text-violet-700 shadow-sm scale-[1.02]"
-                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/50"
-              }`}
-            >
-              <span>🎓 KG2 / Year 1</span>
-              <span
-                className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
-                  selectedStage === "KG2 / Year 1"
-                    ? "bg-violet-100 text-violet-800"
-                    : "bg-slate-300 text-slate-700"
-                }`}
-              >
-                Year 1
-              </span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleStageSwitch("Grade 1 / Year 2")}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-200 ${
-                selectedStage === "Grade 1 / Year 2"
-                  ? "bg-white text-violet-700 shadow-sm scale-[1.02]"
-                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/50"
-              }`}
-            >
-              <span>⭐ Grade 1 / Year 2</span>
-              <span
-                className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
-                  selectedStage === "Grade 1 / Year 2"
-                    ? "bg-violet-100 text-violet-800"
-                    : "bg-slate-300 text-slate-700"
-                }`}
-              >
-                Year 2
-              </span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleStageSwitch("Grade 2 / Year 3")}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-200 ${
-                selectedStage === "Grade 2 / Year 3"
-                  ? "bg-white text-violet-700 shadow-sm scale-[1.02]"
-                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/50"
-              }`}
-            >
-              <span>🎓 Grade 2 / Year 3</span>
-              <span
-                className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
-                  selectedStage === "Grade 2 / Year 3"
-                    ? "bg-violet-100 text-violet-800"
-                    : "bg-slate-300 text-slate-700"
-                }`}
-              >
-                Year 3
-              </span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleStageSwitch("Grade 3 / Year 4")}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-200 ${
-                selectedStage === "Grade 3 / Year 4"
-                  ? "bg-white text-violet-700 shadow-sm scale-[1.02]"
-                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/50"
-              }`}
-            >
-              <span>🚀 Grade 3 / Year 4</span>
-              <span
-                className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
-                  selectedStage === "Grade 3 / Year 4"
-                    ? "bg-violet-100 text-violet-800"
-                    : "bg-slate-300 text-slate-700"
-                }`}
-              >
-                Year 4
-              </span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleStageSwitch("Grade 4 / Year 5")}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-200 ${
-                selectedStage === "Grade 4 / Year 5"
-                  ? "bg-white text-violet-700 shadow-sm scale-[1.02]"
-                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/50"
-              }`}
-            >
-              <span>🌟 Grade 4 / Year 5</span>
-              <span
-                className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
-                  selectedStage === "Grade 4 / Year 5"
-                    ? "bg-violet-100 text-violet-800"
-                    : "bg-slate-300 text-slate-700"
-                }`}
-              >
-                Year 5
-              </span>
-            </button>
-          </div>
+          <StageSelector
+            value={selectedStage}
+            onChange={handleStageSwitch}
+            theme="violet"
+          />
         </div>
 
         {/* Title Header Card */}
@@ -1039,26 +744,6 @@ export default function PrimarySpeakingAssessmentForm() {
             </div>
 
             <div className="flex flex-col sm:flex-row items-center gap-4 self-start md:self-auto">
-              <button
-                type="button"
-                onClick={() => setShowSheetModal(true)}
-                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-violet-50 hover:bg-violet-100 text-violet-700 font-bold text-xs border border-violet-200 transition-colors shadow-2xs"
-              >
-                <svg
-                  className="w-4 h-4 text-violet-600"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={2}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"
-                  />
-                </svg>
-                View Printable Sheet
-              </button>
 
               {/* Selected Level Badge */}
               <div className="bg-violet-50 border-2 border-violet-200 rounded-2xl p-4 flex items-center gap-4 shadow-xs">
@@ -1310,6 +995,18 @@ export default function PrimarySpeakingAssessmentForm() {
               Student & Assessment Details
             </h2>
 
+            <StudentPicker
+              tier="primary"
+              value={formData.studentName}
+              onSelect={(s) => {
+                if (['FS1', 'FS2 - KG1', 'KG2 / Year 1', 'Grade 1 / Year 2', 'Grade 2 / Year 3', 'Grade 3 / Year 4', 'Grade 4 / Year 5'].includes(s.yearGroup)) handleStageSwitch(s.yearGroup);
+                setFormData((p) => ({
+                  ...p,
+                  studentName: studentLabel(s),
+                  yearGroupAndClass: studentYearClass(s),
+                }));
+              }}
+            />
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <div>
                 <label className="block text-xs font-extrabold text-slate-700 mb-1.5">
@@ -1373,38 +1070,6 @@ export default function PrimarySpeakingAssessmentForm() {
             </div>
           </div>
 
-          {/* AI Assessment Conductor */}
-          <AIAssistantConductor
-            questions={activeQuestions.map((q) => q.text)}
-            rubrics={
-              isGrade4Stage
-                ? activeQuestions.map((q, idx) => ({
-                    keyPhrases: GRADE4_KEY_WORDS,
-                    relatablePhrases:
-                      idx === 0
-                        ? ["fish", "coral", "reef", "swimming", "colourful", "underwater", "ocean", "plants"]
-                        : idx === 1
-                        ? ["shark", "swimming", "danger", "kelp", "deep water", "hunting", "moving", "sea"]
-                        : idx === 2
-                        ? ["first", "next", "then", "after that", "finally", "continues", "happens next"]
-                        : ["like", "think", "favourite", "story", "interesting", "ocean", "shark", "fish"],
-                  }))
-                : isGrade3Stage
-                ? activeQuestions.map(() => ({
-                    keyPhrases: GRADE3_KEY_WORDS,
-                    relatablePhrases: ["table", "story", "tablet", "rocket", "space"],
-                  }))
-                : isGrade2Stage
-                ? activeQuestions.map(() => ({
-                    keyPhrases: GRADE2_KEY_WORDS,
-                    relatablePhrases: ["classroom", "story", "picture", "girl", "school"],
-                  }))
-                : null
-            }
-            title={`${selectedStage} Speaking Conductor`}
-            onAnswersArrayChange={setAiAnswers}
-          />
-
           {/* Student Verbal Responses Logging (Optional notes per question) */}
           <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-xs">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
@@ -1435,21 +1100,17 @@ export default function PrimarySpeakingAssessmentForm() {
                       {q.text}
                     </span>
                   </div>
-                  {aiAnswers && aiAnswers[idx] && aiAnswers[idx].trim().length > 0 && (
-                    <div className="mt-2 mb-2 text-sm text-indigo-700 bg-indigo-50/50 p-3 rounded-xl border border-indigo-100 shadow-inner">
-                      <span className="font-bold mr-1">Student Answer (AI):</span> "{aiAnswers[idx]}"
-                    </div>
-                  )}
-                  <input
-                    type="text"
-                    value={questionNotes[idx] || ""}
-                    onChange={(e) => handleNoteChange(idx, e.target.value)}
+                  <QuestionVoiceControls
+                    key={`${selectedStage}-${q.id}`}
+                    question={q.text}
+                    answer={questionNotes[idx] || ""}
+                    onAnswerChange={(text) => handleNoteChange(idx, text)}
+                    alwaysShowAnswer
                     placeholder={
                       isGrade1Stage
-                        ? `Note student's response to Prompt ${q.id}...`
-                        : "Note child's answer (e.g. 'eating rice', points to plate, says 'happy')..."
+                        ? `Student's response to Prompt ${q.id} appears here — or type a note...`
+                        : "Child's answer appears here as they speak — or type a note (e.g. 'eating rice', points to plate)..."
                     }
-                    className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-violet-200 focus:border-violet-500"
                   />
                 </div>
               ))}
@@ -1535,39 +1196,6 @@ export default function PrimarySpeakingAssessmentForm() {
                     );
                   })}
 
-                  {/* Key Words Row (Exact from FS1/FS2/KG2 & Grade 2/Year 3 sheets) */}
-                  {!isGrade4Stage && (!isGrade1Stage || isGrade2Stage) && (
-                    <tr className="bg-slate-50/90 border-t-2 border-slate-300">
-                      <td className="py-4 px-4 font-black text-slate-800 align-top">
-                        Key Words
-                      </td>
-                      <td colSpan={2} className="py-4 px-4">
-                        <p className="text-[11px] text-slate-500 font-semibold mb-2">
-                          Tap words to mark what the student used during speaking:
-                        </p>
-                        <div className="flex flex-wrap gap-1.5">
-                          {activeKeyWords.map((word, kIdx) => {
-                            const isUsed = usedKeywords.includes(word);
-                            return (
-                              <button
-                                key={kIdx}
-                                type="button"
-                                onClick={() => toggleKeyword(word)}
-                                className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all ${
-                                  isUsed
-                                    ? "bg-violet-600 text-white font-bold shadow-xs scale-105"
-                                    : "bg-white border border-slate-200 text-slate-700 hover:border-violet-300"
-                                }`}
-                              >
-                                {isUsed ? "✓ " : ""}
-                                {word}
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </td>
-                    </tr>
-                  )}
                 </tbody>
               </table>
             </div>

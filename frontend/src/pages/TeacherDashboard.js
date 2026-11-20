@@ -7,6 +7,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LabelList
 } from 'recharts';
 import Chart from 'react-apexcharts';
+import { AssessmentIcon, ASSESSMENT_ICON_TILE } from '../components/AssessmentIcons';
 
 // Helper for identifying Primary vs Secondary assessments
 const isPrimaryAssessment = (a) => {
@@ -104,7 +105,7 @@ const PRIMARY_ACTION_CARDS = [
     title: 'Listening Assessment',
     badge: 'FS1 · FS2 · KG2 · Year 2',
     description: '10 personal questions with oral evaluation and CEFR scoring across FS1, FS2, KG2 / Year 1, and Grade 1 / Year 2.',
-    icon: '🎧',
+    icon: 'listening',
     color: 'bg-cyan-500',
     lightBg: 'bg-cyan-50 text-cyan-700 border-cyan-200',
     route: '/assessment/primary-listening'
@@ -114,9 +115,9 @@ const PRIMARY_ACTION_CARDS = [
     title: 'Speaking Assessment',
     badge: 'FS1 · FS2 · KG2 / Y1',
     description: 'Comprehension questions with family meal picture prompt and CEFR level evaluation (Pre-A1 to B2-C1).',
-    icon: '🎙️',
-    color: 'bg-purple-500',
-    lightBg: 'bg-purple-50 text-purple-700 border-purple-200',
+    icon: 'speaking',
+    color: 'bg-violet-500',
+    lightBg: 'bg-violet-50 text-violet-700 border-violet-200',
     route: '/assessment/primary-speaking'
   },
   {
@@ -124,7 +125,7 @@ const PRIMARY_ACTION_CARDS = [
     title: 'Reading Assessment',
     badge: 'FS1 · FS2 · KG2 / Y1',
     description: '6 CVC picture cards with sound blending, phonics decoding, and CEFR level scoring (Pre-A1 to B2-C1).',
-    icon: '📖',
+    icon: 'reading',
     color: 'bg-emerald-500',
     lightBg: 'bg-emerald-50 text-emerald-700 border-emerald-200',
     route: '/assessment/primary-reading'
@@ -133,8 +134,8 @@ const PRIMARY_ACTION_CARDS = [
     id: 'primary-writing',
     title: 'Writing Assessment',
     badge: 'FS1 · FS2 · KG2 / Y1 · AI',
-    description: 'FS1 CVC prompts, FS2 & KG2 / Year 1 picture story with real-time AI keyword detection and rubric.',
-    icon: '✏️',
+    description: 'FS1 CVC prompts, FS2 & KG2 / Year 1 picture story with AI-assisted evaluation and rubric.',
+    icon: 'writing',
     color: 'bg-pink-500',
     lightBg: 'bg-pink-50 text-pink-700 border-pink-200',
     route: '/assessment/primary-writing'
@@ -144,7 +145,7 @@ const PRIMARY_ACTION_CARDS = [
     title: 'Phonic Assessment',
     badge: 'FS1 · FS2 · KG2 (Phase 2–5)',
     description: 'Systematic synthetic phonics across Phase 2, Phase 3, Phase 4 consonant blends, and Phase 5 alternative spellings.',
-    icon: '🔤',
+    icon: 'phonic',
     color: 'bg-amber-500',
     lightBg: 'bg-amber-50 text-amber-700 border-amber-200',
     route: '/assessment/primary-phonic'
@@ -158,7 +159,7 @@ const SECONDARY_ACTION_CARDS = [
     title: 'Listening Assessment',
     badge: 'Year 7–13 · Junior & Senior',
     description: 'Comprehensive evaluation of auditory comprehension across CEFR levels.',
-    icon: '🎧',
+    icon: 'listening',
     color: 'bg-cyan-500',
     lightBg: 'bg-cyan-50 text-cyan-700 border-cyan-200',
     route: '/assessment/listening'
@@ -168,9 +169,9 @@ const SECONDARY_ACTION_CARDS = [
     title: 'Speaking Assessment',
     badge: 'Year 7–13 · Junior & Senior',
     description: 'Assess verbal fluency, pronunciation, and interactive communication.',
-    icon: '🎙️',
-    color: 'bg-purple-500',
-    lightBg: 'bg-purple-50 text-purple-700 border-purple-200',
+    icon: 'speaking',
+    color: 'bg-violet-500',
+    lightBg: 'bg-violet-50 text-violet-700 border-violet-200',
     route: '/assessment/speaking'
   },
   {
@@ -178,7 +179,7 @@ const SECONDARY_ACTION_CARDS = [
     title: 'Reading Assessment',
     badge: 'Year 7–13 · Junior & Senior',
     description: 'Evaluate textual comprehension, vocabulary usage, and speed.',
-    icon: '📖',
+    icon: 'reading',
     color: 'bg-emerald-500',
     lightBg: 'bg-emerald-50 text-emerald-700 border-emerald-200',
     route: '/assessment/reading'
@@ -188,7 +189,7 @@ const SECONDARY_ACTION_CARDS = [
     title: 'Writing Assessment',
     badge: 'Year 7–13 · Junior & Senior',
     description: 'Assess grammatical accuracy, structure, and written expression.',
-    icon: '✏️',
+    icon: 'writing',
     color: 'bg-pink-500',
     lightBg: 'bg-pink-50 text-pink-700 border-pink-200',
     route: '/assessment/writing'
@@ -202,11 +203,11 @@ export default function TeacherDashboard() {
   // Read initial school tier from: 1. URL search param (?tier=primary), 2. localStorage, 3. fallback 'primary'
   const getInitialTier = () => {
     const fromUrl = searchParams.get('tier') || searchParams.get('stage') || searchParams.get('school');
-    if (fromUrl && (fromUrl.toLowerCase() === 'primary' || fromUrl.toLowerCase() === 'secondary' || fromUrl.toLowerCase() === 'all')) {
+    if (fromUrl && (fromUrl.toLowerCase() === 'primary' || fromUrl.toLowerCase() === 'secondary')) {
       return fromUrl.toLowerCase();
     }
     const saved = localStorage.getItem('assessmentSchoolTier');
-    if (saved && (saved === 'primary' || saved === 'secondary' || saved === 'all')) {
+    if (saved === 'primary' || saved === 'secondary') {
       return saved;
     }
     return 'primary';
@@ -221,20 +222,16 @@ export default function TeacherDashboard() {
   // Sync state if URL changes
   useEffect(() => {
     const fromUrl = searchParams.get('tier') || searchParams.get('stage') || searchParams.get('school');
-    if (fromUrl && (fromUrl.toLowerCase() === 'primary' || fromUrl.toLowerCase() === 'secondary' || fromUrl.toLowerCase() === 'all')) {
+    if (fromUrl && (fromUrl.toLowerCase() === 'primary' || fromUrl.toLowerCase() === 'secondary')) {
       const normalized = fromUrl.toLowerCase();
       setActiveTier(normalized);
-      if (normalized !== 'all') {
-        localStorage.setItem('assessmentSchoolTier', normalized);
-      }
+      localStorage.setItem('assessmentSchoolTier', normalized);
     }
   }, [searchParams]);
 
   const handleTierChange = (newTier) => {
     setActiveTier(newTier);
-    if (newTier !== 'all') {
-      localStorage.setItem('assessmentSchoolTier', newTier);
-    }
+    localStorage.setItem('assessmentSchoolTier', newTier);
     const updated = new URLSearchParams(searchParams);
     updated.set('tier', newTier);
     setSearchParams(updated, { replace: true });
@@ -342,12 +339,6 @@ export default function TeacherDashboard() {
       { name: 'Writing', T1: 0, T2: 0, T3: 0, count: { T1: 0, T2: 0, T3: 0 } },
       { name: 'Speaking', T1: 0, T2: 0, T3: 0, count: { T1: 0, T2: 0, T3: 0 } },
       { name: 'Listening', T1: 0, T2: 0, T3: 0, count: { T1: 0, T2: 0, T3: 0 } },
-    ] : tier === 'all' ? [
-      { name: 'Phonics', T1: 0, T2: 0, T3: 0, count: { T1: 0, T2: 0, T3: 0 } },
-      { name: 'Reading', T1: 0, T2: 0, T3: 0, count: { T1: 0, T2: 0, T3: 0 } },
-      { name: 'Writing', T1: 0, T2: 0, T3: 0, count: { T1: 0, T2: 0, T3: 0 } },
-      { name: 'Speaking', T1: 0, T2: 0, T3: 0, count: { T1: 0, T2: 0, T3: 0 } },
-      { name: 'Listening', T1: 0, T2: 0, T3: 0, count: { T1: 0, T2: 0, T3: 0 } },
     ] : [
       { name: 'Reading', T1: 0, T2: 0, T3: 0, count: { T1: 0, T2: 0, T3: 0 } },
       { name: 'Writing', T1: 0, T2: 0, T3: 0, count: { T1: 0, T2: 0, T3: 0 } },
@@ -361,7 +352,7 @@ export default function TeacherDashboard() {
       const score = getDisplayScore(a);
 
       let index = -1;
-      if (isPrimaryMode || tier === 'all') {
+      if (isPrimaryMode) {
         if (type.includes('phonic')) index = 0;
         else if (type.includes('reading')) index = 1;
         else if (type.includes('writing')) index = 2;
@@ -604,9 +595,7 @@ export default function TeacherDashboard() {
                 <span className="text-xs font-bold text-slate-500">
                   {activeTier === 'primary'
                     ? '🎒 Primary School (FS1 · FS2 - KG1 · KG2 / Year 1)'
-                    : activeTier === 'secondary'
-                    ? '🎓 Secondary School (Year 7–13)'
-                    : '🌐 Combined All Tiers'}
+                    : '🎓 Secondary School (Year 7–13)'}
                 </span>
               </div>
               <h1 className="text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight">
@@ -702,26 +691,6 @@ export default function TeacherDashboard() {
                 </span>
               </button>
 
-              {/* ALL TOGGLE */}
-              <button
-                onClick={() => handleTierChange('all')}
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-200 ${
-                  activeTier === 'all'
-                    ? 'bg-white text-indigo-700 shadow-sm scale-[1.02]'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
-                }`}
-              >
-                <span>🌐 All</span>
-                <span
-                  className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
-                    activeTier === 'all'
-                      ? 'bg-indigo-100 text-indigo-800'
-                      : 'bg-slate-200 text-slate-700'
-                  }`}
-                >
-                  {allAssessments.length}
-                </span>
-              </button>
             </div>
           </div>
 
@@ -734,11 +703,6 @@ export default function TeacherDashboard() {
             {activeTier === 'secondary' && (
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200 text-xs font-black">
                 📘 Year 7–9 (Junior) · Year 10–13 (Senior)
-              </span>
-            )}
-            {activeTier === 'all' && (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200 text-xs font-black">
-                ✨ Unified School Portfolio
               </span>
             )}
           </div>
@@ -1071,8 +1035,8 @@ export default function TeacherDashboard() {
                 >
                   <div>
                     <div className="flex items-center justify-between gap-2 mb-4">
-                      <div className={`w-12 h-12 ${type.color} rounded-2xl flex items-center justify-center text-white text-2xl group-hover:scale-110 transition-transform shadow-md`}>
-                        {type.icon}
+                      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center border shadow-xs group-hover:scale-110 transition-transform ${ASSESSMENT_ICON_TILE[type.icon]}`}>
+                        <AssessmentIcon skill={type.icon} />
                       </div>
                       <span className={`text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full border ${type.lightBg}`}>
                         {type.badge}
@@ -1114,7 +1078,7 @@ export default function TeacherDashboard() {
                 Recent Assessment Activity
               </h2>
               <p className="text-slate-400 text-xs mt-0.5">
-                Showing most recent assessments for {activeTier === 'primary' ? 'Primary School' : activeTier === 'secondary' ? 'Secondary School' : 'All Tiers'}.
+                Showing most recent assessments for {activeTier === 'primary' ? 'Primary School' : 'Secondary School'}.
               </p>
             </div>
             <button
@@ -1213,7 +1177,7 @@ export default function TeacherDashboard() {
           </div>
           <div className="bg-white rounded-3xl p-8 border border-slate-100 shadow-sm flex flex-col justify-center">
             <h3 className="text-xl font-bold text-slate-800 mb-2">Primary & Secondary Rubrics</h3>
-            <p className="text-slate-500 mb-6 text-sm">Learn more about the CEFR descriptors (Pre-A1 to C2), scoring thresholds, and real-time AI keyword criteria.</p>
+            <p className="text-slate-500 mb-6 text-sm">Learn more about the CEFR descriptors (Pre-A1 to C2), scoring thresholds, and AI-assisted evaluation.</p>
             <button onClick={() => navigate('/about')} className="text-blue-600 font-black text-xs uppercase tracking-widest flex items-center gap-2 hover:gap-4 transition-all">View Assessment Guide <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7-7 7" /></svg></button>
           </div>
         </div>

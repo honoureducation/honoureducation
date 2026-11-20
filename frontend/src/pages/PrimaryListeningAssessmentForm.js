@@ -1,4 +1,7 @@
 import React, { useState, useEffect } from "react";
+import StudentPicker from "../components/StudentPicker";
+import { studentLabel, studentYearClass } from "../utils/students";
+import StageSelector from '../components/StageSelector';
 import {
   useNavigate,
   useSearchParams,
@@ -432,20 +435,6 @@ const GRADE4_YEAR5_RUBRIC_BANDS = [
     highlightBorder: "border-emerald-400 bg-emerald-50/70",
     accentColor: "text-emerald-600",
   },
-];
-
-const KEY_WORDS = [
-  "name",
-  "I am",
-  "I was born",
-  "I live",
-  "I live with",
-  "I have",
-  "brothers",
-  "sisters",
-  "friends",
-  "I like",
-  "my house",
 ];
 
 function calculateListeningLevel(score, stage) {
@@ -907,7 +896,7 @@ export default function PrimaryListeningAssessmentForm() {
     <div className="min-h-screen bg-slate-50 py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-5xl mx-auto space-y-8">
         {/* Navigation Breadcrumb & Stage Switcher */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="space-y-4">
           <Link
             to="/assessments?tier=primary"
             className="inline-flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-slate-800 transition-colors"
@@ -928,155 +917,11 @@ export default function PrimaryListeningAssessmentForm() {
             Back to Assessments
           </Link>
 
-          {/* Stage Selector (FS1, FS2 - KG1, KG2 / Year 1) */}
-          <div className="inline-flex bg-slate-200/90 p-1.5 rounded-2xl shadow-inner gap-1 flex-wrap self-start sm:self-auto">
-            <button
-              type="button"
-              onClick={() => handleStageSwitch("FS1")}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-200 ${
-                selectedStage === "FS1"
-                  ? "bg-white text-cyan-700 shadow-sm scale-[1.02]"
-                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/50"
-              }`}
-            >
-              <span>🌸 FS1</span>
-              <span
-                className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
-                  selectedStage === "FS1"
-                    ? "bg-cyan-100 text-cyan-800"
-                    : "bg-slate-300 text-slate-700"
-                }`}
-              >
-                Nursery
-              </span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleStageSwitch("FS2 - KG1")}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-200 ${
-                selectedStage === "FS2 - KG1"
-                  ? "bg-white text-cyan-700 shadow-sm scale-[1.02]"
-                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/50"
-              }`}
-            >
-              <span>🌼 FS2 - KG1</span>
-              <span
-                className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
-                  selectedStage === "FS2 - KG1"
-                    ? "bg-cyan-100 text-cyan-800"
-                    : "bg-slate-300 text-slate-700"
-                }`}
-              >
-                Reception
-              </span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleStageSwitch("KG2 / Year 1")}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-200 ${
-                selectedStage === "KG2 / Year 1"
-                  ? "bg-white text-cyan-700 shadow-sm scale-[1.02]"
-                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/50"
-              }`}
-            >
-              <span>🎒 KG2 / Year 1</span>
-              <span
-                className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
-                  selectedStage === "KG2 / Year 1"
-                    ? "bg-cyan-100 text-cyan-800"
-                    : "bg-slate-300 text-slate-700"
-                }`}
-              >
-                Year 1
-              </span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleStageSwitch("Grade 1 / Year 2")}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-200 ${
-                selectedStage === "Grade 1 / Year 2"
-                  ? "bg-white text-cyan-700 shadow-sm scale-[1.02]"
-                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/50"
-              }`}
-            >
-              <span>🎓 Grade 1 / Year 2</span>
-              <span
-                className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
-                  selectedStage === "Grade 1 / Year 2"
-                    ? "bg-cyan-100 text-cyan-800"
-                    : "bg-slate-300 text-slate-700"
-                }`}
-              >
-                Year 2
-              </span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleStageSwitch("Grade 2 / Year 3")}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-200 ${
-                selectedStage === "Grade 2 / Year 3"
-                  ? "bg-white text-cyan-700 shadow-sm scale-[1.02]"
-                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/50"
-              }`}
-            >
-              <span>⭐ Grade 2 / Year 3</span>
-              <span
-                className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
-                  selectedStage === "Grade 2 / Year 3"
-                    ? "bg-cyan-100 text-cyan-800"
-                    : "bg-slate-300 text-slate-700"
-                }`}
-              >
-                Year 3
-              </span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleStageSwitch("Grade 3 / Year 4")}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-200 ${
-                selectedStage === "Grade 3 / Year 4"
-                  ? "bg-white text-cyan-700 shadow-sm scale-[1.02]"
-                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/50"
-              }`}
-            >
-              <span>🚀 Grade 3 / Year 4</span>
-              <span
-                className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
-                  selectedStage === "Grade 3 / Year 4"
-                    ? "bg-cyan-100 text-cyan-800"
-                    : "bg-slate-300 text-slate-700"
-                }`}
-              >
-                Year 4
-              </span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleStageSwitch("Grade 4 / Year 5")}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-200 ${
-                selectedStage === "Grade 4 / Year 5"
-                  ? "bg-white text-cyan-700 shadow-sm scale-[1.02]"
-                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/50"
-              }`}
-            >
-              <span>🌟 Grade 4 / Year 5</span>
-              <span
-                className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
-                  selectedStage === "Grade 4 / Year 5"
-                    ? "bg-cyan-100 text-cyan-800"
-                    : "bg-slate-300 text-slate-700"
-                }`}
-              >
-                Year 5
-              </span>
-            </button>
-          </div>
+          <StageSelector
+            value={selectedStage}
+            onChange={handleStageSwitch}
+            theme="cyan"
+          />
         </div>
 
         {/* Title Header Card */}
@@ -1111,26 +956,6 @@ export default function PrimaryListeningAssessmentForm() {
             </div>
 
             <div className="flex flex-col sm:flex-row items-center gap-4 self-start md:self-auto">
-              <button
-                type="button"
-                onClick={() => setShowSheetModal(true)}
-                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-cyan-50 hover:bg-cyan-100 text-cyan-700 font-bold text-xs border border-cyan-200 transition-colors shadow-2xs"
-              >
-                <svg
-                  className="w-4 h-4 text-cyan-600"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={2}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"
-                  />
-                </svg>
-                View Printable Sheet
-              </button>
 
               {/* Live Score Floating Badge */}
               <div className="bg-cyan-50 border-2 border-cyan-200 rounded-2xl p-4 flex items-center gap-4 shadow-xs">
@@ -1219,6 +1044,18 @@ export default function PrimaryListeningAssessmentForm() {
               Student & Assessment Details
             </h2>
 
+            <StudentPicker
+              tier="primary"
+              value={formData.studentName}
+              onSelect={(s) => {
+                if (['FS1', 'FS2 - KG1', 'KG2 / Year 1', 'Grade 1 / Year 2', 'Grade 2 / Year 3', 'Grade 3 / Year 4', 'Grade 4 / Year 5'].includes(s.yearGroup)) handleStageSwitch(s.yearGroup);
+                setFormData((p) => ({
+                  ...p,
+                  studentName: studentLabel(s),
+                  yearGroupAndClass: studentYearClass(s),
+                }));
+              }}
+            />
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <div>
                 <label className="block text-xs font-extrabold text-slate-700 mb-1.5">
@@ -1522,26 +1359,6 @@ export default function PrimaryListeningAssessmentForm() {
                     );
                   })}
 
-                  {/* Key Words Row (Image 2) */}
-                  {selectedStage !== "Grade 4 / Year 5" && (
-                    <tr className="bg-slate-50/80 border-t-2 border-slate-300">
-                      <td className="py-4 px-4 font-black text-slate-800">
-                        Key words
-                      </td>
-                      <td colSpan={2} className="py-4 px-4">
-                        <div className="flex flex-wrap gap-1.5">
-                          {KEY_WORDS.map((kw, kIdx) => (
-                            <span
-                              key={kIdx}
-                              className="bg-white border border-slate-200 text-slate-700 px-2 py-0.5 rounded-md font-mono text-[11px]"
-                            >
-                              {kw}
-                            </span>
-                          ))}
-                        </div>
-                      </td>
-                    </tr>
-                  )}
                 </tbody>
               </table>
             </div>

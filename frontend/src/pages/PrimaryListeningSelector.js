@@ -83,7 +83,7 @@ const OPTIONS = [
     subtitle: "Stage 4 · Year 2",
     title: "Grade 1 / Year 2 Listening Assessment",
     tag: "Grade 1 · Year 2 · Age 6–7",
-    desc: "10 personal questions with competent response evaluation, rubric scoring (Pre-A1 to B2–C1), and key words.",
+    desc: "10 personal questions with competent response evaluation and rubric scoring (Pre-A1 to B2–C1).",
     color: "bg-cyan-500",
     lightColor: "bg-cyan-50 text-cyan-500 border-cyan-200",
     icon: (

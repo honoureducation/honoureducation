@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import StudentPicker from '../components/StudentPicker';
+import { studentLabel, studentYearClass } from '../utils/students';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { assessmentAPI } from '../services/api';
@@ -122,6 +124,17 @@ export default function AssessmentForm() {
               <span className="text-blue-500">📋</span> Basic Information
             </h2>
 
+            <StudentPicker
+              value={formData.studentName}
+              onSelect={(s) => {
+                setFormData((p) => ({
+                  ...p,
+                  studentName: studentLabel(s),
+                  yearGroupAndClass: studentYearClass(s),
+                  email: s.email || p.email || localStorage.getItem('userEmail') || '',
+                }));
+              }}
+            />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-gray-700 font-semibold mb-2">Email *</label>

@@ -10,6 +10,7 @@ import {
   setPreferredVoiceId,
   pickAmericanVoice,
 } from "../utils/voiceUtils";
+import { analyseReading, summariseReading } from "../utils/readingMistakes";
 
 const FEMALE_VOICE_KEYWORDS = [
   "female",
@@ -97,14 +98,105 @@ export function pickBestFemaleVoice(voiceList = []) {
   return pool[0] || voiceList[0];
 }
 
+function ReadingMistakesPanel({ analysis }) {
+  const { accuracy, errorCount, errorsPer100, substitutions, omissions, insertions } =
+    analysis;
+  const tone =
+    errorsPer100 <= 5
+      ? "bg-emerald-50/80 border-emerald-200 text-emerald-900"
+      : errorsPer100 <= 15
+        ? "bg-amber-50/80 border-amber-200 text-amber-900"
+        : "bg-rose-50/80 border-rose-200 text-rose-900";
+  return (
+    <div className={`p-4 rounded-xl border ${tone}`}>
+      <div className="flex items-center gap-2 flex-wrap">
+        <span className="font-bold text-sm">Reading Accuracy: {accuracy}%</span>
+        <span className="text-xs px-2 py-0.5 rounded-full font-bold bg-white/80 border">
+          {errorCount} mistake{errorCount === 1 ? "" : "s"}
+        </span>
+        <span className="text-xs px-2 py-0.5 rounded-full font-bold bg-white/80 border">
+          ≈ {errorsPer100} errors / 100 words
+        </span>
+        {!analysis.finished && (
+          <span className="text-xs font-medium opacity-80">
+            Read {analysis.wordsReached} of {analysis.totalWords} words so far
+          </span>
+        )}
+      </div>
+      {(substitutions.length > 0 || omissions.length > 0 || insertions.length > 0) && (
+        <div className="mt-3 pt-2 border-t border-black/5 space-y-1.5 text-xs">
+          {substitutions.length > 0 && (
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span className="font-bold uppercase tracking-wider opacity-70">Misread:</span>
+              {substitutions.map((s, i) => (
+                <span key={i} className="px-2 py-0.5 rounded-md bg-white border border-amber-300 font-semibold">
+                  {s.word} → <em>{s.said}</em>
+                </span>
+              ))}
+            </div>
+          )}
+          {omissions.length > 0 && (
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span className="font-bold uppercase tracking-wider opacity-70">Skipped:</span>
+              {omissions.map((o, i) => (
+                <span key={i} className="px-2 py-0.5 rounded-md bg-white border border-rose-300 font-semibold line-through">
+                  {o.word}
+                </span>
+              ))}
+            </div>
+          )}
+          {insertions.length > 0 && (
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span className="font-bold uppercase tracking-wider opacity-70">Added:</span>
+              {insertions.map((x, i) => (
+                <span key={i} className="px-2 py-0.5 rounded-md bg-white border border-violet-300 font-semibold">
+                  +{x.word}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+      <p className="mt-2 text-[11px] opacity-70">
+        Speech recognition can mishear accents — please confirm before scoring.
+      </p>
+    </div>
+  );
+}
+
+const DEFAULT_READING_INSTRUCTION = (item) =>
+  `${item.label}. Please read this ${item.kind || "text"} out loud. Take your time.`;
+
 export default function AIAssistantConductor({
-  questions = [],
+  questions: questionsProp = [],
   rubrics = null,
   title = "AI Assessment Conductor",
-  subtitle = "Real-time keyword detection and instant comprehension understanding.",
+  subtitle,
   onCompleteTextChange,
   onAnswersArrayChange,
+  // Reading mode: the AI only gives the instruction (it never reads the text
+  // aloud), listens to the pupil, and captures their reading mistakes.
+  // readingItems: [{ label, text, kind?, instruction? }]
+  mode = "questions",
+  readingItems = null,
+  onReadingResultsChange,
 }) {
+  const isReading = mode === "reading" && Array.isArray(readingItems);
+
+  // Keep a stable questions array keyed on content, so parents that rebuild
+  // the array on every render don't reset the conductor mid-answer.
+  const rawQuestions = isReading
+    ? readingItems.map((item) => item.text)
+    : questionsProp || [];
+  const questionsKey = rawQuestions.join("\u0001");
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const questions = useMemo(() => rawQuestions, [questionsKey]);
+  const effectiveSubtitle =
+    subtitle ||
+    (isReading
+      ? "Instructs the pupil to read aloud, listens, and captures reading mistakes."
+      : "Real-time listening and instant comprehension understanding.");
+
   const [currentIdx, setCurrentIdx] = useState(-1);
   const [answers, setAnswers] = useState(
     Array(questions ? questions.length : 0).fill(""),
@@ -166,11 +258,28 @@ export default function AIAssistantConductor({
     if (onAnswersArrayChange) onAnswersArrayChange(answers);
   }, [answers, questions, onCompleteTextChange, onAnswersArrayChange]);
 
+  // In reading mode, only the instruction is spoken — never the text itself.
+  const getSpokenPrompt = (index) => {
+    if (isReading) {
+      const item = readingItems[index];
+      if (!item) return "";
+      return item.instruction || DEFAULT_READING_INSTRUCTION(item);
+    }
+    return questions[index];
+  };
+
   const speakQuestion = (index) => {
-    if (!synth || !questions || !questions[index]) return;
+    if (!questions || !questions[index]) return;
+    setCurrentIdx(index);
+    // Reading mode is silent: the AI never speaks — it only listens to the pupil.
+    if (isReading) {
+      if (synth) synth.cancel();
+      return;
+    }
+    if (!synth) return;
     synth.cancel(); // Stop any current speaking
     setIsSpeaking(true);
-    const utterance = new SpeechSynthesisUtterance(questions[index]);
+    const utterance = new SpeechSynthesisUtterance(getSpokenPrompt(index));
 
     const allVoices = synth.getVoices() || [];
     const { voice, pitch, rate } = pickAmericanVoice(allVoices, preferredVoiceId);
@@ -187,7 +296,6 @@ export default function AIAssistantConductor({
     utterance.onend = () => setIsSpeaking(false);
     utterance.onerror = () => setIsSpeaking(false);
     synth.speak(utterance);
-    setCurrentIdx(index);
   };
 
   const handleStart = () => {
@@ -245,15 +353,37 @@ export default function AIAssistantConductor({
     return evaluateAnswer(currentIdx, currentAnswer, currentRubric);
   }, [currentIdx, currentAnswer, currentRubric]);
 
-  const targetKeywords = useMemo(() => {
-    if (!currentRubric) return [];
-    return (
-      currentRubric.keyPhrases ||
-      currentRubric.aiKeywords ||
-      currentRubric.keywords ||
-      []
-    );
-  }, [currentRubric]);
+  // Reading mode: word-by-word mistake analysis for every item
+  const readingResults = useMemo(() => {
+    if (!isReading) return null;
+    return readingItems.map((item, idx) => {
+      const analysis = analyseReading(item.text, answers[idx] || "");
+      return {
+        label: item.label,
+        transcript: answers[idx] || "",
+        analysis,
+        summary: summariseReading(item.label, analysis),
+      };
+    });
+  }, [isReading, readingItems, answers]);
+
+  const readingResultsKey = readingResults
+    ? readingResults.map((r) => r.summary).join("\n")
+    : "";
+  const onReadingResultsChangeRef = useRef(onReadingResultsChange);
+  onReadingResultsChangeRef.current = onReadingResultsChange;
+  useEffect(() => {
+    if (readingResults && onReadingResultsChangeRef.current) {
+      onReadingResultsChangeRef.current(readingResults);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [readingResultsKey]);
+
+  const currentReading =
+    isReading && currentIdx >= 0 && readingResults
+      ? readingResults[currentIdx]
+      : null;
+
 
   return (
     <div className="bg-white p-6 rounded-2xl border-4 border-indigo-50 shadow-sm mb-8 relative overflow-hidden">
@@ -280,12 +410,18 @@ export default function AIAssistantConductor({
             <h2 className="text-xl font-black text-gray-900 tracking-tight">
               {title}
             </h2>
-            <p className="text-sm text-gray-500 font-medium">{subtitle}</p>
+            <p className="text-sm text-gray-500 font-medium">{effectiveSubtitle}</p>
           </div>
         </div>
 
-        {/* American Voice Indicator & Selector */}
-        <div className="flex items-center gap-2">
+        {isReading && (
+          <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold border shadow-xs bg-emerald-50 text-emerald-700 border-emerald-200">
+            🎧 Listening only — AI stays silent
+          </span>
+        )}
+
+        {/* American Voice Indicator & Selector (not used in silent reading mode) */}
+        <div className={`flex items-center gap-2 ${isReading ? "hidden" : ""}`}>
           <div
             className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold border shadow-xs ${
               preferredVoiceId === "american-male"
@@ -351,9 +487,10 @@ export default function AIAssistantConductor({
 
       {currentIdx === -1 ? (
         <div className="text-center py-10 bg-slate-50 rounded-xl border border-slate-100 relative">
-          <p className="text-gray-600 mb-6 font-semibold">
-            Ready to start? I will read the questions aloud and instantly detect
-            keywords as the student speaks.
+          <p className="text-gray-600 mb-6 font-semibold max-w-xl mx-auto">
+            {isReading
+              ? "Ready to start? The pupil presses 🎤 Start Reading and reads the text aloud. The AI only listens — it never reads anything out — and marks any words they misread, skip, or add."
+              : "Ready to start? I will read the questions aloud and evaluate the student's answers as they speak."}
           </p>
           <button
             type="button"
@@ -378,7 +515,7 @@ export default function AIAssistantConductor({
                 d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
               />
             </svg>
-            Start AI Guide
+            {isReading ? "Start Reading Assessment" : "Start AI Guide"}
           </button>
         </div>
       ) : (
@@ -389,39 +526,77 @@ export default function AIAssistantConductor({
           >
             <div className="flex justify-between items-center mb-3">
               <p className="text-sm font-black text-indigo-500 uppercase tracking-widest bg-indigo-100 px-3 py-1 rounded-full inline-block">
-                Question {currentIdx + 1} of {questions.length}
+                {isReading
+                  ? `${readingItems[currentIdx]?.label || "Text"} · ${currentIdx + 1} of ${questions.length}`
+                  : `Question ${currentIdx + 1} of ${questions.length}`}
               </p>
               <div
                 className={`w-3 h-3 rounded-full ${isSpeaking ? "bg-indigo-500 animate-ping" : "bg-slate-200"}`}
               />
             </div>
-            <p className="text-2xl font-bold text-gray-900 leading-tight mb-4">
-              {questions[currentIdx]}
-            </p>
 
-            {/* Target keywords preview */}
-            {targetKeywords.length > 0 && (
-              <div className="flex items-center gap-2 flex-wrap text-xs text-slate-500 mb-3 bg-slate-50 p-2.5 rounded-lg border border-slate-100">
-                <span className="font-semibold text-slate-700">
-                  Target AI Keywords:
-                </span>
-                {targetKeywords.slice(0, 8).map((kp, i) => (
-                  <span
-                    key={i}
-                    className="px-2 py-0.5 bg-white border border-slate-200 rounded text-slate-600 font-medium"
-                  >
-                    {kp}
+            {isReading ? (
+              <>
+                <p className="text-sm font-semibold text-emerald-700 mb-3 flex items-center gap-2">
+                  <span aria-hidden="true">🎤</span>
+                  Press "Start Reading" below, then read this {readingItems[currentIdx]?.kind || "text"} out loud.
+                </p>
+                <div className="p-5 bg-white rounded-xl border-2 border-slate-200 shadow-inner mb-4">
+                  <span className="block text-[11px] font-black uppercase tracking-wider text-slate-400 mb-2">
+                    Pupil reads this aloud
                   </span>
-                ))}
-                {targetKeywords.length > 8 && (
-                  <span className="text-slate-400 font-medium">
-                    +{targetKeywords.length - 8} more
-                  </span>
-                )}
-              </div>
+                  <p className="font-serif text-2xl font-bold text-gray-900 leading-relaxed">
+                    {currentReading && currentReading.analysis.hasReading
+                      ? currentReading.analysis.words.map((w, i) => {
+                          const inserted = currentReading.analysis.insertions.filter(
+                            (x) => x.beforeIndex === i,
+                          );
+                          return (
+                            <React.Fragment key={i}>
+                              {inserted.map((x, k) => (
+                                <span
+                                  key={`ins-${k}`}
+                                  className="text-base font-sans font-bold text-violet-700 bg-violet-50 border border-violet-200 rounded px-1 mx-0.5 align-middle"
+                                  title="Extra word the pupil added"
+                                >
+                                  +{x.word}
+                                </span>
+                              ))}
+                              <span
+                                className={
+                                  w.status === "correct"
+                                    ? "text-emerald-700"
+                                    : w.status === "substituted"
+                                      ? "text-amber-700 bg-amber-100 rounded px-0.5 underline decoration-wavy decoration-amber-500"
+                                      : w.status === "omitted"
+                                        ? "text-rose-600 bg-rose-50 rounded px-0.5 line-through"
+                                        : "text-gray-900"
+                                }
+                                title={
+                                  w.status === "substituted"
+                                    ? `Pupil said "${w.said}"`
+                                    : w.status === "omitted"
+                                      ? "Skipped"
+                                      : undefined
+                                }
+                              >
+                                {w.word}
+                              </span>{" "}
+                            </React.Fragment>
+                          );
+                        })
+                      : questions[currentIdx]}
+                  </p>
+                </div>
+              </>
+            ) : (
+              <p className="text-2xl font-bold text-gray-900 leading-tight mb-4">
+                {questions[currentIdx]}
+              </p>
             )}
 
-            <div className="flex gap-3">
+
+            <div className={`flex gap-3 ${isReading ? "hidden" : ""}`}>
               <button
                 type="button"
                 onClick={() => speakQuestion(currentIdx)}
@@ -440,7 +615,7 @@ export default function AIAssistantConductor({
                     d="M15.536 8.464a5 5 0 010 7.072M18.364 5.636a9 9 0 010 12.728M12 18.25l-4.5-4.5H4a1 1 0 01-1-1v-5a1 1 0 011-1h3.5l4.5-4.5v16.5z"
                   />
                 </svg>
-                Read Again
+                {isReading ? "Repeat Instruction" : "Read Again"}
               </button>
             </div>
           </div>
@@ -449,24 +624,43 @@ export default function AIAssistantConductor({
           <div className="space-y-3 bg-slate-50 p-6 rounded-2xl border border-slate-100">
             <div className="flex justify-between items-center w-full mb-2">
               <label className="block text-sm font-bold text-slate-700 uppercase tracking-wider">
-                Student's Answer
+                {isReading ? "What the Pupil Read (Captured)" : "Student's Answer"}
               </label>
               <VoiceDictation
+                // Remount per item so the mic stops when moving to the next text
+                key={currentIdx}
                 onStart={handleStartDictation}
                 onInterimResult={updateLiveAnswer}
+                idleLabel={isReading ? "Start Reading" : undefined}
+                activeLabel={isReading ? "Listening… (Tap when finished)" : undefined}
               />
             </div>
             <textarea
               value={answers[currentIdx] || ""}
               onChange={handleManualEdit}
               rows={4}
-              placeholder="Student's answer will appear here in real-time as they speak..."
+              placeholder={
+                isReading
+                  ? "Click 'Answer with Voice' and let the pupil read. Their reading is captured here and mistakes are marked automatically..."
+                  : "Student's answer will appear here in real-time as they speak..."
+              }
               className="w-full px-5 py-4 bg-white border-2 border-slate-200 rounded-xl focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/20 outline-none transition-all text-lg resize-none shadow-inner"
             />
 
-            {/* Real-time AI Understanding Badge */}
+            {/* Real-time AI Understanding Badge / Reading Mistakes */}
             <div className="pt-2">
-              {currentEvaluation && currentAnswer.trim().length > 0 ? (
+              {isReading ? (
+                currentReading && currentReading.analysis.hasReading ? (
+                  <ReadingMistakesPanel analysis={currentReading.analysis} />
+                ) : (
+                  <div className="text-xs text-slate-400 py-1">
+                    Waiting for the pupil to read. Mistakes are marked as they
+                    read: <span className="text-amber-700 font-bold">misread</span>,{" "}
+                    <span className="text-rose-600 font-bold">skipped</span>,{" "}
+                    <span className="text-violet-700 font-bold">added</span>.
+                  </div>
+                )
+              ) : currentEvaluation && currentAnswer.trim().length > 0 ? (
                 <div
                   className={`p-4 rounded-xl border transition-all ${
                     currentEvaluation.score === 2
@@ -503,36 +697,6 @@ export default function AIAssistantConductor({
                     </span>
                   </div>
 
-                  {/* Detected Keywords pills */}
-                  {currentEvaluation.detectedKeywords &&
-                    currentEvaluation.detectedKeywords.length > 0 && (
-                      <div className="mt-2.5 pt-2 border-t border-black/5 flex items-center gap-1.5 flex-wrap">
-                        <span className="text-xs font-bold uppercase tracking-wider opacity-70">
-                          Keywords Recognized:
-                        </span>
-                        {currentEvaluation.detectedKeywords.map((kw, i) => (
-                          <span
-                            key={i}
-                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-bold bg-white text-emerald-700 border border-emerald-300 shadow-xs"
-                          >
-                            <svg
-                              className="w-3.5 h-3.5 text-emerald-600"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                              strokeWidth={3}
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M4.5 12.75l6 6 9-13.5"
-                              />
-                            </svg>
-                            {kw}
-                          </span>
-                        ))}
-                      </div>
-                    )}
                 </div>
               ) : (
                 <div className="text-xs text-slate-400 flex items-center gap-1.5 py-1">
@@ -549,8 +713,8 @@ export default function AIAssistantConductor({
                       d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z"
                     />
                   </svg>
-                  AI is waiting for the student's answer. Recognition and
-                  keyword detection happen instantly.
+                  AI is waiting for the student's answer and will evaluate it
+                  instantly.
                 </div>
               )}
             </div>
@@ -572,7 +736,7 @@ export default function AIAssistantConductor({
                 onClick={handleNext}
                 className="px-8 py-3 bg-slate-900 text-white font-bold rounded-xl hover:bg-slate-800 shadow-xl shadow-slate-900/20 flex items-center gap-2 transition-all hover:scale-105 active:scale-95"
               >
-                Next Question
+                {isReading ? "Next Text" : "Next Question"}
                 <svg
                   className="w-5 h-5"
                   fill="none"
@@ -602,7 +766,7 @@ export default function AIAssistantConductor({
                     d="M5 13l4 4L19 7"
                   />
                 </svg>
-                All Questions Answered
+                {isReading ? "All Texts Read" : "All Questions Answered"}
               </div>
             )}
           </div>

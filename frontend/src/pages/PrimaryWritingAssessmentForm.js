@@ -1,4 +1,8 @@
 import React, { useState, useEffect, useMemo } from "react";
+import StudentPicker from "../components/StudentPicker";
+import ReadAloudButton from "../components/ReadAloudButton";
+import { studentLabel, studentYearClass } from "../utils/students";
+import StageSelector, { PRIMARY_STAGES } from '../components/StageSelector';
 import {
   useNavigate,
   useSearchParams,
@@ -7,7 +11,6 @@ import {
 } from "react-router-dom";
 import { toast } from "react-toastify";
 import { assessmentAPI } from "../services/api";
-import AIAssistantConductor from "../components/AIAssistantConductor";
 
 import henImg from "../assets/cvc/cvc-hen.jpg";
 import dogImg from "../assets/cvc/cvc-dog.jpg";
@@ -53,6 +56,18 @@ import grade4WritingSciFiStrip from "../assets/grade4-writing-sci-fi-strip.jpg";
 import grade4WritingCorridor from "../assets/grade4-writing-red-suit-corridor.jpg";
 import grade4WritingCity from "../assets/grade4-writing-futuristic-city.jpg";
 import grade4WritingAstronauts from "../assets/grade4-writing-astronauts-planet.jpg";
+import earlyWritingSit from "../assets/early-writing-sit.png";
+import earlyWritingCup from "../assets/early-writing-cup.png";
+import earlyWritingCat from "../assets/early-writing-cat.png";
+import earlyWritingBook from "../assets/early-writing-book.png";
+import earlyWritingShop from "../assets/early-writing-shop.png";
+import earlyWritingCake from "../assets/early-writing-cake.png";
+import grade5Year6WritingSheetImg from "../assets/grade5-year6-writing-sheet.png";
+import grade5Year6WritingResponseSheetImg from "../assets/grade5-year6-writing-response-sheet.png";
+import grade5WritingSciFiStrip from "../assets/grade5-writing-sci-fi-strip.png";
+import grade5WritingDesert from "../assets/grade5-writing-desert-traveller.png";
+import grade5WritingBlackHole from "../assets/grade5-writing-black-hole.png";
+import grade5WritingRuinedCity from "../assets/grade5-writing-ruined-city.png";
 
 // ==========================================
 // 6 CVC WRITING PROMPTS (FS1 WRITING)
@@ -153,7 +168,7 @@ const CEFR_RUBRIC_LEVELS = [
     dotColor: "bg-rose-500",
   },
   {
-    level: "A1.0â€“A1.2",
+    level: "A1.0–A1.2",
     description:
       "Writes initial sounds of CVC words (mostly correct). One mistake allowed per word.",
     badgeBg: "bg-orange-100 text-orange-800 border-orange-200",
@@ -161,30 +176,30 @@ const CEFR_RUBRIC_LEVELS = [
     dotColor: "bg-orange-500",
   },
   {
-    level: "A2.0â€“A2.2",
+    level: "A2.0–A2.2",
     description:
-      "Writes some initial sounds in CVC or CVVC words. Confidently writes CVC words. Beginning to write 4â€“5 letter words.",
+      "Writes some initial sounds in CVC or CVVC words. Confidently writes CVC words. Beginning to write 4–5 letter words.",
     badgeBg: "bg-amber-100 text-amber-800 border-amber-200",
     activeBg: "bg-amber-50 border-amber-400 text-amber-900",
     dotColor: "bg-amber-500",
   },
   {
-    level: "A2.3â€“B1.1",
+    level: "A2.3–B1.1",
     description:
-      "Can write 4â€“5 letter words independently with increasing accuracy.",
+      "Can write 4–5 letter words independently with increasing accuracy.",
     badgeBg: "bg-blue-100 text-blue-800 border-blue-200",
     activeBg: "bg-blue-50 border-blue-400 text-blue-900",
     dotColor: "bg-blue-600",
   },
   {
-    level: "B1.2â€“B1.3",
+    level: "B1.2–B1.3",
     description: "Can write a few words together to form a simple sentence.",
     badgeBg: "bg-indigo-100 text-indigo-800 border-indigo-200",
     activeBg: "bg-indigo-50 border-indigo-400 text-indigo-900",
     dotColor: "bg-indigo-600",
   },
   {
-    level: "B2â€“C1",
+    level: "B2–C1",
     description:
       "Writes fluently with few mistakes. Uses clear formation and confident spelling patterns.",
     badgeBg: "bg-emerald-100 text-emerald-800 border-emerald-200",
@@ -193,20 +208,27 @@ const CEFR_RUBRIC_LEVELS = [
   },
 ];
 
-const FS1_KEY_WORDS = [
-  "hen",
-  "dog",
-  "sit",
-  "boy",
-  "chicken",
-  "web",
-  "cobweb",
-  "bug",
-  "bugs",
-  "sun",
-  "sunshine",
-  "smile",
+// ==========================================
+// FS2 - KG1, KG2 / YEAR 1 & GRADE 1 / YEAR 2 — 6 WORD PROMPTS
+// Exact from uploaded sheets: s__, c__, c__, b___, sh__, ca__
+// ==========================================
+const EARLY_WORD_ITEMS = [
+  { id: 1, targetWord: "sit", given: "s", image: earlyWritingSit, label: "Girl sitting on a chair reading" },
+  { id: 2, targetWord: "cup", given: "c", image: earlyWritingCup, label: "Cup" },
+  { id: 3, targetWord: "cat", given: "c", image: earlyWritingCat, label: "Cat" },
+  { id: 4, targetWord: "book", given: "b", image: earlyWritingBook, label: "Open book" },
+  { id: 5, targetWord: "shop", given: "sh", image: earlyWritingShop, label: "Shop" },
+  { id: 6, targetWord: "cake", given: "ca", image: earlyWritingCake, label: "Cake" },
 ];
+
+// Auto-mark a written word: correct / partly correct (starts right) / incorrect
+const markEarlyWord = (written, item) => {
+  const w = (written || "").trim().toLowerCase().replace(/[^a-z]/g, "");
+  if (!w) return null;
+  if (w === item.targetWord) return "correct";
+  if (w.startsWith(item.given) || w[0] === item.targetWord[0]) return "partial";
+  return "incorrect";
+};
 
 // ==========================================
 // FS2 - KG1 WRITING ASSESSMENT DATA
@@ -283,7 +305,7 @@ const FS2_WRITING_QUESTIONS = [
     title: "Can you write a sentence for this picture?",
     promptGuide:
       'Encourage sentence construction: "Can you write a sentence for this picture?"',
-    category: "Sentence / Story keywords",
+    category: "Sentence / Story",
     placeholder:
       "e.g. They are playing football. The children are running in the park. It is sunny...",
     aiKeywords: [
@@ -297,36 +319,6 @@ const FS2_WRITING_QUESTIONS = [
       "playing in the park",
     ],
   },
-];
-
-const FS2_KEY_WORDS = [
-  "children",
-  "ball",
-  "grass",
-  "park",
-  "playing",
-  "trees",
-  "sky",
-  "football",
-  "girl",
-  "boy",
-  "happy",
-  "fun",
-];
-
-const KG2_KEY_WORDS = [
-  "children",
-  "ball",
-  "grass",
-  "park",
-  "playing",
-  "trees",
-  "sky",
-  "football",
-  "girl",
-  "boy",
-  "happy",
-  "fun",
 ];
 
 // ==========================================
@@ -406,7 +398,7 @@ const GRADE1_WRITING_QUESTIONS = [
     title: "Can you write a sentence for this picture?",
     promptGuide:
       'Encourage sentence construction: "Can you write a sentence for this picture?"',
-    category: "Sentence / Story keywords",
+    category: "Sentence / Story",
     placeholder:
       "e.g. They are kayaking on the river. They are paddling in the boat...",
     aiKeywords: [
@@ -421,23 +413,6 @@ const GRADE1_WRITING_QUESTIONS = [
       "beautiful place",
     ],
   },
-];
-
-const GRADE1_KEY_WORDS = [
-  "water",
-  "river",
-  "boat",
-  "ore",
-  "kayak",
-  "life jacket",
-  "trees",
-  "flow",
-  "fast",
-  "dangerous",
-  "sky",
-  "blue",
-  "rocks",
-  "raft",
 ];
 
 // ==========================================
@@ -537,21 +512,6 @@ const GRADE2_WRITING_RUBRIC = [
     activeBg: "bg-emerald-50 border-emerald-400 text-emerald-900",
     dotColor: "bg-emerald-600",
   },
-];
-
-const GRADE2_KEY_WORDS = [
-  "moon",
-  "star",
-  "girl",
-  "cube",
-  "night",
-  "sky",
-  "space",
-  "shine",
-  "child",
-  "box",
-  "block",
-  "shape",
 ];
 
 // ==========================================
@@ -710,7 +670,7 @@ const GRADE2_STORY_WRITING_QUESTIONS = [
     title: "Can you write a sentence or paragraph for these pictures?",
     promptGuide:
       'Encourage the child to tell and write the story: "Can you write sentences or a story for the pictures?"',
-    category: "Sentence / Story keywords",
+    category: "Sentence / Story",
     placeholder:
       "e.g. Once upon a time, an adventurer walked through the rocky mountains. They looked across the green forest valley as an eagle flew. At night, the children sat by the campfire with friendly dragons...",
     aiKeywords: [
@@ -737,74 +697,6 @@ const GRADE2_STORY_WRITING_QUESTIONS = [
       "end",
     ],
   },
-];
-
-const GRADE2_STORY_KEY_WORDS = [
-  "person",
-  "boy",
-  "girl",
-  "child",
-  "children",
-  "explorer",
-  "adventurer",
-  "friends",
-  "campers",
-  "dragons",
-  "red dragon",
-  "blue dragon",
-  "creatures",
-  "animals",
-  "walking",
-  "exploring",
-  "climbing",
-  "looking",
-  "standing",
-  "watching",
-  "enjoying nature",
-  "sitting",
-  "talking",
-  "listening",
-  "camping",
-  "telling stories",
-  "roasting food",
-  "playing",
-  "meeting dragons",
-  "being friendly",
-  "rocks",
-  "cliffs",
-  "mountains",
-  "sky",
-  "clouds",
-  "path",
-  "stone",
-  "ancient place",
-  "grass",
-  "trees",
-  "birds",
-  "sunshine",
-  "hill",
-  "forest",
-  "cloak",
-  "wind",
-  "peaceful",
-  "nature",
-  "fire",
-  "campfire",
-  "night",
-  "stars",
-  "warm",
-  "glowing",
-  "once upon a time",
-  "adventure",
-  "journey",
-  "magical place",
-  "happy",
-  "excited",
-  "surprised",
-  "brave",
-  "beginning",
-  "middle",
-  "end",
 ];
 
 const GRADE2_STORY_WRITING_RUBRIC = [
@@ -955,21 +847,6 @@ const GRADE3_WRITING_RUBRIC = [
     activeBg: "bg-emerald-50 border-emerald-400 text-emerald-900",
     dotColor: "bg-emerald-600",
   },
-];
-
-const GRADE3_KEY_WORDS = [
-  "moon",
-  "star",
-  "girl",
-  "cube",
-  "night",
-  "sky",
-  "space",
-  "shine",
-  "child",
-  "box",
-  "block",
-  "shape",
 ];
 
 // ==========================================
@@ -1162,55 +1039,6 @@ const GRADE3_STORY_WRITING_QUESTIONS = [
   },
 ];
 
-const GRADE3_STORY_KEY_WORDS = [
-  "spaceship",
-  "space",
-  "rocket",
-  "flying",
-  "stars",
-  "galaxy",
-  "light",
-  "travelling",
-  "adventure",
-  "mission",
-  "glowing",
-  "thrusters",
-  "explorer",
-  "traveller",
-  "desert",
-  "canyon",
-  "ruins",
-  "pillars",
-  "rocks",
-  "mountains",
-  "clouds",
-  "sky",
-  "walking",
-  "discovering",
-  "knight",
-  "hero",
-  "warrior",
-  "sword",
-  "shield",
-  "dragon",
-  "monster",
-  "beast",
-  "wings",
-  "fighting",
-  "battling",
-  "brave",
-  "cave",
-  "forest",
-  "once upon a time",
-  "suddenly",
-  "then",
-  "finally",
-  "bravely",
-  "quest",
-  "mysterious",
-  "journey",
-];
-
 const GRADE3_STORY_WRITING_RUBRIC = [
   {
     level: "Pre-A1",
@@ -1355,34 +1183,6 @@ const GRADE4_STORY_WRITING_QUESTIONS = [
   },
 ];
 
-const GRADE4_STORY_KEY_WORDS = [
-  "corridor",
-  "lights",
-  "walking",
-  "suit",
-  "future",
-  "mission",
-  "technology",
-  "exploring",
-  "tall buildings",
-  "planet",
-  "skyline",
-  "future city",
-  "glowing lights",
-  "space world",
-  "astronauts",
-  "rocky ground",
-  "planet surface",
-  "space suits",
-  "adventure",
-  "first",
-  "next",
-  "then",
-  "after that",
-  "finally",
-  "journey",
-];
-
 const GRADE4_STORY_WRITING_RUBRIC = [
   {
     level: "A1.0–A1.2",
@@ -1396,6 +1196,154 @@ const GRADE4_STORY_WRITING_RUBRIC = [
     level: "A2.0–A2.2",
     description:
       "Writes fragmented or very short sentences; many grammar/spelling errors; little sequence; weak link to pictures.",
+    badgeBg: "bg-amber-100 text-amber-800 border-amber-200",
+    activeBg: "bg-amber-50 border-amber-400 text-amber-900",
+    dotColor: "bg-amber-500",
+  },
+  {
+    level: "A2.3–B1.1",
+    description:
+      "Writes simple sentences with some sequence; basic vocabulary; mostly correct capitals and full stops.",
+    badgeBg: "bg-blue-100 text-blue-800 border-blue-200",
+    activeBg: "bg-blue-50 border-blue-400 text-blue-900",
+    dotColor: "bg-blue-600",
+  },
+  {
+    level: "B1.2–B1.3",
+    description:
+      "Writes short paragraphs; clear sequence; developing vocabulary; mostly correct tense and punctuation.",
+    badgeBg: "bg-indigo-100 text-indigo-800 border-indigo-200",
+    activeBg: "bg-indigo-50 border-indigo-400 text-indigo-900",
+    dotColor: "bg-indigo-600",
+  },
+  {
+    level: "B2–C1",
+    description:
+      "Writes a fluent, cohesive narrative; varied sentences; precise vocabulary; accurate punctuation; minimal errors.",
+    badgeBg: "bg-emerald-100 text-emerald-800 border-emerald-200",
+    activeBg: "bg-emerald-50 border-emerald-400 text-emerald-900",
+    dotColor: "bg-emerald-600",
+  },
+];
+
+// ==========================================
+// 3 PROMPTS FROM GRADE 5 / YEAR 6 WRITING ASSESSMENT
+// Exact from uploaded Grade 5 / Year 6 sheet
+// Pictures: Desert Traveller, Black Hole / Eclipse, Ruined Desert City
+// ==========================================
+const GRADE5_STORY_WRITING_QUESTIONS = [
+  {
+    id: 1,
+    number: "1",
+    title: "Who and what can you see?",
+    promptGuide: 'Point to the pictures and prompt: "Who and what can you see?"',
+    category: "Who and what can you see?",
+    placeholder:
+      "e.g. a lonely traveller in a long coat, golden sand dunes, tall rocky spires, a glowing black hole in space, a ruined city in the desert...",
+    aiKeywords: [
+      "man",
+      "traveller",
+      "traveler",
+      "stranger",
+      "coat",
+      "cloak",
+      "desert",
+      "sand",
+      "dunes",
+      "rocks",
+      "spires",
+      "sunset",
+      "sun",
+      "black hole",
+      "eclipse",
+      "ring",
+      "planet",
+      "space",
+      "stars",
+      "galaxy",
+      "city",
+      "ruins",
+      "buildings",
+      "towers",
+      "abandoned",
+    ],
+  },
+  {
+    id: 2,
+    number: "2",
+    title: "What are they doing?",
+    promptGuide: 'Ask the pupil: "What are they doing?"',
+    category: "What are they doing?",
+    placeholder:
+      "e.g. the traveller is walking alone across the hot desert, looking up at a strange glowing ring in the sky, searching through an empty ruined city...",
+    aiKeywords: [
+      "walking",
+      "travelling",
+      "traveling",
+      "journey",
+      "searching",
+      "looking",
+      "watching",
+      "staring",
+      "exploring",
+      "wandering",
+      "crossing",
+      "climbing",
+      "carrying",
+      "discovering",
+      "escaping",
+      "alone",
+    ],
+  },
+  {
+    id: 3,
+    number: "3",
+    title: "Can you write a story for these pictures?",
+    promptGuide:
+      'Prompt: "Can you write a story for these pictures? (Use first, next, then, finally)"',
+    category: "Sci-Fi Desert Adventure Story",
+    placeholder:
+      "e.g. First, a lonely traveller walked across the burning desert as the sun set behind the rocky spires. Next, a giant glowing ring appeared in the night sky. Then, he followed its light to an ancient ruined city. Finally, he discovered...",
+    aiKeywords: [
+      "first",
+      "next",
+      "then",
+      "after that",
+      "suddenly",
+      "finally",
+      "journey",
+      "traveller",
+      "desert",
+      "dunes",
+      "sunset",
+      "black hole",
+      "glowing",
+      "ring",
+      "sky",
+      "space",
+      "city",
+      "ruins",
+      "ancient",
+      "abandoned",
+      "mystery",
+      "discovered",
+    ],
+  },
+];
+
+const GRADE5_STORY_WRITING_RUBRIC = [
+  {
+    level: "A1.0–A1.2",
+    description:
+      "Writes only labels or single words; no sentences; meaning unclear; extremely limited written output.",
+    badgeBg: "bg-orange-100 text-orange-800 border-orange-200",
+    activeBg: "bg-orange-50 border-orange-400 text-orange-900",
+    dotColor: "bg-orange-500",
+  },
+  {
+    level: "A2.0–A2.2",
+    description:
+      "Writes fragmented or very short sentences; many errors; little sequence; weak link to pictures.",
     badgeBg: "bg-amber-100 text-amber-800 border-amber-200",
     activeBg: "bg-amber-50 border-amber-400 text-amber-900",
     dotColor: "bg-amber-500",
@@ -1455,13 +1403,22 @@ export default function PrimaryWritingAssessmentForm() {
   const preSelectedTerm = searchParams.get("term") || "T1";
 
   // Determine initial stage: FS1, FS2 - KG1, KG2 / Year 1, Grade 1 / Year 2, Grade 2 / Year 3, Grade 3 / Year 4, or Grade 4 / Year 5
+  const isGrade5Initial =
+    location.pathname.includes("grade5") ||
+    location.pathname.includes("year6") ||
+    searchParams.get("grade") === "grade5" ||
+    searchParams.get("grade") === "year6" ||
+    searchParams.get("stage") === "grade5" ||
+    searchParams.get("stage") === "year6";
+
   const isGrade4Initial =
-    location.pathname.includes("grade4") ||
-    location.pathname.includes("year5") ||
-    searchParams.get("grade") === "grade4" ||
-    searchParams.get("grade") === "year5" ||
-    searchParams.get("stage") === "grade4" ||
-    searchParams.get("stage") === "year5";
+    !isGrade5Initial &&
+    (location.pathname.includes("grade4") ||
+      location.pathname.includes("year5") ||
+      searchParams.get("grade") === "grade4" ||
+      searchParams.get("grade") === "year5" ||
+      searchParams.get("stage") === "grade4" ||
+      searchParams.get("stage") === "year5");
 
   const isGrade3Initial =
     !isGrade4Initial &&
@@ -1515,7 +1472,9 @@ export default function PrimaryWritingAssessmentForm() {
       searchParams.get("grade") === "fs2" ||
       searchParams.get("stage") === "fs2");
 
-  const initialStage = isGrade4Initial
+  const initialStage = isGrade5Initial
+    ? "Grade 5 / Year 6"
+    : isGrade4Initial
     ? "Grade 4 / Year 5"
     : isGrade3Initial
       ? "Grade 3 / Year 4"
@@ -1531,16 +1490,32 @@ export default function PrimaryWritingAssessmentForm() {
 
   const [selectedStage, setSelectedStage] = useState(initialStage);
   const [grade2WritingMode, setGrade2WritingMode] = useState("story"); // 'story' | 'phonics'
+  // FS2 - KG1, KG2 / Year 1, Grade 1 / Year 2: 6 word prompts or picture story
+  const [earlyWritingMode, setEarlyWritingMode] = useState("words"); // 'words' | 'story'
+  const [earlyWritten, setEarlyWritten] = useState(Array(EARLY_WORD_ITEMS.length).fill(""));
+  const [earlyStatuses, setEarlyStatuses] = useState(Array(EARLY_WORD_ITEMS.length).fill(null));
+  const [earlyNotes, setEarlyNotes] = useState(Array(EARLY_WORD_ITEMS.length).fill(""));
   const [grade3WritingMode, setGrade3WritingMode] = useState("story"); // 'story' | 'phonics'
   const [showSheetModal, setShowSheetModal] = useState(false);
   const [modalTab, setModalTab] = useState("sheet"); // 'sheet' | 'keywords' | 'worksheet'
   const [showParkZoom, setShowParkZoom] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  const isGrade5Stage =
+    selectedStage === "Grade 5 / Year 6" ||
+    selectedStage.includes("Year 6") ||
+    selectedStage.includes("Grade 5");
+  // NOTE: isGrade4Stage is the shared "3-picture story" layout used by
+  // Grade 4 / Year 5 AND Grade 5 / Year 6. Use isGrade5Stage to pick Grade 5 content.
   const isGrade4Stage =
+    isGrade5Stage ||
     selectedStage === "Grade 4 / Year 5" ||
     selectedStage.includes("Year 5") ||
     selectedStage.includes("Grade 4");
+  const upperStageLabel = isGrade5Stage ? "Grade 5 / Year 6" : "Grade 4 / Year 5";
+  const upperStoryQuestions = isGrade5Stage
+    ? GRADE5_STORY_WRITING_QUESTIONS
+    : GRADE4_STORY_WRITING_QUESTIONS;
   const isGrade3Stage =
     !isGrade4Stage &&
     (selectedStage === "Grade 3 / Year 4" ||
@@ -1560,14 +1535,15 @@ export default function PrimaryWritingAssessmentForm() {
       selectedStage.includes("Year 2") ||
       selectedStage.includes("Grade 1"));
   const isFS1Stage = selectedStage === "FS1";
+  const isEarlyStage =
+    selectedStage === "FS2 - KG1" || selectedStage === "KG2 / Year 1" || isGrade1Stage;
   const isWordItemsStage =
     isFS1Stage ||
+    (isEarlyStage && earlyWritingMode === "words") ||
     (isGrade2Stage && grade2WritingMode === "phonics") ||
     (isGrade3Stage && grade3WritingMode === "phonics");
   const isPictureAiStage =
-    selectedStage === "FS2 - KG1" ||
-    selectedStage === "KG2 / Year 1" ||
-    isGrade1Stage ||
+    (isEarlyStage && earlyWritingMode === "story") ||
     isGrade4Stage ||
     (isGrade2Stage && grade2WritingMode === "story") ||
     (isGrade3Stage && grade3WritingMode === "story");
@@ -1627,6 +1603,14 @@ export default function PrimaryWritingAssessmentForm() {
     1: "",
     2: "",
   });
+  // Grade 5 / Year 6 (3 story questions) — kept separate from Grade 4
+  const [grade5Answers, setGrade5Answers] = useState({
+    0: "",
+    1: "",
+    2: "",
+  });
+  const upperAnswers = isGrade5Stage ? grade5Answers : grade4Answers;
+  const setUpperAnswers = isGrade5Stage ? setGrade5Answers : setGrade4Answers;
 
   // ------------------------------------------
   // Grade 3 / Year 4 Specific State (4 picture word prompts / 3 story questions)
@@ -1662,10 +1646,9 @@ export default function PrimaryWritingAssessmentForm() {
     2: "",
     3: "",
   });
-  const [aiAnswers, setAiAnswers] = useState([]);
 
   const activeQuestions = isGrade4Stage
-    ? GRADE4_STORY_WRITING_QUESTIONS
+    ? upperStoryQuestions
     : isGrade3Stage
       ? GRADE3_STORY_WRITING_QUESTIONS
       : isGrade2Stage
@@ -1675,7 +1658,7 @@ export default function PrimaryWritingAssessmentForm() {
           : FS2_WRITING_QUESTIONS;
 
   const activeAnswers = isGrade4Stage
-    ? grade4Answers
+    ? upperAnswers
     : isGrade3Stage
       ? grade3Answers
       : isGrade2Stage
@@ -1686,230 +1669,8 @@ export default function PrimaryWritingAssessmentForm() {
             ? kg2Answers
             : fs2Answers;
 
-  const conductorQuestions = useMemo(() => {
-    if (selectedStage === "FS1") {
-      return FS1_WRITING_ITEMS.map(
-        (i) => `Spell and write: ${i.targetWord} (${i.promptDisplay})`,
-      );
-    }
-    if (isGrade4Stage) {
-      return GRADE4_STORY_WRITING_QUESTIONS.map((q) => q.title);
-    }
-    if (isGrade3Stage) {
-      if (grade3WritingMode === "phonics") {
-        return GRADE3_WRITING_ITEMS.map(
-          (item, idx) =>
-            `Picture ${idx + 1}: Can you write the word for this picture? (${item.targetWord})`,
-        );
-      }
-      return GRADE3_STORY_WRITING_QUESTIONS.map((q) => q.title);
-    }
-    if (isGrade2Stage) {
-      if (grade2WritingMode === "phonics") {
-        return GRADE2_WRITING_ITEMS.map(
-          (item, idx) =>
-            `Picture ${idx + 1}: Can you write the word for this picture? (${item.targetWord})`,
-        );
-      }
-      return GRADE2_STORY_WRITING_QUESTIONS.map((q) => q.title);
-    }
-    return activeQuestions.map((q) => q.title);
-  }, [
-    selectedStage,
-    isGrade4Stage,
-    isGrade3Stage,
-    grade3WritingMode,
-    isGrade2Stage,
-    grade2WritingMode,
-    activeQuestions,
-  ]);
 
-  const conductorRubrics = useMemo(() => {
-    if (selectedStage === "FS1") {
-      return FS1_WRITING_ITEMS.map((i) => ({
-        keyPhrases: [i.targetWord],
-        relatablePhrases: i.slots.map((s) => s.char),
-      }));
-    }
-    if (isGrade4Stage) {
-      return GRADE4_STORY_WRITING_QUESTIONS.map((q) => ({
-        keyPhrases: q.aiKeywords,
-        relatablePhrases: [
-          "corridor",
-          "city",
-          "astronauts",
-          "planet",
-          "story",
-          "first",
-          "next",
-          "finally",
-          "spacesuit",
-          "helmet",
-          "futuristic",
-        ],
-      }));
-    }
-    if (isGrade3Stage) {
-      if (grade3WritingMode === "phonics") {
-        return GRADE3_WRITING_ITEMS.map((item) => ({
-          keyPhrases: [item.targetWord, ...item.aiKeyWords],
-          relatablePhrases: [item.targetWord],
-        }));
-      }
-      return GRADE3_STORY_WRITING_QUESTIONS.map((q) => ({
-        keyPhrases: q.aiKeywords,
-        relatablePhrases: [],
-      }));
-    }
-    if (isGrade2Stage) {
-      if (grade2WritingMode === "phonics") {
-        return GRADE2_WRITING_ITEMS.map((item) => ({
-          keyPhrases: [item.targetWord, ...item.aiKeyWords],
-          relatablePhrases: [item.targetWord],
-        }));
-      }
-      return GRADE2_STORY_WRITING_QUESTIONS.map((q) => ({
-        keyPhrases: q.aiKeywords,
-        relatablePhrases: [],
-      }));
-    }
-    return activeQuestions.map((q) => ({
-      keyPhrases: q.aiKeywords,
-      relatablePhrases: [],
-    }));
-  }, [
-    selectedStage,
-    isGrade4Stage,
-    isGrade3Stage,
-    grade3WritingMode,
-    isGrade2Stage,
-    grade2WritingMode,
-    activeQuestions,
-  ]);
 
-  // Sync AI answers to active form textareas if not manually edited
-  useEffect(() => {
-    if (selectedStage !== "FS1" && aiAnswers && aiAnswers.length > 0) {
-      if (isGrade4Stage) {
-        setGrade4Answers((prev) => {
-          const next = { ...prev };
-          let changed = false;
-          aiAnswers.forEach((ans, idx) => {
-            if (ans && ans.trim().length > 0 && !next[idx]) {
-              next[idx] = ans.trim();
-              changed = true;
-            }
-          });
-          return changed ? next : prev;
-        });
-      } else if (isGrade3Stage) {
-        if (grade3WritingMode === "story") {
-          setGrade3Answers((prev) => {
-            const next = { ...prev };
-            let changed = false;
-            aiAnswers.forEach((ans, idx) => {
-              if (ans && ans.trim().length > 0 && !next[idx]) {
-                next[idx] = ans.trim();
-                changed = true;
-              }
-            });
-            return changed ? next : prev;
-          });
-        } else {
-          setGrade3Written((prev) => {
-            const next = [...prev];
-            let changed = false;
-            aiAnswers.forEach((ans, idx) => {
-              if (ans && ans.trim().length > 0 && !next[idx]) {
-                const cleaned = ans
-                  .trim()
-                  .toLowerCase()
-                  .replace(/[^a-z]/g, "");
-                next[idx] = cleaned;
-                changed = true;
-              }
-            });
-            return changed ? next : prev;
-          });
-        }
-      } else if (isGrade2Stage) {
-        if (grade2WritingMode === "story") {
-          setGrade2Answers((prev) => {
-            const next = { ...prev };
-            let changed = false;
-            aiAnswers.forEach((ans, idx) => {
-              if (ans && ans.trim().length > 0 && !next[idx]) {
-                next[idx] = ans.trim();
-                changed = true;
-              }
-            });
-            return changed ? next : prev;
-          });
-        } else {
-          setGrade2Written((prev) => {
-            const next = [...prev];
-            let changed = false;
-            aiAnswers.forEach((ans, idx) => {
-              if (ans && ans.trim().length > 0 && !next[idx]) {
-                const cleaned = ans
-                  .trim()
-                  .toLowerCase()
-                  .replace(/[^a-z]/g, "");
-                next[idx] = cleaned;
-                changed = true;
-              }
-            });
-            return changed ? next : prev;
-          });
-        }
-      } else if (selectedStage === "FS2 - KG1") {
-        setFs2Answers((prev) => {
-          const next = { ...prev };
-          let changed = false;
-          aiAnswers.forEach((ans, idx) => {
-            if (ans && ans.trim().length > 0 && !next[idx]) {
-              next[idx] = ans.trim();
-              changed = true;
-            }
-          });
-          return changed ? next : prev;
-        });
-      } else if (selectedStage === "KG2 / Year 1") {
-        setKg2Answers((prev) => {
-          const next = { ...prev };
-          let changed = false;
-          aiAnswers.forEach((ans, idx) => {
-            if (ans && ans.trim().length > 0 && !next[idx]) {
-              next[idx] = ans.trim();
-              changed = true;
-            }
-          });
-          return changed ? next : prev;
-        });
-      } else if (isGrade1Stage) {
-        setGrade1Answers((prev) => {
-          const next = { ...prev };
-          let changed = false;
-          aiAnswers.forEach((ans, idx) => {
-            if (ans && ans.trim().length > 0 && !next[idx]) {
-              next[idx] = ans.trim();
-              changed = true;
-            }
-          });
-          return changed ? next : prev;
-        });
-      }
-    }
-  }, [
-    aiAnswers,
-    selectedStage,
-    isGrade4Stage,
-    isGrade3Stage,
-    grade3WritingMode,
-    isGrade1Stage,
-    isGrade2Stage,
-    grade2WritingMode,
-  ]);
   // Load teacher email/name from localStorage
   useEffect(() => {
     if (preSelectedTerm) {
@@ -1939,6 +1700,14 @@ export default function PrimaryWritingAssessmentForm() {
     }));
     setSelectedLevel(null);
     setUsedKeywords([]);
+    setEarlyWritten(Array(EARLY_WORD_ITEMS.length).fill(""));
+    setEarlyStatuses(Array(EARLY_WORD_ITEMS.length).fill(null));
+    setEarlyNotes(Array(EARLY_WORD_ITEMS.length).fill(""));
+  };
+
+  const handleEarlyWrittenChange = (idx, value) => {
+    setEarlyWritten((prev) => prev.map((v, i) => (i === idx ? value : v)));
+    setEarlyStatuses((prev) => prev.map((v, i) => (i === idx ? markEarlyWord(value, EARLY_WORD_ITEMS[idx]) : v)));
   };
 
   // ------------------------------------------
@@ -2001,7 +1770,7 @@ export default function PrimaryWritingAssessmentForm() {
 
   const handleAnswerChange = (qIndex, text) => {
     if (isGrade4Stage) {
-      setGrade4Answers((prev) => ({ ...prev, [qIndex]: text }));
+      setUpperAnswers((prev) => ({ ...prev, [qIndex]: text }));
     } else if (isGrade3Stage) {
       setGrade3Answers((prev) => ({ ...prev, [qIndex]: text }));
     } else if (isGrade2Stage) {
@@ -2013,36 +1782,6 @@ export default function PrimaryWritingAssessmentForm() {
     } else {
       setFs2Answers((prev) => ({ ...prev, [qIndex]: text }));
     }
-  };
-
-  // Quick-append keyword chip to text
-  const handleAppendKeyword = (qIndex, keyword) => {
-    const setter = isGrade4Stage
-      ? setGrade4Answers
-      : isGrade3Stage
-        ? setGrade3Answers
-        : isGrade2Stage
-          ? setGrade2Answers
-          : isGrade1Stage
-            ? setGrade1Answers
-            : selectedStage === "KG2 / Year 1"
-              ? setKg2Answers
-              : setFs2Answers;
-
-    setter((prev) => {
-      const current = prev[qIndex] || "";
-      if (matchKeyword(current, keyword)) return prev; // already present
-      const separator =
-        current.trim().length > 0
-          ? current.trim().endsWith(",") || current.trim().endsWith(".")
-            ? " "
-            : ", "
-          : "";
-      return {
-        ...prev,
-        [qIndex]: current + separator + keyword,
-      };
-    });
   };
 
   // Detected AI keywords per question
@@ -2071,37 +1810,37 @@ export default function PrimaryWritingAssessmentForm() {
       .split(/\s+/)
       .filter(Boolean).length;
 
-    // B2â€“C1: Fluent, confident sentences, high keyword detection
+    // B2–C1: Fluent, confident sentences, high keyword detection
     if (
       (sentenceMatches.length >= 2 ||
         (sentenceText.split(/\s+/).length >= 5 && totalAiMatches >= 6)) &&
       formationQuality === "Clear & Confident"
     ) {
-      return "B2â€“C1";
+      return "B2–C1";
     }
 
-    // B1.2â€“B1.3: Formed simple sentence (few words together)
+    // B1.2–B1.3: Formed simple sentence (few words together)
     if (
       sentenceMatches.length >= 1 ||
       sentenceText.split(/\s+/).length >= 3 ||
       totalAiMatches >= 5
     ) {
-      return "B1.2â€“B1.3";
+      return "B1.2–B1.3";
     }
 
-    // A2.3â€“B1.1: 4â€“5 letter words independently with increasing accuracy
+    // A2.3–B1.1: 4–5 letter words independently with increasing accuracy
     if (totalAiMatches >= 3 || wordCountTotal >= 4) {
-      return "A2.3â€“B1.1";
+      return "A2.3–B1.1";
     }
 
-    // A2.0â€“A2.2: Some initial sounds, CVC words confident
+    // A2.0–A2.2: Some initial sounds, CVC words confident
     if (totalAiMatches >= 1 || wordCountTotal >= 2) {
-      return "A2.0â€“A2.2";
+      return "A2.0–A2.2";
     }
 
-    // A1.0â€“A1.2: Initial sounds of words
+    // A1.0–A1.2: Initial sounds of words
     if (wordCountTotal >= 1 || formationQuality === "Emerging") {
-      return "A1.0â€“A1.2";
+      return "A1.0–A1.2";
     }
 
     // Pre-A1: Mark-making / poor legibility
@@ -2205,12 +1944,6 @@ export default function PrimaryWritingAssessmentForm() {
         : pictureAiRecommendedLevel;
 
   // Toggle keyword chip (common)
-  const toggleKeyword = (kw) => {
-    setUsedKeywords((prev) =>
-      prev.includes(kw) ? prev.filter((k) => k !== kw) : [...prev, kw],
-    );
-  };
-
   // ------------------------------------------
   // Form Submission
   // ------------------------------------------
@@ -2239,7 +1972,7 @@ export default function PrimaryWritingAssessmentForm() {
     const isKG2 = selectedStage === "KG2 / Year 1";
     const isFS2 = selectedStage === "FS2 - KG1";
     const assessmentType = isGrade4
-      ? "Grade 4 / Year 5 Writing Assessment"
+      ? `${upperStageLabel} Writing Assessment`
       : isGrade3
         ? "Grade 3 / Year 4 Writing Assessment"
         : isGrade2
@@ -2337,6 +2070,38 @@ export default function PrimaryWritingAssessmentForm() {
           )
           .join(", "),
       };
+    } else if (isEarlyStage && earlyWritingMode === "words") {
+      const detailedResponses = EARLY_WORD_ITEMS.map((item, idx) => ({
+        itemNumber: idx + 1,
+        targetWord: item.targetWord,
+        prompt: `${item.given} ${"_ ".repeat(item.targetWord.length - item.given.length).trim()}`,
+        writtenByStudent: earlyWritten[idx] || "",
+        status: earlyStatuses[idx] || "not-evaluated",
+        notes: earlyNotes[idx] || "",
+      }));
+      const correct = earlyStatuses.filter((st) => st === "correct").length;
+      assessmentPayload = {
+        studentName: formData.studentName.trim(),
+        email: effectiveEmail,
+        yearGroupAndClass: formData.yearGroupAndClass || selectedStage,
+        teacherName: formData.teacherName.trim(),
+        term: formData.term || "T1",
+        assessmentType: `${assessmentType} (Word Writing)`,
+        cefrLevel: selectedLevel,
+        writingScore: selectedLevel,
+        level: selectedLevel,
+        score: correct,
+        totalScore: correct,
+        totalPossible: EARLY_WORD_ITEMS.length,
+        formationQuality,
+        pencilGrip,
+        keyWordsUsed: usedKeywords,
+        teachingFocus: teachingFocusNotes,
+        detailedResponses,
+        studentWriting: detailedResponses
+          .map((d) => `${d.targetWord}: ${d.writtenByStudent || "(no attempt)"}`)
+          .join(", "),
+      };
     } else if (isPictureAiStage) {
       const writingAnswers = activeQuestions.map((q, idx) => ({
         questionId: q.id,
@@ -2420,7 +2185,7 @@ export default function PrimaryWritingAssessmentForm() {
       };
       await assessmentAPI.createAssessment(assessmentPayload);
       toast.success(
-        `ðŸŽ‰ ${assessmentType} saved successfully! (${selectedLevel})`,
+        `🎉 ${assessmentType} saved successfully! (${selectedLevel})`,
       );
       setTimeout(() => {
         navigate("/assessments?tier=primary");
@@ -2436,25 +2201,9 @@ export default function PrimaryWritingAssessmentForm() {
     }
   };
 
-  const activeKeyWordsList = isGrade4Stage
-    ? GRADE4_STORY_KEY_WORDS
-    : isGrade3Stage
-      ? grade3WritingMode === "story"
-        ? GRADE3_STORY_KEY_WORDS
-        : GRADE3_KEY_WORDS
-      : isGrade2Stage
-        ? grade2WritingMode === "story"
-          ? GRADE2_STORY_KEY_WORDS
-          : GRADE2_KEY_WORDS
-        : isGrade1Stage
-          ? GRADE1_KEY_WORDS
-          : selectedStage === "FS1"
-            ? FS1_KEY_WORDS
-            : selectedStage === "FS2 - KG1"
-              ? FS2_KEY_WORDS
-              : KG2_KEY_WORDS;
-
-  const activeRubricLevels = isGrade4Stage
+  const activeRubricLevels = isGrade5Stage
+    ? GRADE5_STORY_WRITING_RUBRIC
+    : isGrade4Stage
     ? GRADE4_STORY_WRITING_RUBRIC
     : isGrade3Stage
       ? grade3WritingMode === "story"
@@ -2470,7 +2219,7 @@ export default function PrimaryWritingAssessmentForm() {
     <div className="min-h-screen bg-slate-50 py-8 px-4 sm:px-6 lg:px-8 font-sans">
       <div className="max-w-5xl mx-auto space-y-6">
         {/* Navigation Breadcrumb & Stage Switcher */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="space-y-4">
           <Link
             to="/assessments?tier=primary"
             className="inline-flex items-center text-sm font-bold text-pink-600 hover:text-pink-700 bg-white px-3.5 py-1.5 rounded-full border border-pink-200 shadow-2xs transition-colors self-start sm:self-auto"
@@ -2491,156 +2240,41 @@ export default function PrimaryWritingAssessmentForm() {
             Back to Assessment Selector
           </Link>
 
-          {/* Stage Selector Toggle (FS1, FS2 - KG1, KG2 / Year 1, Grade 1 / Year 2) */}
-          <div className="inline-flex bg-slate-200/90 p-1.5 rounded-2xl shadow-inner gap-1 self-start sm:self-auto flex-wrap">
-            <button
-              type="button"
-              onClick={() => handleStageSwitch("FS1")}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-200 ${
-                selectedStage === "FS1"
-                  ? "bg-white text-pink-600 shadow-sm scale-[1.02]"
-                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/50"
-              }`}
-            >
-              <span>ðŸŒ¸ FS1</span>
-              <span
-                className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
-                  selectedStage === "FS1"
-                    ? "bg-pink-100 text-pink-700"
-                    : "bg-slate-300 text-slate-700"
-                }`}
-              >
-                CVC Prompts
-              </span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleStageSwitch("FS2 - KG1")}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-200 ${
-                selectedStage === "FS2 - KG1"
-                  ? "bg-white text-pink-600 shadow-sm scale-[1.02]"
-                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/50"
-              }`}
-            >
-              <span>ðŸŒ¼ FS2 - KG1</span>
-              <span
-                className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
-                  selectedStage === "FS2 - KG1"
-                    ? "bg-pink-100 text-pink-700"
-                    : "bg-slate-300 text-slate-700"
-                }`}
-              >
-                Picture & AI
-              </span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleStageSwitch("KG2 / Year 1")}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-200 ${
-                selectedStage === "KG2 / Year 1"
-                  ? "bg-white text-pink-600 shadow-sm scale-[1.02]"
-                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/50"
-              }`}
-            >
-              <span>ðŸŽ“ KG2 / Year 1</span>
-              <span
-                className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
-                  selectedStage === "KG2 / Year 1"
-                    ? "bg-pink-100 text-pink-700"
-                    : "bg-slate-300 text-slate-700"
-                }`}
-              >
-                Picture & AI
-              </span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleStageSwitch("Grade 1 / Year 2")}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-200 ${
-                selectedStage === "Grade 1 / Year 2"
-                  ? "bg-white text-pink-600 shadow-sm scale-[1.02]"
-                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/50"
-              }`}
-            >
-              <span>â­ Grade 1 / Year 2</span>
-              <span
-                className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
-                  selectedStage === "Grade 1 / Year 2"
-                    ? "bg-pink-100 text-pink-700"
-                    : "bg-slate-300 text-slate-700"
-                }`}
-              >
-                Picture & AI
-              </span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleStageSwitch("Grade 2 / Year 3")}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-200 ${
-                selectedStage === "Grade 2 / Year 3"
-                  ? "bg-white text-pink-600 shadow-sm scale-[1.02]"
-                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/50"
-              }`}
-            >
-              <span>⭐ Grade 2 / Year 3</span>
-              <span
-                className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
-                  selectedStage === "Grade 2 / Year 3"
-                    ? "bg-pink-100 text-pink-700"
-                    : "bg-slate-300 text-slate-700"
-                }`}
-              >
-                Word Writing
-              </span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleStageSwitch("Grade 3 / Year 4")}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-200 ${
-                selectedStage === "Grade 3 / Year 4"
-                  ? "bg-white text-pink-600 shadow-sm scale-[1.02]"
-                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/50"
-              }`}
-            >
-              <span>⭐ Grade 3 / Year 4</span>
-              <span
-                className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
-                  selectedStage === "Grade 3 / Year 4"
-                    ? "bg-pink-100 text-pink-700"
-                    : "bg-slate-300 text-slate-700"
-                }`}
-              >
-                Dual Mode & AI
-              </span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleStageSwitch("Grade 4 / Year 5")}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-200 ${
-                selectedStage === "Grade 4 / Year 5"
-                  ? "bg-white text-pink-600 shadow-sm scale-[1.02]"
-                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/50"
-              }`}
-            >
-              <span>⭐ Grade 4 / Year 5</span>
-              <span
-                className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
-                  selectedStage === "Grade 4 / Year 5"
-                    ? "bg-pink-100 text-pink-700"
-                    : "bg-slate-300 text-slate-700"
-                }`}
-              >
-                Sci-Fi Story & AI
-              </span>
-            </button>
-          </div>
+          <StageSelector
+            stages={[...PRIMARY_STAGES, 'Grade 5 / Year 6']}
+            value={selectedStage}
+            onChange={handleStageSwitch}
+            theme="pink"
+          />
         </div>
+
+        {/* FS2 - KG1, KG2 / Year 1, Grade 1 / Year 2 — Word Writing vs Picture Story */}
+        {isEarlyStage && (
+          <div className="bg-white rounded-2xl border border-pink-200 p-3 shadow-xs flex flex-wrap items-center justify-between gap-3">
+            <span className="text-xs font-black uppercase tracking-wider text-slate-500">
+              {selectedStage} Assessment Part:
+            </span>
+            <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl">
+              {[
+                { key: "words", label: "✏️ Word Writing (6 Pictures)" },
+                { key: "story", label: "🖼️ Picture Story (4 Questions)" },
+              ].map((m) => (
+                <button
+                  key={m.key}
+                  type="button"
+                  onClick={() => setEarlyWritingMode(m.key)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all ${
+                    earlyWritingMode === m.key
+                      ? "bg-white text-pink-700 shadow-xs"
+                      : "text-slate-600 hover:text-slate-900"
+                  }`}
+                >
+                  {m.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Grade 3 / Year 4 Assessment Mode Toggle (Creative Story & AI vs Phonics Word Writing) */}
         {isGrade3Stage && (
@@ -2731,7 +2365,7 @@ export default function PrimaryWritingAssessmentForm() {
                 <span>
                   ✍️{" "}
                   {isGrade4Stage
-                    ? "Grade 4 / Year 5 Writing Assessment"
+                    ? `${upperStageLabel} Writing Assessment`
                     : isGrade3Stage
                       ? "Grade 3 / Year 4 Writing Assessment"
                       : isGrade2Stage
@@ -2756,12 +2390,12 @@ export default function PrimaryWritingAssessmentForm() {
                         ? "4 Picture Word-Writing Prompts"
                         : selectedStage === "FS1"
                           ? "6 CVC Missing Grapheme Prompts"
-                          : "Picture Prompt & AI Keyword Detection"}
+                          : "Picture Prompt & Story Writing"}
                 </span>
               </div>
               <h1 className="text-3xl sm:text-4xl font-black tracking-tight">
                 {isGrade4Stage
-                  ? "Grade 4 / Year 5 Writing Assessment"
+                  ? `${upperStageLabel} Writing Assessment`
                   : isGrade3Stage
                     ? "Grade 3 / Year 4 Writing Assessment"
                     : isGrade2Stage
@@ -2775,97 +2409,22 @@ export default function PrimaryWritingAssessmentForm() {
                             : "KG2 / Year 1 Writing Assessment"}
               </h1>
               <p className="text-pink-100 text-sm max-w-2xl font-medium">
-                {isGrade4Stage
+                {isGrade5Stage
+                  ? "Evaluate paragraph and story writing across 3 sci-fi pictures (Desert Traveller, Black Hole, Ruined City) with AI Assessment Conductor and CEFR Pre-A1 to B2–C1 scoring."
+                  : isGrade4Stage
                   ? "Evaluate narrative story writing across 3 sequential sci-fi pictures (Neon Corridor, Alien Metropolis, Planetary Astronauts) with AI Assessment Conductor and CEFR Pre-A1 to B2–C1 scoring."
                   : isGrade3Stage
                     ? "Dual-mode Grade 3 assessment: Evaluate creative narrative storytelling across 3 sequential sci-fi/fantasy pictures (Spaceship, Canyon Ruins, Knight & Dragon) or 4 phonics word-writing prompts (Moon, Star, Girl, Cube) with live AI detection and CEFR rubric."
                     : isGrade2Stage
                       ? "Evaluate independent word writing from 4 picture stimulus prompts (moon, star, girl, cube), phonics pattern decoding, and CEFR Pre-A1 to B2–C1 assessment."
                       : isGrade1Stage
-                        ? "Evaluate picture prompt story writing (kayakers navigating river rapids), vocabulary elicitation, and real-time AI keyword detection with CEFR Pre-A1 to B2–C1 assessment."
+                        ? "Evaluate picture prompt story writing (kayakers navigating river rapids), vocabulary elicitation, and CEFR Pre-A1 to B2–C1 assessment."
                         : selectedStage === "FS1"
                           ? "Evaluate mark-making, pencil grip, initial letter formation, and independent CVC word spelling with full CEFR Pre-A1 to B2–C1 scoring."
-                          : "Evaluate picture prompt story writing, vocabulary elicitation, and real-time AI keyword detection with CEFR Pre-A1 to B2–C1 assessment."}
+                          : "Evaluate picture prompt story writing, vocabulary elicitation, and CEFR Pre-A1 to B2–C1 assessment."}
               </p>
             </div>
 
-            <div className="flex flex-wrap items-center gap-2 self-start md:self-auto">
-              <button
-                type="button"
-                onClick={() => {
-                  setModalTab("sheet");
-                  setShowSheetModal(true);
-                }}
-                className="inline-flex items-center gap-2 bg-white text-pink-700 font-bold px-4 py-2.5 rounded-2xl shadow-lg hover:bg-pink-50 transition-all hover:scale-105 text-sm"
-              >
-                <svg
-                  className="w-5 h-5 text-pink-600"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={2}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"
-                  />
-                </svg>
-                View Assessment Sheet
-              </button>
-
-              {isPictureAiStage && (
-                <>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setModalTab("keywords");
-                      setShowSheetModal(true);
-                    }}
-                    className="inline-flex items-center gap-2 bg-pink-700/80 backdrop-blur text-white font-bold px-4 py-2.5 rounded-2xl shadow-lg hover:bg-pink-800 transition-all hover:scale-105 text-sm border border-white/20"
-                  >
-                    <svg
-                      className="w-5 h-5 text-pink-200"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      strokeWidth={2}
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z"
-                      />
-                    </svg>
-                    AI Keywords Sheet
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setModalTab("worksheet");
-                      setShowSheetModal(true);
-                    }}
-                    className="inline-flex items-center gap-2 bg-white/20 backdrop-blur text-white font-bold px-4 py-2.5 rounded-2xl shadow-lg hover:bg-white/30 transition-all hover:scale-105 text-sm border border-white/30"
-                  >
-                    <svg
-                      className="w-5 h-5 text-pink-100"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      strokeWidth={2}
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"
-                      />
-                    </svg>
-                    Student Lined Sheet
-                  </button>
-                </>
-              )}
-            </div>
           </div>
         </div>
 
@@ -2917,6 +2476,18 @@ export default function PrimaryWritingAssessmentForm() {
               <span className="w-2.5 h-2.5 rounded-full bg-pink-500"></span>
               Student & Assessment Details
             </h3>
+            <StudentPicker
+              tier="primary"
+              value={formData.studentName}
+              onSelect={(s) => {
+                if (['FS1', 'FS2 - KG1', 'KG2 / Year 1', 'Grade 1 / Year 2', 'Grade 2 / Year 3', 'Grade 3 / Year 4', 'Grade 4 / Year 5', 'Grade 5 / Year 6'].includes(s.yearGroup)) handleStageSwitch(s.yearGroup);
+                setFormData((p) => ({
+                  ...p,
+                  studentName: studentLabel(s),
+                  yearGroupAndClass: studentYearClass(s),
+                }));
+              }}
+            />
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
               <div>
                 <label className="block text-xs font-black uppercase tracking-wider text-slate-500 mb-1">
@@ -3055,12 +2626,6 @@ export default function PrimaryWritingAssessmentForm() {
             </div>
           </div>
 
-          {/* AI Assessment Conductor */}
-          <AIAssistantConductor
-            questions={conductorQuestions}
-            rubrics={conductorRubrics}
-            onAnswersArrayChange={setAiAnswers}
-          />
 
           {/* ==================================================== */}
           {/* STAGE 1: FS1 WRITING ASSESSMENT (CVC Missing Graphemes) */}
@@ -3115,8 +2680,11 @@ export default function PrimaryWritingAssessmentForm() {
                           <span className="text-xs font-black px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600">
                             Word #{idx + 1}
                           </span>
-                          <span className="text-xs font-black tracking-widest text-slate-400 font-mono">
-                            Target: {item.targetWord}
+                          <span className="flex items-center gap-2">
+                            <span className="text-xs font-black tracking-widest text-slate-400 font-mono">
+                              Target: {item.targetWord}
+                            </span>
+                            <ReadAloudButton text={`Picture ${item.id}. Can you write the word for this picture?`} label="Read" />
                           </span>
                         </div>
 
@@ -3193,16 +2761,6 @@ export default function PrimaryWritingAssessmentForm() {
                               {fullWritten || "(empty)"}
                             </span>
                           </div>
-                          {aiAnswers &&
-                            aiAnswers[idx] &&
-                            aiAnswers[idx].trim().length > 0 && (
-                              <div className="mt-2 text-xs text-indigo-700 bg-indigo-50/50 p-2 rounded-xl border border-indigo-100 shadow-inner">
-                                <span className="font-bold mr-1">
-                                  Student Answer (AI):
-                                </span>{" "}
-                                "{aiAnswers[idx]}"
-                              </div>
-                            )}
                         </div>
 
                         {/* Quick Evaluation Status Radio Buttons */}
@@ -3222,7 +2780,7 @@ export default function PrimaryWritingAssessmentForm() {
                                   : "bg-slate-100 text-slate-700 hover:bg-emerald-50 hover:text-emerald-700"
                               }`}
                             >
-                              <span>âœ“</span>
+                              <span>✓</span>
                               <span>Correct CVC</span>
                             </button>
 
@@ -3237,7 +2795,7 @@ export default function PrimaryWritingAssessmentForm() {
                                   : "bg-slate-100 text-slate-700 hover:bg-amber-50 hover:text-amber-700"
                               }`}
                             >
-                              <span>â€¢</span>
+                              <span>•</span>
                               <span>Initial Sound</span>
                             </button>
 
@@ -3267,7 +2825,7 @@ export default function PrimaryWritingAssessmentForm() {
                                   : "bg-slate-100 text-slate-700 hover:bg-slate-200"
                               }`}
                             >
-                              <span>âœ•</span>
+                              <span>✕</span>
                               <span>No Attempt</span>
                             </button>
                           </div>
@@ -3300,7 +2858,94 @@ export default function PrimaryWritingAssessmentForm() {
             <div className="space-y-6">
               {/* Prompt Picture Showcase Card */}
               <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-xs">
-                {isGrade4Stage ? (
+                {isGrade5Stage ? (
+                  <div className="space-y-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-slate-100 gap-2">
+                      <div className="space-y-1">
+                        <div className="inline-flex items-center gap-2 bg-pink-100 text-pink-800 text-xs font-black uppercase tracking-wider px-3 py-1 rounded-full">
+                          <span>
+                            🌌 3-Picture Sci-Fi Story Stimulus · Grade 5 / Year 6
+                          </span>
+                        </div>
+                        <h3 className="text-xl font-black text-slate-900 tracking-tight">
+                          Desert Traveller, Black Hole & Ruined City
+                        </h3>
+                        <p className="text-xs text-slate-500 font-medium">
+                          Sit with the pupil in a calm, distraction-free space. Ask the pupil to write paragraphs / sentences for these pictures, using the questions to prompt.
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setShowParkZoom(true)}
+                          className="bg-purple-50 hover:bg-purple-100 text-purple-700 px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors border border-purple-200 shadow-2xs"
+                        >
+                          <svg
+                            className="w-4 h-4"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            strokeWidth={2}
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607zM10.5 7.5v6m3-3h-6"
+                            />
+                          </svg>
+                          Enlarge 3-Picture Strip
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      {[
+                        {
+                          img: grade5WritingDesert,
+                          alt: "A lone traveller in a long coat walking across desert dunes at sunset",
+                          title: "Desert Traveller",
+                          desc: "Lone traveller, sand dunes, rocky spires, sunset",
+                        },
+                        {
+                          img: grade5WritingBlackHole,
+                          alt: "A glowing black hole ring in deep space",
+                          title: "Black Hole in Space",
+                          desc: "Glowing ring, dark planet, stars, purple galaxy",
+                        },
+                        {
+                          img: grade5WritingRuinedCity,
+                          alt: "Ruins of an ancient city in the desert",
+                          title: "Ruined Desert City",
+                          desc: "Abandoned towers, ancient ruins, dusty skyline",
+                        },
+                      ].map((pic, idx) => (
+                        <div
+                          key={pic.title}
+                          className="bg-slate-50 rounded-2xl p-3 border-2 border-slate-200 hover:border-pink-300 transition-all flex flex-col justify-between"
+                        >
+                          <div>
+                            <div className="relative h-44 rounded-xl overflow-hidden mb-2 bg-slate-200 border border-slate-200">
+                              <img
+                                src={pic.img}
+                                alt={pic.alt}
+                                className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                              />
+                              <span className="absolute top-2 left-2 bg-slate-900/80 text-white text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full backdrop-blur-xs">
+                                Picture {idx + 1}
+                              </span>
+                            </div>
+                            <div className="text-xs font-black text-slate-900">
+                              {pic.title}
+                            </div>
+                            <p className="text-[11px] text-slate-500 font-medium">
+                              {pic.desc}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : isGrade4Stage ? (
                   <div className="space-y-4">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-slate-100 gap-2">
                       <div className="space-y-1">
@@ -3425,9 +3070,7 @@ export default function PrimaryWritingAssessmentForm() {
                         </h3>
                         <p className="text-xs text-slate-500 font-medium">
                           Guide the pupil through the 3 sequential pictures and
-                          transcribe their written responses. Real-time AI
-                          keyword detection matches against all official prompt
-                          categories.
+                          transcribe their written responses.
                         </p>
                       </div>
                       <div className="flex items-center gap-2">
@@ -3526,22 +3169,6 @@ export default function PrimaryWritingAssessmentForm() {
                       </div>
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-3 pt-2">
-                      <div className="inline-flex items-center gap-2 bg-emerald-50 border border-emerald-200 text-emerald-800 px-3 py-1 rounded-xl text-xs font-bold">
-                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                        <span>
-                          AI Keyword Detection:{" "}
-                          <strong>
-                            {totalAiMatches} of {totalAiPossible}
-                          </strong>{" "}
-                          keywords matched
-                        </span>
-                      </div>
-                      <span className="text-xs text-slate-400 font-semibold">
-                        Click any keyword chip below to quick-insert into the
-                        child&apos;s answer!
-                      </span>
-                    </div>
                   </div>
                 ) : isGrade2Stage ? (
                   <div className="space-y-4">
@@ -3558,9 +3185,7 @@ export default function PrimaryWritingAssessmentForm() {
                         </h3>
                         <p className="text-xs text-slate-500 font-medium">
                           Guide the pupil through the 3 sequential pictures and
-                          transcribe their written responses. Real-time AI
-                          keyword detection matches against all 6 official
-                          categories.
+                          transcribe their written responses.
                         </p>
                       </div>
                       <div className="flex items-center gap-2">
@@ -3656,22 +3281,6 @@ export default function PrimaryWritingAssessmentForm() {
                       </div>
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-3 pt-2">
-                      <div className="inline-flex items-center gap-2 bg-emerald-50 border border-emerald-200 text-emerald-800 px-3 py-1 rounded-xl text-xs font-bold">
-                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                        <span>
-                          AI Keyword Detection:{" "}
-                          <strong>
-                            {totalAiMatches} of {totalAiPossible}
-                          </strong>{" "}
-                          keywords matched
-                        </span>
-                      </div>
-                      <span className="text-xs text-slate-400 font-semibold">
-                        Click any keyword chip below to quick-insert into the
-                        child&apos;s answer!
-                      </span>
-                    </div>
                   </div>
                 ) : (
                   <div className="flex flex-col lg:flex-row items-center gap-6">
@@ -3724,31 +3333,15 @@ export default function PrimaryWritingAssessmentForm() {
                       </h3>
                       <p className="text-sm text-slate-600 font-medium leading-relaxed">
                         {isGrade1Stage
-                          ? "Present the picture of the two kayakers navigating the river rapids to the child and guide them through the 4 questions below. Type what the student writes or transcribes. As words and phrases are entered, the system performs real-time AI detection against the official Grade 1 / Year 2 keyword bank."
-                          : "Present the picture to the child and guide them through the 4 questions below. Type what the student writes or transcribes. As words and phrases are entered, the system performs real-time AI detection against the official keyword bank from the assessment specification."}
+                          ? "Present the picture of the two kayakers navigating the river rapids to the child and guide them through the 4 questions below. Type what the student writes or transcribes."
+                          : "Present the picture to the child and guide them through the 4 questions below. Type what the student writes or transcribes."}
                       </p>
-                      <div className="flex flex-wrap items-center gap-3 pt-1">
-                        <div className="inline-flex items-center gap-2 bg-emerald-50 border border-emerald-200 text-emerald-800 px-3 py-1 rounded-xl text-xs font-bold">
-                          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                          <span>
-                            AI Detection:{" "}
-                            <strong>
-                              {totalAiMatches} of {totalAiPossible}
-                            </strong>{" "}
-                            keywords matched
-                          </span>
-                        </div>
-                        <span className="text-xs text-slate-400 font-semibold">
-                          Click any keyword chip below to quick-insert it if
-                          student produced it!
-                        </span>
-                      </div>
                     </div>
                   </div>
                 )}
               </div>
 
-              {/* 4 Writing Questions with Real-Time AI Keyword Detection */}
+              {/* 4 Writing Questions */}
               <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-xs space-y-6">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-100 gap-2">
                   <div>
@@ -3756,22 +3349,14 @@ export default function PrimaryWritingAssessmentForm() {
                       <span className="w-2.5 h-2.5 rounded-full bg-pink-500"></span>
                       {isGrade4Stage
                         ? "3 Writing Tasks & AI Story Evaluation"
-                        : "4 Writing Tasks & AI Keyword Detection"}
+                        : "4 Writing Tasks"}
                     </h3>
                     <p className="text-xs text-slate-500 font-medium mt-0.5">
                       {isGrade4Stage
                         ? "Transcribe the child’s written response for each prompt. AI evaluation analyzes vocabulary, narrative sequencing, and CEFR indicators."
-                        : "Transcribe the child’s written response for each prompt. Matched AI keywords highlight automatically in emerald green."}
+                        : "Transcribe the child’s written response for each prompt."}
                     </p>
                   </div>
-                  {!isGrade4Stage && (
-                    <div className="inline-flex items-center gap-2 bg-purple-50 text-purple-900 border border-purple-200 px-3 py-1.5 rounded-2xl text-xs font-black">
-                      <span>✨ AI Keywords Matched:</span>
-                      <span className="bg-purple-600 text-white px-2 py-0.5 rounded-full">
-                        {totalAiMatches}
-                      </span>
-                    </div>
-                  )}
                 </div>
 
                 <div className="space-y-6">
@@ -3805,21 +3390,10 @@ export default function PrimaryWritingAssessmentForm() {
                           </div>
 
                           <div className="flex items-center gap-2 self-start sm:self-auto">
+                            <ReadAloudButton text={q.title} />
                             <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 bg-slate-100 px-2 py-0.5 rounded-md">
                               Category: {q.category}
                             </span>
-                            {!isGrade4Stage && (
-                              <span
-                                className={`text-xs font-black px-2.5 py-0.5 rounded-full border ${
-                                  matchedList.length > 0
-                                    ? "bg-emerald-100 text-emerald-800 border-emerald-200"
-                                    : "bg-slate-100 text-slate-600 border-slate-200"
-                                }`}
-                              >
-                                {matchedList.length} / {q.aiKeywords.length} AI
-                                Matches
-                              </span>
-                            )}
                           </div>
                         </div>
 
@@ -3838,73 +3412,7 @@ export default function PrimaryWritingAssessmentForm() {
                             className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-medium bg-white focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-all"
                           />
                         </div>
-                        {aiAnswers &&
-                          aiAnswers[idx] &&
-                          aiAnswers[idx].trim().length > 0 && (
-                            <div className="mb-3 text-sm text-indigo-700 bg-indigo-50/50 p-3 rounded-xl border border-indigo-100 shadow-inner">
-                              <span className="font-bold mr-1">
-                                Student Answer (AI):
-                              </span>{" "}
-                              "{aiAnswers[idx]}"
-                            </div>
-                          )}
 
-                        {/* Real-Time AI Keyword Tags */}
-                        {!isGrade4Stage && (
-                          <div className="bg-white rounded-xl p-3 border border-slate-200/80">
-                            <div className="flex items-center justify-between mb-2">
-                              <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
-                                <svg
-                                  className="w-3.5 h-3.5 text-purple-600"
-                                  fill="none"
-                                  viewBox="0 0 24 24"
-                                  stroke="currentColor"
-                                  strokeWidth={2.5}
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"
-                                  />
-                                </svg>
-                                Official AI Keywords Bank:
-                              </span>
-                              <span className="text-[10px] text-slate-400 font-semibold">
-                                Tap chip to add to response
-                              </span>
-                            </div>
-
-                            <div className="flex flex-wrap gap-1.5">
-                              {q.aiKeywords.map((kw) => {
-                                const isMatched = matchKeyword(text, kw);
-                                return (
-                                  <button
-                                    key={kw}
-                                    type="button"
-                                    onClick={() => handleAppendKeyword(idx, kw)}
-                                    className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all border flex items-center gap-1.5 ${
-                                      isMatched
-                                        ? "bg-emerald-600 text-white border-emerald-600 shadow-xs scale-[1.03]"
-                                        : "bg-slate-50 text-slate-700 border-slate-200 hover:border-pink-300 hover:bg-pink-50/50"
-                                    }`}
-                                    title={
-                                      isMatched
-                                        ? "Detected by AI in student text!"
-                                        : "Click to insert into response"
-                                    }
-                                  >
-                                    {isMatched ? (
-                                      <span>✓</span>
-                                    ) : (
-                                      <span className="text-slate-400">+</span>
-                                    )}
-                                    <span>{kw}</span>
-                                  </button>
-                                );
-                              })}
-                            </div>
-                          </div>
-                        )}
                       </div>
                     );
                   })}
@@ -3962,29 +3470,6 @@ export default function PrimaryWritingAssessmentForm() {
                     </li>
                   </ul>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setModalTab("sheet");
-                    setShowSheetModal(true);
-                  }}
-                  className="self-start md:self-auto shrink-0 bg-white hover:bg-pink-100 text-pink-700 text-xs font-bold px-3.5 py-2 rounded-xl border border-pink-200 shadow-2xs transition-all flex items-center gap-1.5"
-                >
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth={2}
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"
-                    />
-                  </svg>
-                  View Original Sheet
-                </button>
               </div>
 
               {/* 4 Picture Prompts Grid */}
@@ -4021,8 +3506,11 @@ export default function PrimaryWritingAssessmentForm() {
                               {item.phonicsPattern}
                             </span>
                           </div>
-                          <span className="text-xs font-mono font-black text-pink-700 bg-pink-50 px-2 py-0.5 rounded-md border border-pink-200">
-                            Target: {item.targetWord}
+                          <span className="flex items-center gap-2">
+                            <span className="text-xs font-mono font-black text-pink-700 bg-pink-50 px-2 py-0.5 rounded-md border border-pink-200">
+                              Target: {item.targetWord}
+                            </span>
+                            <ReadAloudButton text={`Picture ${item.id}. Can you write the word for this picture?`} label="Read" />
                           </span>
                         </div>
 
@@ -4079,44 +3567,6 @@ export default function PrimaryWritingAssessmentForm() {
                           />
 
                           {/* Student Answer AI Reflection */}
-                          {aiAnswers &&
-                            aiAnswers[idx] &&
-                            aiAnswers[idx].trim().length > 0 && (
-                              <div className="mt-2.5 text-xs text-indigo-700 bg-indigo-50/50 p-2.5 rounded-xl border border-indigo-100 shadow-inner flex items-center justify-between">
-                                <div>
-                                  <span className="font-bold mr-1">
-                                    Student Answer (AI):
-                                  </span>
-                                  &ldquo;{aiAnswers[idx]}&rdquo;
-                                </div>
-                                {!written && (
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      const cleaned = aiAnswers[idx]
-                                        .trim()
-                                        .toLowerCase()
-                                        .replace(/[^a-z]/g, "");
-                                      setGrade3Written((prev) => {
-                                        const next = [...prev];
-                                        next[idx] = cleaned;
-                                        return next;
-                                      });
-                                      if (cleaned === item.targetWord) {
-                                        setGrade3Statuses((prev) => {
-                                          const next = [...prev];
-                                          next[idx] = "correct";
-                                          return next;
-                                        });
-                                      }
-                                    }}
-                                    className="text-[10px] font-black uppercase tracking-wider bg-indigo-600 hover:bg-indigo-700 text-white px-2 py-1 rounded-lg transition-colors ml-2"
-                                  >
-                                    Use AI Word
-                                  </button>
-                                )}
-                              </div>
-                            )}
                         </div>
 
                         {/* Evaluation Radios */}
@@ -4274,29 +3724,6 @@ export default function PrimaryWritingAssessmentForm() {
                     </li>
                   </ul>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setModalTab("sheet");
-                    setShowSheetModal(true);
-                  }}
-                  className="self-start md:self-auto shrink-0 bg-white hover:bg-pink-100 text-pink-700 text-xs font-bold px-3.5 py-2 rounded-xl border border-pink-200 shadow-2xs transition-all flex items-center gap-1.5"
-                >
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth={2}
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"
-                    />
-                  </svg>
-                  View Original Sheet
-                </button>
               </div>
 
               {/* 4 Picture Prompts Grid */}
@@ -4334,6 +3761,7 @@ export default function PrimaryWritingAssessmentForm() {
                               {item.targetWord}
                             </span>
                           </span>
+                          <ReadAloudButton text={`Picture ${item.id}. Can you write the word for this picture?`} label="Read" />
                         </div>
 
                         {/* Stimulus Picture */}
@@ -4396,44 +3824,6 @@ export default function PrimaryWritingAssessmentForm() {
                           </div>
 
                           {/* Student Answer AI Reflection */}
-                          {aiAnswers &&
-                            aiAnswers[idx] &&
-                            aiAnswers[idx].trim().length > 0 && (
-                              <div className="mt-2.5 text-xs text-indigo-700 bg-indigo-50/50 p-2.5 rounded-xl border border-indigo-100 shadow-inner flex items-center justify-between">
-                                <div>
-                                  <span className="font-bold mr-1">
-                                    Student Answer (AI):
-                                  </span>
-                                  &ldquo;{aiAnswers[idx]}&rdquo;
-                                </div>
-                                {!written && (
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      const cleaned = aiAnswers[idx]
-                                        .trim()
-                                        .toLowerCase()
-                                        .replace(/[^a-z]/g, "");
-                                      setGrade2Written((prev) => {
-                                        const next = [...prev];
-                                        next[idx] = cleaned;
-                                        return next;
-                                      });
-                                      if (cleaned === item.targetWord) {
-                                        setGrade2Statuses((prev) => {
-                                          const next = [...prev];
-                                          next[idx] = "correct";
-                                          return next;
-                                        });
-                                      }
-                                    }}
-                                    className="text-[10px] font-bold text-indigo-600 hover:text-indigo-800 bg-white px-2 py-0.5 rounded border border-indigo-200"
-                                  >
-                                    Use AI Word
-                                  </button>
-                                )}
-                              </div>
-                            )}
                         </div>
 
                         {/* Quick Evaluation Status Buttons */}
@@ -4546,7 +3936,100 @@ export default function PrimaryWritingAssessmentForm() {
           )}
 
           {/* ==================================================== */}
-          {/* CEFR LEVEL SCORING RUBRIC (Pre-A1 to B2â€“C1)         */}
+          {/* FS2 - KG1, KG2 / YEAR 1, GRADE 1 / YEAR 2 — 6 WORD PROMPTS */}
+          {/* ==================================================== */}
+          {isEarlyStage && earlyWritingMode === "words" && (
+            <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-xs space-y-5">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-4 border-b border-slate-100">
+                <div>
+                  <h3 className="text-base font-black text-slate-900 flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-pink-500"></span>
+                    Word Writing · 6 Picture Prompts
+                  </h3>
+                  <p className="text-xs text-slate-500 font-medium mt-0.5">
+                    Point to each picture and say: "Can you write the word for this picture?" Type what the child writes.
+                  </p>
+                </div>
+                <span className="text-xs font-bold text-slate-600 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200 self-start sm:self-auto">
+                  ✓ {earlyStatuses.filter((st) => st === "correct").length} / {EARLY_WORD_ITEMS.length} correct
+                </span>
+              </div>
+
+              <div className="border border-slate-300 rounded-2xl overflow-hidden divide-y divide-slate-300">
+                {EARLY_WORD_ITEMS.map((item, idx) => {
+                  const status = earlyStatuses[idx];
+                  const blanks = item.targetWord.length - item.given.length;
+                  return (
+                    <div
+                      key={item.id}
+                      className={`grid grid-cols-1 md:grid-cols-[120px_1fr] ${
+                        status === "correct"
+                          ? "bg-emerald-50/40"
+                          : status === "partial"
+                            ? "bg-amber-50/40"
+                            : status === "incorrect"
+                              ? "bg-rose-50/40"
+                              : "bg-white"
+                      }`}
+                    >
+                      <div className="flex items-center justify-center p-3 md:border-r border-slate-300 bg-white">
+                        <img src={item.image} alt={item.label} className="h-16 w-auto object-contain" />
+                      </div>
+                      <div className="p-4 space-y-3">
+                        <div className="flex flex-wrap items-center gap-4">
+                          {/* Prompt as on the sheet, e.g. "sh _ _" */}
+                          <span className="font-mono text-2xl font-black text-slate-900 tracking-widest min-w-[110px]">
+                            {item.given}
+                            {" _".repeat(blanks)}
+                          </span>
+                          <ReadAloudButton text={`Picture ${item.id}. Can you write the word for this picture?`} label="Read" />
+                          <input
+                            type="text"
+                            value={earlyWritten[idx]}
+                            onChange={(e) => handleEarlyWrittenChange(idx, e.target.value)}
+                            placeholder="Child wrote…"
+                            className="w-40 px-3 py-2 rounded-xl border-2 border-slate-300 font-mono text-lg font-bold text-slate-900 bg-white focus:outline-none focus:border-pink-500 focus:ring-4 focus:ring-pink-100"
+                          />
+                          <div className="flex gap-1.5 text-xs font-bold">
+                            {[
+                              { key: "correct", label: "✓ Correct", on: "bg-emerald-600 text-white", off: "hover:bg-emerald-100 hover:text-emerald-800" },
+                              { key: "partial", label: "~ Partly", on: "bg-amber-500 text-white", off: "hover:bg-amber-100 hover:text-amber-800" },
+                              { key: "incorrect", label: "✗ Not yet", on: "bg-rose-500 text-white", off: "hover:bg-rose-100 hover:text-rose-800" },
+                            ].map((b) => (
+                              <button
+                                key={b.key}
+                                type="button"
+                                onClick={() =>
+                                  setEarlyStatuses((prev) => prev.map((v, i) => (i === idx ? b.key : v)))
+                                }
+                                className={`px-2.5 py-1.5 rounded-xl transition-all ${
+                                  status === b.key ? `${b.on} shadow-xs` : `bg-slate-100 text-slate-600 ${b.off}`
+                                }`}
+                              >
+                                {b.label}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                        <input
+                          type="text"
+                          value={earlyNotes[idx]}
+                          onChange={(e) =>
+                            setEarlyNotes((prev) => prev.map((v, i) => (i === idx ? e.target.value : v)))
+                          }
+                          placeholder="Notes (letter formation, reversals, sounds attempted)…"
+                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-pink-200 focus:border-pink-500"
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* ==================================================== */}
+          {/* CEFR LEVEL SCORING RUBRIC (Pre-A1 to B2–C1)         */}
           {/* 100% exact text from uploaded sheet                  */}
           {/* ==================================================== */}
           <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-xs space-y-4">
@@ -4557,7 +4040,7 @@ export default function PrimaryWritingAssessmentForm() {
                   CEFR Level Assessment Rubric
                 </h3>
                 <p className="text-xs text-slate-500 font-medium">
-                  Select the level that best reflects the studentâ€™s
+                  Select the level that best reflects the student’s
                   independent writing competency.
                 </p>
               </div>
@@ -4629,39 +4112,6 @@ export default function PrimaryWritingAssessmentForm() {
             </div>
           </div>
 
-          {/* Key Words Checkbox List (100% exact text from sheet) */}
-          {!isGrade4Stage && (
-            <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-xs space-y-3">
-              <h3 className="text-sm font-black uppercase tracking-wider text-slate-800 flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-pink-500"></span>
-                Observed Key Words ({selectedStage})
-              </h3>
-              <p className="text-xs text-slate-500 font-medium">
-                Click any words the child produced, recognized, or spoke during
-                the writing assessment:
-              </p>
-              <div className="flex flex-wrap gap-2 pt-2">
-                {activeKeyWordsList.map((kw) => {
-                  const isSelected = usedKeywords.includes(kw);
-                  return (
-                    <button
-                      key={kw}
-                      type="button"
-                      onClick={() => toggleKeyword(kw)}
-                      className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all border ${
-                        isSelected
-                          ? "bg-pink-600 text-white border-pink-600 shadow-xs"
-                          : "bg-slate-50 text-slate-700 border-slate-200 hover:border-pink-300"
-                      }`}
-                    >
-                      {isSelected ? "✓ " : "+ "}
-                      {kw}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
 
           {/* Teaching Focus & Action Plan */}
           <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-xs space-y-2">
@@ -4690,23 +4140,14 @@ export default function PrimaryWritingAssessmentForm() {
               <strong className="text-slate-800">
                 {formData.studentName || "Student"}
               </strong>{" "}
-              Â· Level:{" "}
+              · Level:{" "}
               <strong className="text-pink-600">
                 {selectedLevel || "Not selected"}
               </strong>
-              {isPictureAiStage && (
-                <span>
-                  {" "}
-                  Â· AI Matches:{" "}
-                  <strong className="text-emerald-700 font-black">
-                    {totalAiMatches}
-                  </strong>
-                </span>
-              )}
               {selectedStage === "FS1" && (
                 <span>
                   {" "}
-                  Â· Correct CVC:{" "}
+                  · Correct CVC:{" "}
                   <strong className="text-emerald-700 font-black">
                     {countCorrect} / 6
                   </strong>
@@ -4744,7 +4185,7 @@ export default function PrimaryWritingAssessmentForm() {
                 <span className="w-2.5 h-2.5 rounded-full bg-pink-500"></span>
                 <h3 className="font-black text-slate-800 text-sm uppercase tracking-wider">
                   {isGrade4Stage
-                    ? "Grade 4 / Year 5 Writing Assessment · Specification Sheet"
+                    ? `${upperStageLabel} Writing Assessment · Specification Sheet`
                     : isGrade3Stage
                       ? modalTab === "sheet"
                         ? "Grade 3 / Year 4 Writing Assessment · Story Specification Sheet"
@@ -4759,23 +4200,23 @@ export default function PrimaryWritingAssessmentForm() {
                             : "Student Lined Worksheet · Grade 2 / Year 3"
                         : isGrade1Stage
                           ? modalTab === "sheet"
-                            ? "Grade 1 / Year 2 Writing Assessment Â· Specification Sheet"
+                            ? "Grade 1 / Year 2 Writing Assessment · Specification Sheet"
                             : modalTab === "keywords"
-                              ? "AI Keywords Detection Guide Â· Grade 1 / Year 2"
-                              : "Student Lined Worksheet Â· Grade 1 / Year 2"
+                              ? "AI Keywords Detection Guide · Grade 1 / Year 2"
+                              : "Student Lined Worksheet · Grade 1 / Year 2"
                           : selectedStage === "FS1"
-                            ? "FS1 Writing Assessment Â· Original Document"
+                            ? "FS1 Writing Assessment · Original Document"
                             : selectedStage === "KG2 / Year 1"
                               ? modalTab === "sheet"
-                                ? "KG2 / Year 1 Writing Assessment Â· Specification Sheet"
+                                ? "KG2 / Year 1 Writing Assessment · Specification Sheet"
                                 : modalTab === "keywords"
-                                  ? "AI Keywords Detection Guide Â· KG2 / Year 1"
-                                  : "Student Lined Worksheet Â· KG2 / Year 1"
+                                  ? "AI Keywords Detection Guide · KG2 / Year 1"
+                                  : "Student Lined Worksheet · KG2 / Year 1"
                               : modalTab === "sheet"
-                                ? "FS2 - KG1 Writing Assessment Â· Specification Sheet"
+                                ? "FS2 - KG1 Writing Assessment · Specification Sheet"
                                 : modalTab === "keywords"
-                                  ? "AI Keywords Detection Guide Â· FS2 - KG1"
-                                  : "Student Lined Worksheet Â· FS2 - KG1"}
+                                  ? "AI Keywords Detection Guide · FS2 - KG1"
+                                  : "Student Lined Worksheet · FS2 - KG1"}
                 </h3>
               </div>
               <button
@@ -4783,7 +4224,7 @@ export default function PrimaryWritingAssessmentForm() {
                 onClick={() => setShowSheetModal(false)}
                 className="w-8 h-8 rounded-full bg-white border border-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center font-bold text-sm"
               >
-                âœ•
+                ✕
               </button>
             </div>
 
@@ -4803,19 +4244,22 @@ export default function PrimaryWritingAssessmentForm() {
                       : "text-slate-600 hover:text-slate-900"
                   }`}
                 >
-                  ðŸ“„ Assessment Sheet
+                  📄 Assessment Sheet
                 </button>
-                <button
-                  type="button"
-                  onClick={() => setModalTab("keywords")}
-                  className={`px-4 py-2 text-xs font-black uppercase tracking-wider rounded-t-xl transition-colors ${
-                    modalTab === "keywords"
-                      ? "bg-white text-pink-700 border-t-2 border-pink-600 shadow-2xs"
-                      : "text-slate-600 hover:text-slate-900"
-                  }`}
-                >
-                  âœ¨ AI Keywords Sheet
-                </button>
+                {/* AI keyword guides are not shown; Grade 3 keeps its official Word Writing Sheet */}
+                {isGrade3Stage && (
+                  <button
+                    type="button"
+                    onClick={() => setModalTab("keywords")}
+                    className={`px-4 py-2 text-xs font-black uppercase tracking-wider rounded-t-xl transition-colors ${
+                      modalTab === "keywords"
+                        ? "bg-white text-pink-700 border-t-2 border-pink-600 shadow-2xs"
+                        : "text-slate-600 hover:text-slate-900"
+                    }`}
+                  >
+                    Word Writing Sheet
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={() => setModalTab("worksheet")}
@@ -4825,15 +4269,17 @@ export default function PrimaryWritingAssessmentForm() {
                       : "text-slate-600 hover:text-slate-900"
                   }`}
                 >
-                  âœï¸ Student Lined Worksheet
+                  ✏️ Student Lined Worksheet
                 </button>
               </div>
             )}
 
-            <div className="p-4 overflow-y-auto flex-1 flex justify-center bg-slate-100">
+            <div className="p-4 overflow-y-auto flex-1 flex flex-col items-center gap-4 bg-slate-100">
               <img
                 src={
-                  isGrade4Stage
+                  isGrade5Stage
+                    ? grade5Year6WritingSheetImg
+                    : isGrade4Stage
                     ? grade4Year5WritingSheetImg
                     : isGrade3Stage
                       ? modalTab === "sheet"
@@ -4870,6 +4316,13 @@ export default function PrimaryWritingAssessmentForm() {
                 alt="Assessment Document"
                 className="max-w-full h-auto rounded-xl shadow-lg border border-slate-300"
               />
+              {isGrade5Stage && (
+                <img
+                  src={grade5Year6WritingResponseSheetImg}
+                  alt="Grade 5 / Year 6 Student Writing Response Sheet"
+                  className="max-w-full h-auto rounded-xl shadow-lg border border-slate-300"
+                />
+              )}
             </div>
             <div className="px-6 py-3 border-t border-slate-200 flex justify-end bg-white">
               <button
@@ -4892,7 +4345,9 @@ export default function PrimaryWritingAssessmentForm() {
               <div className="flex items-center gap-2">
                 <span className="w-2.5 h-2.5 rounded-full bg-purple-600"></span>
                 <h3 className="font-black text-slate-800 text-sm uppercase tracking-wider">
-                  {isGrade4Stage
+                  {isGrade5Stage
+                    ? "Desert Traveller, Black Hole & Ruined City · Full View"
+                    : isGrade4Stage
                     ? "Neon Corridor, Futuristic City & Planetary Astronauts · Full View"
                     : isGrade3Stage
                       ? "Spaceship, Canyon Ruins & Knight Battling Dragon · Full View"
@@ -4914,7 +4369,9 @@ export default function PrimaryWritingAssessmentForm() {
             <div className="p-4 flex justify-center bg-slate-100">
               <img
                 src={
-                  isGrade4Stage
+                  isGrade5Stage
+                    ? grade5WritingSciFiStrip
+                    : isGrade4Stage
                     ? grade4WritingSciFiStrip
                     : isGrade3Stage
                       ? grade3WritingAdventureStrip
@@ -4925,7 +4382,9 @@ export default function PrimaryWritingAssessmentForm() {
                           : fs2ParkImg
                 }
                 alt={
-                  isGrade4Stage
+                  isGrade5Stage
+                    ? "3-Picture Sci-Fi Story: Desert Traveller, Black Hole, and Ruined City"
+                    : isGrade4Stage
                     ? "3-Picture Sci-Fi Story: Neon Corridor, Futuristic City, and Planetary Astronauts"
                     : isGrade3Stage
                       ? "3-Picture Creative Story: Spaceship, Desert Canyon Ruins, and Knight battling Dragon"

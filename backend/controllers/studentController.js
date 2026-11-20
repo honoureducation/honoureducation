@@ -1,139 +1,160 @@
+const mongoose = require('mongoose');
 const Student = require('../models/Student');
 const User = require('../models/User');
 const Assessment = require('../models/Assessment');
 const ActivityLog = require('../models/ActivityLog');
 const ExcelJS = require('exceljs');
 
+// ------------------------------------------------------------------
+// Students are owned by the teacher who registers them (createdBy).
+// When MongoDB is offline (demo mode) an in-memory store is used so the
+// register-then-assess flow still works.
+// ------------------------------------------------------------------
+const OFFLINE_STUDENTS = [];
+const isDbOnline = () => mongoose.connection.readyState === 1;
+
+const PRIMARY_YEAR_HINTS = ['fs1', 'fs2', 'kg', 'grade 1', 'grade 2', 'grade 3', 'grade 4', 'grade 5', 'year 1', 'year 2', 'year 3', 'year 4', 'year 5', 'year 6'];
+const detectTier = (yearGroup = '') => {
+  const yg = String(yearGroup).toLowerCase();
+  // Secondary year groups are Year 7–13; check those first so "Year 1x" isn't read as Year 1
+  if (/year\s*(7|8|9|10|11|12|13)\b/.test(yg)) return 'secondary';
+  return PRIMARY_YEAR_HINTS.some((h) => yg.includes(h)) ? 'primary' : 'secondary';
+};
+
+const generateStudentId = () =>
+  `STU-${Date.now().toString(36).toUpperCase().slice(-5)}${Math.random().toString(36).slice(2, 5).toUpperCase()}`;
+
+// Normalise one incoming student (from the form or a CSV row)
+const normaliseStudent = (data = {}) => {
+  let firstName = String(data.firstName || '').trim();
+  let lastName = String(data.lastName || '').trim();
+  // Accept a single "name" / "fullName" column too
+  const full = String(data.fullName || data.name || '').trim();
+  if (!firstName && full) {
+    const parts = full.split(/\s+/);
+    firstName = parts.shift();
+    lastName = parts.join(' ');
+  }
+  const yearGroup = String(data.yearGroup || '').trim();
+  return {
+    firstName,
+    lastName,
+    studentId: String(data.studentId || '').trim() || generateStudentId(),
+    yearGroup,
+    class: String(data.class || data.className || '').trim(),
+    email: String(data.email || '').trim().toLowerCase() || undefined,
+    tier: data.tier === 'primary' || data.tier === 'secondary' ? data.tier : detectTier(yearGroup),
+    notes: data.notes,
+  };
+};
+
+const validateStudent = (s) => {
+  if (!s.firstName) return 'Student name is required';
+  if (!s.yearGroup) return 'Year group is required';
+  return null;
+};
+
+// Shape returned to the frontend (works for Mongo docs and offline objects)
+const toClient = (s) => {
+  const o = typeof s.toJSON === 'function' ? s.toJSON() : { ...s };
+  const fullName = `${o.firstName || ''} ${o.lastName || ''}`.trim();
+  return {
+    ...o,
+    _id: String(o._id),
+    fullName,
+    yearGroupAndClass: o.class ? `${o.yearGroup} - ${o.class}` : o.yearGroup,
+  };
+};
+
+const getUserSchool = async (userId) => {
+  if (!isDbOnline() || !mongoose.Types.ObjectId.isValid(userId)) return undefined;
+  const user = await User.findById(userId).select('school');
+  return user ? user.school : undefined;
+};
+
+const logActivity = async (entry) => {
+  if (!isDbOnline()) return;
+  try {
+    await ActivityLog.create(entry);
+  } catch (e) {
+    // Activity logging must never block the main action
+  }
+};
+
 // Create new student
 const createStudent = async (req, res) => {
   try {
-    const {
-      firstName,
-      lastName,
-      studentId,
-      yearGroup,
-      class: studentClass,
-      academicYear,
-      dateOfBirth,
-      gender,
-      nationality,
-      nativeLanguage,
-      otherLanguages,
-      englishLearningStartDate,
-      previousSchools,
-      parentContact,
-      notes,
-      specialNeeds,
-      learningSupport
-    } = req.body;
+    const data = normaliseStudent(req.body);
+    const invalid = validateStudent(data);
+    if (invalid) return res.status(400).json({ message: invalid });
 
-    // Get user's school
-    const user = await User.findById(req.userId);
-    if (!user.school) {
-      return res.status(400).json({ message: 'User is not associated with a school' });
+    if (!isDbOnline()) {
+      if (OFFLINE_STUDENTS.some((s) => s.createdBy === req.userId && s.studentId === data.studentId)) {
+        return res.status(400).json({ message: 'Student ID already exists' });
+      }
+      const student = { ...data, _id: `offline-stu-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`, createdBy: req.userId, status: 'active', createdAt: new Date().toISOString() };
+      OFFLINE_STUDENTS.unshift(student);
+      return res.status(201).json({ message: 'Student registered (offline mode)', student: toClient(student) });
     }
 
-    // Check if student ID already exists in this school
-    const existingStudent = await Student.findOne({ 
-      school: user.school, 
-      studentId 
-    });
-    if (existingStudent) {
-      return res.status(400).json({ message: 'Student ID already exists in this school' });
-    }
+    const exists = await Student.findOne({ createdBy: req.userId, studentId: data.studentId });
+    if (exists) return res.status(400).json({ message: 'Student ID already exists' });
 
-    const student = new Student({
-      firstName,
-      lastName,
-      studentId,
-      school: user.school,
-      yearGroup,
-      class: studentClass,
-      academicYear,
-      dateOfBirth,
-      gender,
-      nationality,
-      nativeLanguage,
-      otherLanguages,
-      englishLearningStartDate,
-      previousSchools,
-      parentContact,
-      notes,
-      specialNeeds,
-      learningSupport,
-      createdBy: req.userId
-    });
-
+    const student = new Student({ ...data, school: await getUserSchool(req.userId), createdBy: req.userId });
     await student.save();
 
-    // Log activity
-    await ActivityLog.create({
+    await logActivity({
       user: req.userId,
-      school: user.school,
       action: 'student_created',
       targetType: 'student',
       targetId: student._id,
       targetName: student.fullName,
-      description: `Created new student: ${student.fullName} (${student.studentId})`,
+      description: `Registered student: ${student.fullName} (${student.studentId})`,
       ipAddress: req.ip,
-      userAgent: req.get('User-Agent')
+      userAgent: req.get('User-Agent'),
     });
 
-    res.status(201).json({
-      message: 'Student created successfully',
-      student
-    });
+    res.status(201).json({ message: 'Student registered successfully', student: toClient(student) });
   } catch (error) {
     console.error('Student creation error:', error);
-    res.status(500).json({ message: 'Failed to create student', error: error.message });
+    res.status(500).json({ message: 'Failed to register student', error: error.message });
   }
 };
 
-// Get students (filtered by user's school)
+// Get the teacher's students (optionally filtered)
 const getStudents = async (req, res) => {
   try {
-    const { 
-      page = 1, 
-      limit = 10, 
-      yearGroup, 
-      class: studentClass, 
-      status, 
-      search 
-    } = req.query;
+    const { tier, yearGroup, search, status = 'active' } = req.query;
+    const matchesSearch = (s) => {
+      if (!search) return true;
+      const q = String(search).toLowerCase();
+      return [s.firstName, s.lastName, s.studentId, s.yearGroup, s.class, s.email]
+        .filter(Boolean)
+        .some((v) => String(v).toLowerCase().includes(q));
+    };
 
-    // Get user's school
-    const user = await User.findById(req.userId);
-    if (!user.school) {
-      return res.status(400).json({ message: 'User is not associated with a school' });
+    if (!isDbOnline()) {
+      const students = OFFLINE_STUDENTS.filter(
+        (s) =>
+          s.createdBy === req.userId &&
+          (!tier || s.tier === tier) &&
+          (!yearGroup || s.yearGroup === yearGroup) &&
+          matchesSearch(s),
+      ).map(toClient);
+      return res.json({ students, total: students.length });
     }
 
-    const query = { school: user.school };
-    if (yearGroup) query.yearGroup = yearGroup;
-    if (studentClass) query.class = studentClass;
+    const query = { createdBy: req.userId };
     if (status) query.status = status;
+    if (tier) query.tier = tier;
+    if (yearGroup) query.yearGroup = yearGroup;
     if (search) {
-      query.$or = [
-        { firstName: { $regex: search, $options: 'i' } },
-        { lastName: { $regex: search, $options: 'i' } },
-        { studentId: { $regex: search, $options: 'i' } }
-      ];
+      const rx = { $regex: String(search).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), $options: 'i' };
+      query.$or = [{ firstName: rx }, { lastName: rx }, { studentId: rx }, { class: rx }, { email: rx }];
     }
 
-    const students = await Student.find(query)
-      .populate('createdBy', 'firstName lastName')
-      .populate('updatedBy', 'firstName lastName')
-      .sort({ lastName: 1, firstName: 1 })
-      .limit(limit * 1)
-      .skip((page - 1) * limit);
-
-    const total = await Student.countDocuments(query);
-
-    res.json({
-      students,
-      totalPages: Math.ceil(total / limit),
-      currentPage: page,
-      total
-    });
+    const students = await Student.find(query).sort({ yearGroup: 1, firstName: 1, lastName: 1 }).limit(2000);
+    res.json({ students: students.map(toClient), total: students.length });
   } catch (error) {
     console.error('Get students error:', error);
     res.status(500).json({ message: 'Failed to fetch students', error: error.message });
@@ -144,36 +165,13 @@ const getStudents = async (req, res) => {
 const getStudentById = async (req, res) => {
   try {
     const { id } = req.params;
-    
-    // Get user's school
-    const user = await User.findById(req.userId);
-    
-    const student = await Student.findOne({ 
-      _id: id, 
-      school: user.school 
-    })
-    .populate('createdBy', 'firstName lastName')
-    .populate('updatedBy', 'firstName lastName')
-    .populate('school', 'name code');
-
-    if (!student) {
-      return res.status(404).json({ message: 'Student not found' });
+    if (!isDbOnline()) {
+      const s = OFFLINE_STUDENTS.find((x) => x._id === id && x.createdBy === req.userId);
+      return s ? res.json({ student: toClient(s) }) : res.status(404).json({ message: 'Student not found' });
     }
-
-    // Log activity
-    await ActivityLog.create({
-      user: req.userId,
-      school: user.school,
-      action: 'student_viewed',
-      targetType: 'student',
-      targetId: student._id,
-      targetName: student.fullName,
-      description: `Viewed student profile: ${student.fullName}`,
-      ipAddress: req.ip,
-      userAgent: req.get('User-Agent')
-    });
-
-    res.json({ student });
+    const student = await Student.findOne({ _id: id, createdBy: req.userId });
+    if (!student) return res.status(404).json({ message: 'Student not found' });
+    res.json({ student: toClient(student) });
   } catch (error) {
     console.error('Get student error:', error);
     res.status(500).json({ message: 'Failed to fetch student', error: error.message });
@@ -184,45 +182,24 @@ const getStudentById = async (req, res) => {
 const updateStudent = async (req, res) => {
   try {
     const { id } = req.params;
-    const updates = req.body;
+    const updates = { ...req.body };
+    ['school', 'createdBy', 'createdAt', '_id'].forEach((k) => delete updates[k]);
+    if (updates.yearGroup && !updates.tier) updates.tier = detectTier(updates.yearGroup);
 
-    // Get user's school
-    const user = await User.findById(req.userId);
-
-    // Don't allow updating certain fields
-    delete updates.school;
-    delete updates.createdBy;
-    delete updates.createdAt;
-    updates.updatedBy = req.userId;
-
-    const student = await Student.findOneAndUpdate(
-      { _id: id, school: user.school },
-      updates,
-      { new: true, runValidators: true }
-    );
-
-    if (!student) {
-      return res.status(404).json({ message: 'Student not found' });
+    if (!isDbOnline()) {
+      const s = OFFLINE_STUDENTS.find((x) => x._id === id && x.createdBy === req.userId);
+      if (!s) return res.status(404).json({ message: 'Student not found' });
+      Object.assign(s, updates);
+      return res.json({ message: 'Student updated', student: toClient(s) });
     }
 
-    // Log activity
-    await ActivityLog.create({
-      user: req.userId,
-      school: user.school,
-      action: 'student_updated',
-      targetType: 'student',
-      targetId: student._id,
-      targetName: student.fullName,
-      description: `Updated student: ${student.fullName}`,
-      metadata: updates,
-      ipAddress: req.ip,
-      userAgent: req.get('User-Agent')
+    updates.updatedBy = req.userId;
+    const student = await Student.findOneAndUpdate({ _id: id, createdBy: req.userId }, updates, {
+      new: true,
+      runValidators: true,
     });
-
-    res.json({
-      message: 'Student updated successfully',
-      student
-    });
+    if (!student) return res.status(404).json({ message: 'Student not found' });
+    res.json({ message: 'Student updated successfully', student: toClient(student) });
   } catch (error) {
     console.error('Student update error:', error);
     res.status(500).json({ message: 'Failed to update student', error: error.message });
@@ -233,43 +210,18 @@ const updateStudent = async (req, res) => {
 const deleteStudent = async (req, res) => {
   try {
     const { id } = req.params;
-    
-    // Get user's school
-    const user = await User.findById(req.userId);
-
-    const student = await Student.findOne({ _id: id, school: user.school });
-    if (!student) {
-      return res.status(404).json({ message: 'Student not found' });
+    if (!isDbOnline()) {
+      const idx = OFFLINE_STUDENTS.findIndex((x) => x._id === id && x.createdBy === req.userId);
+      if (idx === -1) return res.status(404).json({ message: 'Student not found' });
+      OFFLINE_STUDENTS.splice(idx, 1);
+      return res.json({ message: 'Student removed' });
     }
-
-    // Check if student has assessments
-    const assessmentCount = await Assessment.countDocuments({ student: id });
-    if (assessmentCount > 0) {
-      return res.status(400).json({ 
-        message: 'Cannot delete student with existing assessments',
-        assessmentCount 
-      });
-    }
-
-    await Student.findByIdAndDelete(id);
-
-    // Log activity
-    await ActivityLog.create({
-      user: req.userId,
-      school: user.school,
-      action: 'student_deleted',
-      targetType: 'student',
-      targetId: id,
-      targetName: student.fullName,
-      description: `Deleted student: ${student.fullName} (${student.studentId})`,
-      ipAddress: req.ip,
-      userAgent: req.get('User-Agent')
-    });
-
-    res.json({ message: 'Student deleted successfully' });
+    const student = await Student.findOneAndDelete({ _id: id, createdBy: req.userId });
+    if (!student) return res.status(404).json({ message: 'Student not found' });
+    res.json({ message: 'Student removed successfully' });
   } catch (error) {
     console.error('Student deletion error:', error);
-    res.status(500).json({ message: 'Failed to delete student', error: error.message });
+    res.status(500).json({ message: 'Failed to remove student', error: error.message });
   }
 };
 
@@ -277,20 +229,12 @@ const deleteStudent = async (req, res) => {
 const getStudentAssessments = async (req, res) => {
   try {
     const { id } = req.params;
-    
-    // Get user's school
-    const user = await User.findById(req.userId);
-
-    // Verify student belongs to user's school
-    const student = await Student.findOne({ _id: id, school: user.school });
-    if (!student) {
-      return res.status(404).json({ message: 'Student not found' });
-    }
-
-    const assessments = await Assessment.find({ student: id })
-      .populate('assessedBy', 'firstName lastName')
-      .sort({ createdAt: -1 });
-
+    if (!isDbOnline()) return res.json({ assessments: [] });
+    const student = await Student.findOne({ _id: id, createdBy: req.userId });
+    if (!student) return res.status(404).json({ message: 'Student not found' });
+    const assessments = await Assessment.find({
+      $or: [{ studentRef: String(student._id) }, { createdBy: req.userId, studentName: student.fullName }],
+    }).sort({ createdAt: -1 });
     res.json({ assessments });
   } catch (error) {
     console.error('Get student assessments error:', error);
@@ -298,73 +242,56 @@ const getStudentAssessments = async (req, res) => {
   }
 };
 
-// Bulk import students
+// Bulk import students (from a CSV parsed on the client)
 const bulkImportStudents = async (req, res) => {
   try {
-    const { students } = req.body;
-    
-    // Get user's school
-    const user = await User.findById(req.userId);
-    if (!user.school) {
-      return res.status(400).json({ message: 'User is not associated with a school' });
-    }
+    const rows = Array.isArray(req.body.students) ? req.body.students : [];
+    if (rows.length === 0) return res.status(400).json({ message: 'No students to import' });
+    if (rows.length > 1000) return res.status(400).json({ message: 'Please import at most 1000 students at a time' });
 
-    const results = {
-      successful: 0,
-      failed: 0,
-      errors: []
-    };
+    const results = { successful: 0, failed: 0, errors: [], students: [] };
+    const school = await getUserSchool(req.userId);
 
-    for (const studentData of students) {
+    for (let i = 0; i < rows.length; i++) {
+      const data = normaliseStudent(rows[i]);
+      const invalid = validateStudent(data);
+      if (invalid) {
+        results.failed++;
+        results.errors.push({ row: i + 2, name: data.firstName, error: invalid });
+        continue;
+      }
       try {
-        // Check if student ID already exists
-        const existingStudent = await Student.findOne({ 
-          school: user.school, 
-          studentId: studentData.studentId 
-        });
-        
-        if (existingStudent) {
-          results.failed++;
-          results.errors.push({
-            studentId: studentData.studentId,
-            error: 'Student ID already exists'
-          });
-          continue;
+        if (!isDbOnline()) {
+          if (OFFLINE_STUDENTS.some((s) => s.createdBy === req.userId && s.studentId === data.studentId)) {
+            throw new Error('Student ID already exists');
+          }
+          const student = { ...data, _id: `offline-stu-${Date.now()}-${i}`, createdBy: req.userId, status: 'active', createdAt: new Date().toISOString() };
+          OFFLINE_STUDENTS.unshift(student);
+          results.students.push(toClient(student));
+        } else {
+          const exists = await Student.findOne({ createdBy: req.userId, studentId: data.studentId });
+          if (exists) throw new Error('Student ID already exists');
+          const student = await new Student({ ...data, school, createdBy: req.userId }).save();
+          results.students.push(toClient(student));
         }
-
-        const student = new Student({
-          ...studentData,
-          school: user.school,
-          createdBy: req.userId
-        });
-
-        await student.save();
         results.successful++;
       } catch (error) {
         results.failed++;
-        results.errors.push({
-          studentId: studentData.studentId,
-          error: error.message
-        });
+        results.errors.push({ row: i + 2, name: `${data.firstName} ${data.lastName}`.trim(), error: error.message });
       }
     }
 
-    // Log activity
-    await ActivityLog.create({
+    await logActivity({
       user: req.userId,
-      school: user.school,
       action: 'student_created',
       targetType: 'student',
       description: `Bulk imported students: ${results.successful} successful, ${results.failed} failed`,
-      metadata: results,
+      metadata: { successful: results.successful, failed: results.failed },
       ipAddress: req.ip,
-      userAgent: req.get('User-Agent')
+      userAgent: req.get('User-Agent'),
     });
 
-    res.json({
-      message: 'Bulk import completed',
-      results
-    });
+    res.json({ message: 'Import completed', results });
   } catch (error) {
     console.error('Bulk import error:', error);
     res.status(500).json({ message: 'Failed to import students', error: error.message });

@@ -157,6 +157,10 @@ const TYPE_META = {
     label: "Grade 4 Reading",
     color: "bg-emerald-100 text-emerald-800",
   },
+  "Grade 5 / Year 6 Reading Assessment": {
+    label: "Grade 5 Reading",
+    color: "bg-emerald-100 text-emerald-800",
+  },
   // Primary Writing
   "FS1 Writing Assessment": {
     label: "FS1 Writing",
@@ -192,6 +196,10 @@ const TYPE_META = {
   },
   "Grade 4 / Year 5 Writing Assessment": {
     label: "Grade 4 Writing",
+    color: "bg-pink-100 text-pink-800",
+  },
+  "Grade 5 / Year 6 Writing Assessment": {
+    label: "Grade 5 Writing",
     color: "bg-pink-100 text-pink-800",
   },
 };
@@ -909,6 +917,51 @@ function DetailModal({ assessment: a, onClose }) {
   );
 }
 
+/* ── Records filters: skill & year group ──────────────────── */
+const PRIMARY_STAGES = [
+  "FS1",
+  "FS2 - KG1",
+  "KG2 / Year 1",
+  "Grade 1 / Year 2",
+  "Grade 2 / Year 3",
+  "Grade 3 / Year 4",
+  "Grade 4 / Year 5",
+  "Grade 5 / Year 6",
+];
+const SECONDARY_STAGES = ["Junior (Year 7–9)", "Senior (Year 10–13)"];
+
+function skillOf(a) {
+  const t = (a.assessmentType || "").toLowerCase();
+  if (t.includes("phonic")) return "Phonics";
+  if (t.includes("listen")) return "Listening";
+  if (t.includes("speak")) return "Speaking";
+  if (t.includes("read")) return "Reading";
+  if (t.includes("writ")) return "Writing";
+  return "Other";
+}
+
+function stageOf(a) {
+  if (!isPrimaryAssessment(a)) {
+    return a.yearGroupType === "senior" ? SECONDARY_STAGES[1] : SECONDARY_STAGES[0];
+  }
+  const type = a.assessmentType || "";
+  const yg = a.yearGroupAndClass || "";
+  return (
+    PRIMARY_STAGES.find((st) => type.startsWith(st)) ||
+    PRIMARY_STAGES.find((st) => yg.startsWith(st)) ||
+    "Other"
+  );
+}
+
+const SKILL_CARD_STYLES = {
+  blue: { idle: "bg-blue-50 text-blue-700 border-blue-200", active: "bg-blue-600 text-white border-blue-600" },
+  cyan: { idle: "bg-cyan-50 text-cyan-700 border-cyan-200", active: "bg-cyan-600 text-white border-cyan-600" },
+  violet: { idle: "bg-violet-50 text-violet-700 border-violet-200", active: "bg-violet-600 text-white border-violet-600" },
+  emerald: { idle: "bg-emerald-50 text-emerald-700 border-emerald-200", active: "bg-emerald-600 text-white border-emerald-600" },
+  pink: { idle: "bg-pink-50 text-pink-700 border-pink-200", active: "bg-pink-600 text-white border-pink-600" },
+  amber: { idle: "bg-amber-50 text-amber-700 border-amber-200", active: "bg-amber-500 text-white border-amber-500" },
+};
+
 /* ── Main Component ───────────────────────────────────────── */
 export default function AssessmentList() {
   const [assessments, setAssessments] = useState([]);
@@ -916,12 +969,19 @@ export default function AssessmentList() {
   const [deletingId, setDeletingId] = useState(null);
   const [viewing, setViewing] = useState(null);
   const [search, setSearch] = useState("");
-  const [filterTier, setFilterTier] = useState(() => {
-    const saved = localStorage.getItem("assessmentSchoolTier");
-    return saved === "primary" || saved === "secondary" ? saved : "All";
-  });
-  const [filterType, setFilterType] = useState("All");
+  const [filterTier, setFilterTier] = useState(() =>
+    localStorage.getItem("assessmentSchoolTier") === "secondary" ? "secondary" : "primary",
+  );
+  const [filterSkill, setFilterSkill] = useState("All");
+  const [filterStage, setFilterStage] = useState("All");
   const [filterTerm, setFilterTerm] = useState("All");
+
+  const changeTier = (tier) => {
+    setFilterTier(tier);
+    setFilterSkill("All");
+    setFilterStage("All");
+    localStorage.setItem("assessmentSchoolTier", tier);
+  };
 
   useEffect(() => {
     fetchAssessments();
@@ -1009,81 +1069,44 @@ export default function AssessmentList() {
     document.body.removeChild(link);
   };
 
-  const filtered = assessments.filter((a) => {
-    const isPrim = isPrimaryAssessment(a);
-    const matchTier =
-      filterTier === "All" ? true : filterTier === "primary" ? isPrim : !isPrim;
-    const matchType = filterType === "All" || a.assessmentType === filterType;
+  // Records for the selected tier (Primary or Secondary)
+  const tierRecords = assessments.filter((a) =>
+    filterTier === "primary" ? isPrimaryAssessment(a) : !isPrimaryAssessment(a),
+  );
+  const stageOptions = (filterTier === "primary" ? PRIMARY_STAGES : SECONDARY_STAGES).filter((st) =>
+    tierRecords.some((a) => stageOf(a) === st),
+  );
+
+  // Everything except the skill filter (the skill cards show these counts)
+  const baseFiltered = tierRecords.filter((a) => {
+    const q = search.trim().toLowerCase();
+    const matchStage = filterStage === "All" || stageOf(a) === filterStage;
     const matchTerm = filterTerm === "All" || (a.term || "T1") === filterTerm;
     const matchSearch =
-      !search ||
-      a.studentName?.toLowerCase().includes(search.toLowerCase()) ||
-      a.yearGroupAndClass?.toLowerCase().includes(search.toLowerCase());
-    return matchTier && matchType && matchTerm && matchSearch;
+      !q ||
+      a.studentName?.toLowerCase().includes(q) ||
+      a.yearGroupAndClass?.toLowerCase().includes(q);
+    return matchStage && matchTerm && matchSearch;
   });
-
-  const typesInAssessments = Array.from(
-    new Set(assessments.map((a) => a.assessmentType).filter(Boolean)),
-  );
-  const allKnownTypes = Array.from(
-    new Set([...Object.keys(TYPE_META), ...typesInAssessments]),
-  );
-  const availableTypes = [
-    "All",
-    ...allKnownTypes.filter((typeKey) => {
-      if (filterTier === "All") return true;
-      const isPrim = isPrimaryAssessment({ assessmentType: typeKey });
-      return filterTier === "primary" ? isPrim : !isPrim;
-    }),
-  ];
+  const filtered = baseFiltered.filter((a) => filterSkill === "All" || skillOf(a) === filterSkill);
 
   const primaryCount = assessments.filter(isPrimaryAssessment).length;
   const secondaryCount = assessments.filter(
     (a) => !isPrimaryAssessment(a),
   ).length;
 
-  const stats = [
-    {
-      label: "Total",
-      value: filtered.length,
-      color: "bg-blue-50 text-blue-600 border-blue-200",
-    },
-    {
-      label: "Phonics",
-      value: filtered.filter((a) =>
-        (a.assessmentType || "").toLowerCase().includes("phonic"),
-      ).length,
-      color: "bg-amber-50 text-amber-600 border-amber-200",
-    },
-    {
-      label: "Reading",
-      value: filtered.filter((a) =>
-        (a.assessmentType || "").toLowerCase().includes("reading"),
-      ).length,
-      color: "bg-emerald-50 text-emerald-600 border-emerald-200",
-    },
-    {
-      label: "Writing",
-      value: filtered.filter((a) =>
-        (a.assessmentType || "").toLowerCase().includes("writing"),
-      ).length,
-      color: "bg-pink-50 text-pink-600 border-pink-200",
-    },
-    {
-      label: "Speaking",
-      value: filtered.filter((a) =>
-        (a.assessmentType || "").toLowerCase().includes("speaking"),
-      ).length,
-      color: "bg-violet-50 text-violet-600 border-violet-200",
-    },
-    {
-      label: "Listening",
-      value: filtered.filter((a) =>
-        (a.assessmentType || "").toLowerCase().includes("listening"),
-      ).length,
-      color: "bg-cyan-50 text-cyan-600 border-cyan-200",
-    },
-  ];
+  // Skill cards double as the skill filter
+  const SKILL_CARDS = [
+    { key: "All", label: "All Skills", color: "blue" },
+    { key: "Listening", label: "Listening", color: "cyan" },
+    { key: "Speaking", label: "Speaking", color: "violet" },
+    { key: "Reading", label: "Reading", color: "emerald" },
+    { key: "Writing", label: "Writing", color: "pink" },
+    ...(filterTier === "primary" ? [{ key: "Phonics", label: "Phonics", color: "amber" }] : []),
+  ].map((c) => ({
+    ...c,
+    value: c.key === "All" ? baseFiltered.length : baseFiltered.filter((a) => skillOf(a) === c.key).length,
+  }));
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -1142,92 +1165,57 @@ export default function AssessmentList() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-        {/* School Tier Selector */}
-        <div className="flex flex-wrap items-center justify-between gap-4 bg-white p-3.5 rounded-2xl border border-slate-200 shadow-2xs">
-          <div className="flex items-center gap-2">
-            <span className="text-[11px] font-black uppercase tracking-wider text-slate-400 pl-2">
-              School Tier:
-            </span>
-            <div className="inline-flex bg-slate-100 p-1 rounded-xl shadow-inner gap-1">
+        {/* School tier — Primary or Secondary */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="inline-flex bg-white border border-slate-200 p-1 rounded-2xl shadow-2xs self-start">
+            {[
+              { key: "primary", label: "Primary", count: primaryCount, on: "bg-pink-600 text-white" },
+              { key: "secondary", label: "Secondary", count: secondaryCount, on: "bg-blue-600 text-white" },
+            ].map((t) => (
               <button
-                onClick={() => {
-                  setFilterTier("primary");
-                  setFilterType("All");
-                  localStorage.setItem("assessmentSchoolTier", "primary");
-                }}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-black uppercase tracking-wider transition-all ${
-                  filterTier === "primary"
-                    ? "bg-white text-pink-700 shadow-xs"
-                    : "text-slate-600 hover:text-slate-900"
+                key={t.key}
+                type="button"
+                onClick={() => changeTier(t.key)}
+                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all ${
+                  filterTier === t.key ? `${t.on} shadow-sm` : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
                 }`}
               >
-                <span>🎒 Primary</span>
+                {t.label}
                 <span
-                  className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${filterTier === "primary" ? "bg-pink-100 text-pink-800" : "bg-slate-200"}`}
+                  className={`text-[11px] px-2 py-0.5 rounded-full font-bold ${
+                    filterTier === t.key ? "bg-white/25 text-white" : "bg-slate-100 text-slate-600"
+                  }`}
                 >
-                  {primaryCount}
+                  {t.count}
                 </span>
               </button>
-
-              <button
-                onClick={() => {
-                  setFilterTier("secondary");
-                  setFilterType("All");
-                  localStorage.setItem("assessmentSchoolTier", "secondary");
-                }}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-black uppercase tracking-wider transition-all ${
-                  filterTier === "secondary"
-                    ? "bg-white text-blue-700 shadow-xs"
-                    : "text-slate-600 hover:text-slate-900"
-                }`}
-              >
-                <span>🎓 Secondary</span>
-                <span
-                  className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${filterTier === "secondary" ? "bg-blue-100 text-blue-800" : "bg-slate-200"}`}
-                >
-                  {secondaryCount}
-                </span>
-              </button>
-
-              <button
-                onClick={() => {
-                  setFilterTier("All");
-                  setFilterType("All");
-                }}
-                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-black uppercase tracking-wider transition-all ${
-                  filterTier === "All"
-                    ? "bg-white text-indigo-700 shadow-xs"
-                    : "text-slate-600 hover:text-slate-900"
-                }`}
-              >
-                <span>🌐 All</span>
-                <span
-                  className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${filterTier === "All" ? "bg-indigo-100 text-indigo-800" : "bg-slate-200"}`}
-                >
-                  {assessments.length}
-                </span>
-              </button>
-            </div>
+            ))}
           </div>
-          <span className="text-xs text-slate-500 font-bold pr-2">
-            Showing {filtered.length} matching assessment
-            {filtered.length === 1 ? "" : "s"}
+          <span className="text-sm text-slate-500 font-semibold">
+            Showing {filtered.length} of {tierRecords.length} {filterTier} assessment
+            {tierRecords.length === 1 ? "" : "s"}
           </span>
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-          {stats.map(({ label, value, color }) => (
-            <div
-              key={label}
-              className={`rounded-2xl border p-4 text-center ${color}`}
-            >
-              <div className="text-2xl font-bold">{value}</div>
-              <div className="text-xs font-medium mt-0.5 opacity-80">
-                {label}
-              </div>
-            </div>
-          ))}
+        {/* Skill cards — click to filter */}
+        <div className={`grid grid-cols-2 sm:grid-cols-3 ${SKILL_CARDS.length === 6 ? "lg:grid-cols-6" : "lg:grid-cols-5"} gap-3`}>
+          {SKILL_CARDS.map((c) => {
+            const active = filterSkill === c.key;
+            const style = SKILL_CARD_STYLES[c.color];
+            return (
+              <button
+                key={c.key}
+                type="button"
+                onClick={() => setFilterSkill(c.key)}
+                className={`rounded-2xl border p-4 text-center transition-all ${
+                  active ? `${style.active} shadow-md scale-[1.02]` : `${style.idle} hover:shadow-sm`
+                }`}
+              >
+                <div className="text-2xl font-bold">{c.value}</div>
+                <div className="text-xs font-semibold mt-0.5 opacity-90">{c.label}</div>
+              </button>
+            );
+          })}
         </div>
 
         {loading ? (
@@ -1259,64 +1247,62 @@ export default function AssessmentList() {
           </div>
         ) : (
           <>
-            {/* Filters */}
-            <div className="flex flex-col sm:flex-row gap-3">
-              <div className="relative flex-1 max-w-xs">
-                <svg
-                  className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={2}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"
-                  />
+            {/* Filters: search · year group · term */}
+            <div className="bg-white border border-slate-200 rounded-2xl p-3 shadow-2xs flex flex-col lg:flex-row lg:items-center gap-3">
+              <div className="relative flex-1">
+                <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
                 </svg>
                 <input
                   type="text"
-                  placeholder="Search student or class..."
+                  placeholder="Search student or class…"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="form-input pl-9"
+                  className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                 />
               </div>
-              <div className="flex flex-wrap gap-2">
-                {availableTypes.map((t) => (
-                  <button
-                    key={t}
-                    onClick={() => setFilterType(t)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
-                      filterType === t
-                        ? "bg-blue-600 text-white"
-                        : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
-                    }`}
-                  >
-                    {t === "All" ? "All Skills" : getTypeMeta(t)?.label || t}
-                  </button>
+              <select
+                value={filterStage}
+                onChange={(e) => setFilterStage(e.target.value)}
+                className="lg:w-56 px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm font-semibold text-slate-700 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                aria-label="Year group"
+              >
+                <option value="All">All year groups</option>
+                {stageOptions.map((st) => (
+                  <option key={st} value={st}>{st}</option>
                 ))}
-              </div>
-
-              <div className="flex gap-2">
+              </select>
+              <div className="inline-flex bg-slate-100 p-1 rounded-xl self-start lg:self-auto" role="group" aria-label="Term">
                 {["All", "T1", "T2", "T3"].map((t) => (
                   <button
                     key={t}
+                    type="button"
                     onClick={() => setFilterTerm(t)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
-                      filterTerm === t
-                        ? "bg-indigo-600 text-white"
-                        : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
+                    className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                      filterTerm === t ? "bg-white text-slate-900 shadow-xs" : "text-slate-500 hover:text-slate-800"
                     }`}
                   >
-                    {t === "All" ? "All Terms" : t}
+                    {t === "All" ? "All terms" : t}
                   </button>
                 ))}
               </div>
+              {(search || filterStage !== "All" || filterTerm !== "All" || filterSkill !== "All") && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearch("");
+                    setFilterStage("All");
+                    setFilterTerm("All");
+                    setFilterSkill("All");
+                  }}
+                  className="text-xs font-bold text-slate-500 hover:text-slate-800 px-2"
+                >
+                  Clear filters
+                </button>
+              )}
             </div>
 
-            {/* Table */}
+
             <div className="table-wrapper bg-white">
               <table className="data-table">
                 <thead>

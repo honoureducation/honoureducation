@@ -70,6 +70,9 @@ const assessmentSchema = new mongoose.Schema(
       comment:
         "Used to distinguish between Year 7-9 (junior) and Year 10-13 (senior) for Listening Part 2, Speaking Assessment, and Reading Assessment",
     },
+  // Registered student this assessment belongs to (Students page)
+  studentRef: { type: String, index: true },
+  studentCode: { type: String },
   term: {
     type: String,
     enum: ["T1", "T2", "T3"],

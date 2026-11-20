@@ -1,4 +1,5 @@
 import { authAPI } from './authService';
+import { getSelectedStudent, studentLabel } from '../utils/students';
 
 const DEMO_FALLBACK_ASSESSMENTS = [
   {
@@ -39,8 +40,20 @@ const DEMO_FALLBACK_ASSESSMENTS = [
   }
 ];
 
+// Attach the registered student (picked on the form) so the record links to them
+const withStudentLink = (data) => {
+  const selected = getSelectedStudent();
+  if (!selected || !data || data.studentRef) return data;
+  const sameStudent =
+    (data.studentName || '').trim().toLowerCase() === studentLabel(selected).toLowerCase();
+  return sameStudent
+    ? { ...data, studentRef: selected._id, studentCode: selected.studentId }
+    : data;
+};
+
 // Create assessment
-const createAssessment = async (assessmentData) => {
+const createAssessment = async (rawAssessmentData) => {
+  const assessmentData = withStudentLink(rawAssessmentData);
   try {
     const response = await authAPI.post('/assessments', assessmentData);
     return response.data;
@@ -94,6 +107,52 @@ export const assessmentAPI = {
   getAllAssessments,
   getAssessmentById,
   deleteAssessment
+};
+
+// Registered students (each teacher manages their own list)
+const apiError = (error) => error.response?.data?.message || error.message || 'Request failed';
+
+export const studentAPI = {
+  list: async (params = {}) => {
+    try {
+      const response = await authAPI.get('/students', { params });
+      return response.data.students || [];
+    } catch (error) {
+      throw new Error(apiError(error));
+    }
+  },
+  create: async (student) => {
+    try {
+      const response = await authAPI.post('/students', student);
+      return response.data.student;
+    } catch (error) {
+      throw new Error(apiError(error));
+    }
+  },
+  update: async (id, updates) => {
+    try {
+      const response = await authAPI.put(`/students/${id}`, updates);
+      return response.data.student;
+    } catch (error) {
+      throw new Error(apiError(error));
+    }
+  },
+  remove: async (id) => {
+    try {
+      const response = await authAPI.delete(`/students/${id}`);
+      return response.data;
+    } catch (error) {
+      throw new Error(apiError(error));
+    }
+  },
+  bulkImport: async (students) => {
+    try {
+      const response = await authAPI.post('/students/bulk-import', { students });
+      return response.data.results;
+    } catch (error) {
+      throw new Error(apiError(error));
+    }
+  },
 };
 
 export const contactAPI = {

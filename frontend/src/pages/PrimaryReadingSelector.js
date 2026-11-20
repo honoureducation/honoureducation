@@ -177,6 +177,31 @@ const OPTIONS = [
     ),
     route: "/assessment/grade4-reading",
   },
+  {
+    id: "grade5-year6",
+    subtitle: "Stage 8 · Year 6",
+    title: "Grade 5 / Year 6 Reading Assessment",
+    tag: "Grade 5 · Year 6 · Age 10–11",
+    desc: "The Moonlight Market story reading (4 paragraphs), 20–30s per line, accuracy error tracking (/100 words), fluency check, and CEFR decoding levels.",
+    color: "bg-emerald-500",
+    lightColor: "bg-emerald-50 text-emerald-500 border-emerald-200",
+    icon: (
+      <svg
+        className="w-5 h-5"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        strokeWidth={1.8}
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"
+        />
+      </svg>
+    ),
+    route: "/assessment/grade5-reading",
+  },
 ];
 
 export default function PrimaryReadingSelector() {

@@ -25,6 +25,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import AdminLogin from "./pages/AdminLogin";
 import TeacherDashboard from "./pages/TeacherDashboard";
 import AssessmentSelector from "./pages/AssessmentSelector";
+import StudentsPage from "./pages/StudentsPage";
 import AssessmentForm from "./pages/AssessmentForm";
 import ListeningAssessmentForm from "./pages/ListeningAssessmentForm";
 import ListeningAssessmentPart2Form from "./pages/ListeningAssessmentPart2Form";
@@ -143,6 +144,16 @@ function App() {
             element={
               <ProtectedRoute requireApprovedTeacher={true}>
                 <TeacherDashboard />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Student registration — done before assessing */}
+          <Route
+            path="/students"
+            element={
+              <ProtectedRoute requireApprovedTeacher={true}>
+                <StudentsPage />
               </ProtectedRoute>
             }
           />
@@ -623,6 +634,22 @@ function App() {
             }
           />
           <Route
+            path="/assessment/grade5-reading"
+            element={
+              <ProtectedRoute requireApprovedTeacher={true}>
+                <PrimaryReadingAssessmentForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/assessment/grade5-year6-reading"
+            element={
+              <ProtectedRoute requireApprovedTeacher={true}>
+                <PrimaryReadingAssessmentForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/assessment/primary-writing"
             element={
               <ProtectedRoute requireApprovedTeacher={true}>
@@ -768,6 +795,22 @@ function App() {
           />
           <Route
             path="/assessment/grade4-year5-writing"
+            element={
+              <ProtectedRoute requireApprovedTeacher={true}>
+                <PrimaryWritingAssessmentForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/assessment/grade5-writing"
+            element={
+              <ProtectedRoute requireApprovedTeacher={true}>
+                <PrimaryWritingAssessmentForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/assessment/grade5-year6-writing"
             element={
               <ProtectedRoute requireApprovedTeacher={true}>
                 <PrimaryWritingAssessmentForm />

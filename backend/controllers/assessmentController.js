@@ -286,6 +286,11 @@ exports.createAssessment = async (req, res) => {
     // Get the authenticated teacher's ID for ownership tracking
     const createdBy = req.userId || null;
 
+    // Link to the registered student picked on the form (if any)
+    const studentLink = {};
+    if (req.body.studentRef) studentLink.studentRef = String(req.body.studentRef);
+    if (req.body.studentCode) studentLink.studentCode = String(req.body.studentCode);
+
     // Handle Speaking Assessment (Secondary and Primary FS1, FS2, KG2, Grade 1 to Grade 4)
     if (
       assessmentType === "Speaking Assessment" ||
@@ -321,7 +326,7 @@ exports.createAssessment = async (req, res) => {
         teachingFocus: req.body.teachingFocus || "",
       };
 
-      const assessment = new Assessment(assessmentData);
+      const assessment = new Assessment({ ...assessmentData, ...studentLink });
       const saved = await saveAssessmentRecord(assessment, assessmentData);
       return res.status(201).json({
         message: "Speaking Assessment saved successfully",
@@ -369,7 +374,7 @@ exports.createAssessment = async (req, res) => {
         recommendedLevel: req.body.recommendedLevel || "",
       };
 
-      const assessment = new Assessment(assessmentData);
+      const assessment = new Assessment({ ...assessmentData, ...studentLink });
       const saved = await saveAssessmentRecord(assessment, assessmentData);
       return res.status(201).json({
         message: "Reading Assessment saved successfully",
@@ -430,7 +435,7 @@ exports.createAssessment = async (req, res) => {
         recommendedLevel: req.body.recommendedLevel || "",
       };
 
-      const assessment = new Assessment(assessmentData);
+      const assessment = new Assessment({ ...assessmentData, ...studentLink });
       const saved = await saveAssessmentRecord(assessment, assessmentData);
       return res.status(201).json({
         message: "Writing Assessment saved successfully",
@@ -466,7 +471,7 @@ exports.createAssessment = async (req, res) => {
         recommendedLevel: req.body.recommendedLevel || "",
       };
 
-      const assessment = new Assessment(assessmentData);
+      const assessment = new Assessment({ ...assessmentData, ...studentLink });
       const saved = await saveAssessmentRecord(assessment, assessmentData);
       return res.status(201).json({
         message: `${assessmentType} saved successfully`,
@@ -507,7 +512,7 @@ exports.createAssessment = async (req, res) => {
         recommendedLevel: req.body.recommendedLevel || "",
       };
 
-      const assessment = new Assessment(assessmentData);
+      const assessment = new Assessment({ ...assessmentData, ...studentLink });
       const saved = await saveAssessmentRecord(assessment, assessmentData);
       return res.status(201).json({
         message: `${assessmentType} saved successfully`,
@@ -572,7 +577,7 @@ exports.createAssessment = async (req, res) => {
       createdBy,
     };
 
-    const assessment = new Assessment(assessmentData);
+    const assessment = new Assessment({ ...assessmentData, ...studentLink });
     const saved = await saveAssessmentRecord(assessment, assessmentData);
 
     res.status(201).json({

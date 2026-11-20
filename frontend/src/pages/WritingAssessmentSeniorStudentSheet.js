@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import StudentPicker from '../components/StudentPicker';
+import { studentLabel, studentYearClass } from '../utils/students';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { assessmentAPI } from '../services/api';
-import AIAssistantConductor from '../components/AIAssistantConductor';
+import WritingQuestions from '../components/WritingQuestions';
 // Landmark images served from /public
 const writingImg1 = '/img1.png';
 const writingImg2 = '/img2.png';
@@ -28,6 +30,21 @@ export default function WritingAssessmentSeniorStudentSheet() {
   const [studentWriting, setStudentWriting] = useState('');
   const [loading, setLoading] = useState(false);
   const [aiAnswers, setAiAnswers] = useState([]);
+
+  // Typed answer for each writing question
+  const handleWritingAnswer = (index, text) => {
+    setAiAnswers((prev) => {
+      const next = [...prev];
+      next[index] = text;
+      return next;
+    });
+  };
+
+  useEffect(() => {
+    setStudentWriting(
+      WRITING_QUESTIONS.map((q, i) => `Q${i + 1}: ${q}\nA: ${aiAnswers[i] || ''}`).join('\n\n'),
+    );
+  }, [aiAnswers]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -63,6 +80,7 @@ export default function WritingAssessmentSeniorStudentSheet() {
       });
       setFormData({ email: '', studentName: '', yearGroupAndClass: '', teacherName: '' });
       setStudentWriting('');
+      setAiAnswers([]);
     } catch (err) {
       toast.error(`❌ Error: ${err.message || 'Failed to submit'}`, {
         position: 'top-right', autoClose: 4000,
@@ -102,25 +120,7 @@ export default function WritingAssessmentSeniorStudentSheet() {
 
         {/* Questions + Pictures */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <h2 className="text-lg font-bold text-gray-900 mb-2">Questions</h2>
-          <p className="text-sm font-semibold text-blue-600 mb-4 bg-blue-50 inline-block px-3 py-1 rounded-md">
-            Note: Allow 10 minutes for student to write.
-          </p>
-          <div className="space-y-3 text-gray-700 mb-6">
-            {WRITING_QUESTIONS.map((q, idx) => (
-              <div key={idx}>
-                <div className="flex gap-2">
-                  <span className="font-semibold text-slate-400 flex-shrink-0">{idx + 1}.</span>
-                  <span className="font-medium text-slate-900">{q}</span>
-                </div>
-                {aiAnswers && aiAnswers[idx] && (
-                  <div className="mt-2 text-sm text-indigo-700 bg-indigo-50/50 p-2.5 rounded-lg border border-indigo-100 shadow-inner">
-                    <span className="font-bold mr-1">Student Answer (AI):</span> "{aiAnswers[idx]}"
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
+          <h2 className="text-lg font-bold text-gray-900 mb-2">Picture Prompts</h2>
 
           {/* 3 Landmark Pictures */}
           <div className="grid grid-cols-3 gap-4">
@@ -138,17 +138,31 @@ export default function WritingAssessmentSeniorStudentSheet() {
           </div>
         </div>
 
-        {/* Lined Writing Area / AI Assistant */}
-        <AIAssistantConductor
+        {/* Questions — read aloud by AI, answers typed by the student */}
+        <WritingQuestions
           questions={WRITING_QUESTIONS}
-          onCompleteTextChange={(text) => setStudentWriting(text)}
-          onAnswersArrayChange={setAiAnswers}
+          answers={aiAnswers}
+          onAnswerChange={handleWritingAnswer}
+          note="Allow 10 minutes for the student to write."
         />
+
 
         {/* Student Info + Submit */}
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-purple-500">
             <h2 className="text-xl font-bold text-gray-900 mb-4">Student Information</h2>
+            <StudentPicker
+              tier="secondary"
+              value={formData.studentName}
+              onSelect={(s) => {
+                setFormData((p) => ({
+                  ...p,
+                  studentName: studentLabel(s),
+                  yearGroupAndClass: studentYearClass(s),
+                  email: s.email || p.email || localStorage.getItem('userEmail') || '',
+                }));
+              }}
+            />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">Email</label>

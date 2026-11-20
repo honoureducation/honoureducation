@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import StudentPicker from '../components/StudentPicker';
+import { studentLabel, studentYearClass } from '../utils/students';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { assessmentAPI } from '../services/api';
@@ -44,6 +46,11 @@ const READING_QUESTIONS = [
   'Paragraph 4: One evening, as the sun dipped behind the mountains, Asha scored a goal that echoed across the valley. She stood tall, imagining a stadium full of cheering fans. One day, she whispered, she would be a football hero. And with Rafi, her brother, and her father believing in her, the dream felt closer than ever.'
 ];
 
+const READING_ITEMS = READING_QUESTIONS.map((q) => {
+  const sep = q.indexOf(': ');
+  return { label: q.slice(0, sep), text: q.slice(sep + 2) };
+});
+
 export default function ReadingAssessmentForm() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -60,22 +67,20 @@ export default function ReadingAssessmentForm() {
   const [teacherNotes, setTeacherNotes] = useState('');
   const [loading, setLoading] = useState(false);
   const [aiAnswers, setAiAnswers] = useState([]);
+  const [readingResults, setReadingResults] = useState([]);
 
+  // Write the AI-captured reading mistakes into the Teacher Notes
   useEffect(() => {
-    if (aiAnswers && aiAnswers.some((ans) => ans && ans.trim())) {
-      const summary = aiAnswers
-        .map((ans, idx) => (ans && ans.trim() ? `[Para ${idx + 1} AI Read]: ${ans.trim()}` : null))
-        .filter(Boolean)
-        .join('\n');
-      if (summary) {
-        setTeacherNotes((prev) => {
-          if (!prev) return summary;
-          if (prev.includes('[Para')) return summary;
-          return `${prev}\n\n${summary}`;
-        });
-      }
-    }
-  }, [aiAnswers]);
+    const read = (readingResults || []).filter((r) => r.analysis.hasReading);
+    if (read.length === 0) return;
+    const summary = ['[AI Reading Check]', ...read.map((r) => r.summary)].join('\n');
+    setTeacherNotes((prev) => {
+      if (!prev) return summary;
+      const marker = prev.indexOf('[AI Reading Check]');
+      if (marker !== -1) return `${prev.slice(0, marker)}${summary}`.trimStart();
+      return `${prev}\n\n${summary}`;
+    });
+  }, [readingResults]);
 
   useEffect(() => {
     if (preSelectedTerm) {
@@ -175,8 +180,11 @@ export default function ReadingAssessmentForm() {
 
         {/* AI Assessment Conductor */}
         <AIAssistantConductor
-          questions={READING_QUESTIONS}
+          mode="reading"
+          readingItems={READING_ITEMS}
+          title="AI Reading Conductor"
           onAnswersArrayChange={setAiAnswers}
+          onReadingResultsChange={setReadingResults}
         />
 
         {/* Story */}
@@ -193,7 +201,7 @@ export default function ReadingAssessmentForm() {
                 <p className={`${i === 0 ? 'font-semibold text-slate-900 mb-2' : 'mb-2'}`}>{para}</p>
                 {i > 0 && aiAnswers && aiAnswers[i - 1] && (
                   <div className="mt-2 mb-3 text-sm text-indigo-700 bg-indigo-50/50 p-3 rounded-xl border border-indigo-100 shadow-inner">
-                    <span className="font-bold mr-1">Student Answer (AI):</span> "{aiAnswers[i - 1]}"
+                    <span className="font-bold mr-1">AI Reading Check:</span> {readingResults[i - 1]?.summary || `"${aiAnswers[i - 1]}"`}
                   </div>
                 )}
               </div>
@@ -217,6 +225,18 @@ export default function ReadingAssessmentForm() {
               </svg>
               Student Information
             </h2>
+            <StudentPicker
+              tier="secondary"
+              value={formData.studentName}
+              onSelect={(s) => {
+                setFormData((p) => ({
+                  ...p,
+                  studentName: studentLabel(s),
+                  yearGroupAndClass: studentYearClass(s),
+                  email: s.email || p.email || localStorage.getItem('userEmail') || '',
+                }));
+              }}
+            />
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="form-label">Email <span className="text-red-500">*</span></label>

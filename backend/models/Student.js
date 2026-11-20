@@ -9,7 +9,7 @@ const studentSchema = new mongoose.Schema({
   },
   lastName: {
     type: String,
-    required: true,
+    default: "",
     trim: true
   },
   studentId: {
@@ -18,11 +18,21 @@ const studentSchema = new mongoose.Schema({
     trim: true
   },
   
-  // School Association
+  // School Association (teachers may only have a school name, so accept either)
   school: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'School',
-    required: true
+    type: mongoose.Schema.Types.Mixed,
+    required: false
+  },
+
+  // Optional contact email and Primary / Secondary tier
+  email: {
+    type: String,
+    trim: true,
+    lowercase: true
+  },
+  tier: {
+    type: String,
+    enum: ['primary', 'secondary']
   },
   
   // Academic Information
@@ -32,11 +42,14 @@ const studentSchema = new mongoose.Schema({
   },
   class: {
     type: String,
-    required: true
+    default: ""
   },
   academicYear: {
     type: String,
-    required: true
+    default: function () {
+      const y = new Date().getFullYear();
+      return new Date().getMonth() >= 7 ? `${y}-${y + 1}` : `${y - 1}-${y}`;
+    }
   },
   
   // Personal Information
@@ -120,15 +133,24 @@ const studentSchema = new mongoose.Schema({
 });
 
 // Compound indexes for multi-tenancy
-studentSchema.index({ school: 1, studentId: 1 }, { unique: true });
+// Student IDs are unique per teacher (each teacher manages their own class list)
+studentSchema.index({ createdBy: 1, studentId: 1 }, { unique: true });
 studentSchema.index({ school: 1, status: 1 });
 studentSchema.index({ school: 1, yearGroup: 1, class: 1 });
 studentSchema.index({ school: 1, createdAt: -1 });
 
 // Virtual for full name
 studentSchema.virtual('fullName').get(function() {
-  return `${this.firstName} ${this.lastName}`;
+  return `${this.firstName || ''} ${this.lastName || ''}`.trim();
 });
+
+// Year group + class as used on assessment forms, e.g. "Grade 2 / Year 3 - B"
+studentSchema.virtual('yearGroupAndClass').get(function() {
+  return this.class ? `${this.yearGroup} - ${this.class}` : this.yearGroup;
+});
+
+studentSchema.set('toJSON', { virtuals: true });
+studentSchema.set('toObject', { virtuals: true });
 
 // Virtual for current age
 studentSchema.virtual('age').get(function() {

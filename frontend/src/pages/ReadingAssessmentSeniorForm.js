@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import StudentPicker from '../components/StudentPicker';
+import { studentLabel, studentYearClass } from '../utils/students';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { assessmentAPI } from '../services/api';
@@ -38,6 +40,11 @@ const READING_QUESTIONS_SENIOR = [
   'Paragraph 4: These third culture students, had developed a profound understanding of the value of diversity. They learned to appreciate different perspectives and adapt to ever-changing environments, skills they knew would serve them well in life. As they prepared for university applications and life beyond their school, they carried with them not just academic knowledge but also a deeper wisdom that came from growing up between worlds.'
 ];
 
+const READING_ITEMS = READING_QUESTIONS_SENIOR.map((q) => {
+  const sep = q.indexOf(': ');
+  return { label: q.slice(0, sep), text: q.slice(sep + 2) };
+});
+
 export default function ReadingAssessmentSeniorForm() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -55,22 +62,20 @@ export default function ReadingAssessmentSeniorForm() {
   const [teacherNotes, setTeacherNotes] = useState('');
   const [loading, setLoading] = useState(false);
   const [aiAnswers, setAiAnswers] = useState([]);
+  const [readingResults, setReadingResults] = useState([]);
 
+  // Write the AI-captured reading mistakes into the Teacher Notes
   useEffect(() => {
-    if (aiAnswers && aiAnswers.some((ans) => ans && ans.trim())) {
-      const summary = aiAnswers
-        .map((ans, idx) => (ans && ans.trim() ? `[Para ${idx + 1} AI Read]: ${ans.trim()}` : null))
-        .filter(Boolean)
-        .join('\n');
-      if (summary) {
-        setTeacherNotes((prev) => {
-          if (!prev) return summary;
-          if (prev.includes('[Para')) return summary;
-          return `${prev}\n\n${summary}`;
-        });
-      }
-    }
-  }, [aiAnswers]);
+    const read = (readingResults || []).filter((r) => r.analysis.hasReading);
+    if (read.length === 0) return;
+    const summary = ['[AI Reading Check]', ...read.map((r) => r.summary)].join('\n');
+    setTeacherNotes((prev) => {
+      if (!prev) return summary;
+      const marker = prev.indexOf('[AI Reading Check]');
+      if (marker !== -1) return `${prev.slice(0, marker)}${summary}`.trimStart();
+      return `${prev}\n\n${summary}`;
+    });
+  }, [readingResults]);
 
   useEffect(() => {
     if (preSelectedTerm) {
@@ -186,8 +191,11 @@ export default function ReadingAssessmentSeniorForm() {
 
         {/* AI Assessment Conductor */}
         <AIAssistantConductor
-          questions={READING_QUESTIONS_SENIOR}
+          mode="reading"
+          readingItems={READING_ITEMS}
+          title="AI Reading Conductor"
           onAnswersArrayChange={setAiAnswers}
+          onReadingResultsChange={setReadingResults}
         />
 
         {/* Story Section */}
@@ -199,7 +207,7 @@ export default function ReadingAssessmentSeniorForm() {
                 <p className={`${idx === 0 ? 'font-bold text-gray-900 mb-2' : 'mb-2'}`}>{paragraph}</p>
                 {idx > 0 && aiAnswers && aiAnswers[idx - 1] && (
                   <div className="mt-2 mb-3 text-sm text-indigo-700 bg-indigo-50/50 p-3 rounded-xl border border-indigo-100 shadow-inner">
-                    <span className="font-bold mr-1">Student Answer (AI):</span> "{aiAnswers[idx - 1]}"
+                    <span className="font-bold mr-1">AI Reading Check:</span> {readingResults[idx - 1]?.summary || `"${aiAnswers[idx - 1]}"`}
                   </div>
                 )}
               </div>
@@ -228,6 +236,18 @@ export default function ReadingAssessmentSeniorForm() {
           {/* Student Information Section */}
           <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-blue-500">
             <h2 className="text-xl font-bold text-gray-900 mb-4">Student Information</h2>
+            <StudentPicker
+              tier="secondary"
+              value={formData.studentName}
+              onSelect={(s) => {
+                setFormData((p) => ({
+                  ...p,
+                  studentName: studentLabel(s),
+                  yearGroupAndClass: studentYearClass(s),
+                  email: s.email || p.email || localStorage.getItem('userEmail') || '',
+                }));
+              }}
+            />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">Email</label>

@@ -32,7 +32,7 @@ const OPTIONS = [
     subtitle: "Stage 2 · Reception",
     title: "FS2 - KG1 Writing Assessment",
     tag: "FS2 · KG1 · Age 4–5",
-    desc: "Children playing football in park picture story with real-time AI keyword detection and CEFR scoring.",
+    desc: "Two parts: 6 word-writing prompts (s _ _, c _ _, b _ _ _, sh _ _, ca _ _) and a football-in-the-park picture story with 4 questions. CEFR writing rubric.",
     color: "bg-pink-500",
     lightColor: "bg-pink-50 text-pink-500 border-pink-200",
     icon: (
@@ -57,7 +57,7 @@ const OPTIONS = [
     subtitle: "Stage 3 · Year 1",
     title: "KG2 / Year 1 Writing Assessment",
     tag: "KG2 · Year 1 · Age 5–6",
-    desc: "Children playing football in park picture story with real-time AI keyword detection and CEFR Pre-A1 to B2–C1 writing rubric.",
+    desc: "Two parts: 6 word-writing prompts (s _ _, c _ _, b _ _ _, sh _ _, ca _ _) and a football-in-the-park picture story with 4 questions. CEFR Pre-A1 to B2–C1 rubric.",
     color: "bg-pink-500",
     lightColor: "bg-pink-50 text-pink-500 border-pink-200",
     icon: (
@@ -82,7 +82,7 @@ const OPTIONS = [
     subtitle: "Stage 4 · Year 2",
     title: "Grade 1 / Year 2 Writing Assessment",
     tag: "Grade 1 · Year 2 · Age 6–7",
-    desc: "6 word-writing prompts (s _ _, c _ _, b _ _ _, sh _ _, ca _ _), independent word formation, and CEFR writing rubric.",
+    desc: "Two parts: 6 word-writing prompts (s _ _, c _ _, b _ _ _, sh _ _, ca _ _) and a river-kayaking picture story with 4 questions. CEFR writing rubric.",
     color: "bg-pink-500",
     lightColor: "bg-pink-50 text-pink-500 border-pink-200",
     icon: (
@@ -107,7 +107,7 @@ const OPTIONS = [
     subtitle: "Stage 5 · Year 3",
     title: "Grade 2 / Year 3 Writing Assessment",
     tag: "Grade 2 · Year 3 · Age 7–8",
-    desc: "3 fantasy story pictures (Rocky mountain, Nature valley, Campfire dragons) with 4 prompts, real-time AI keyword detection, and CEFR writing rubric.",
+    desc: "3 fantasy story pictures (Rocky mountain, Nature valley, Campfire dragons) with 4 prompts, AI-assisted evaluation, and CEFR writing rubric.",
     color: "bg-pink-500",
     lightColor: "bg-pink-50 text-pink-500 border-pink-200",
     icon: (
@@ -176,6 +176,31 @@ const OPTIONS = [
       </svg>
     ),
     route: "/assessment/grade4-writing",
+  },
+  {
+    id: "grade5-year6",
+    subtitle: "Stage 8 · Year 6",
+    title: "Grade 5 / Year 6 Writing Assessment",
+    tag: "Grade 5 · Year 6 · Age 10–11",
+    desc: "3-picture sci-fi story prompts (Desert Traveller, Black Hole, Ruined City) — who, what they are doing, and a written story — with AI Conductor & CEFR rubric.",
+    color: "bg-pink-500",
+    lightColor: "bg-pink-50 text-pink-500 border-pink-200",
+    icon: (
+      <svg
+        className="w-5 h-5"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        strokeWidth={1.8}
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"
+        />
+      </svg>
+    ),
+    route: "/assessment/grade5-writing",
   },
 ];
 

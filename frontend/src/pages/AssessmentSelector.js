@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { studentAPI } from "../services/api";
+import { getSelectedStudent, studentLabel } from "../utils/students";
 
 // ==========================================
 // 🎓 SECONDARY ASSESSMENTS (Year 7–13 · Grade 6–12)
@@ -227,7 +229,7 @@ const PRIMARY_ASSESSMENTS = [
     subtitle: "FS1 · FS2 · KG2 · Year 2",
     stage: "Primary",
     tag: "FS1 · FS2 · KG2 · Year 2",
-    desc: "FS1 & Grade 1 / Year 2 word prompts, FS2 & KG2 picture story with real-time AI keyword detection and CEFR rubric.",
+    desc: "FS1 & Grade 1 / Year 2 word prompts, FS2 & KG2 picture story with AI-assisted evaluation and CEFR rubric.",
     icon: (
       <svg
         className="w-6 h-6"
@@ -331,6 +333,21 @@ export default function AssessmentSelector() {
     }
   }, [searchParams]);
 
+  // Registered students: prompt to register first if there are none
+  const [studentCount, setStudentCount] = useState(null); // null = loading / unavailable
+  const [skipRegistration, setSkipRegistration] = useState(false);
+  const selectedStudent = getSelectedStudent();
+  useEffect(() => {
+    let cancelled = false;
+    studentAPI
+      .list()
+      .then((list) => !cancelled && setStudentCount(list.length))
+      .catch(() => !cancelled && setStudentCount(null)); // don't block assessments if the API is unreachable
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const handleStageChange = (newStage) => {
     setSelectedStage(newStage);
     localStorage.setItem("assessmentSchoolTier", newStage);
@@ -403,6 +420,51 @@ export default function AssessmentSelector() {
 
       {/* Main Content Area */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
+        {/* Step 1: students must be registered before assessing */}
+        {studentCount === 0 && !skipRegistration ? (
+          <div className="mb-8 bg-white rounded-3xl border-2 border-indigo-200 p-8 text-center shadow-sm">
+            <p className="text-[11px] font-black uppercase tracking-widest text-indigo-600">Step 1</p>
+            <h2 className="text-2xl font-black text-slate-900 mt-1">Register your students first</h2>
+            <p className="text-sm text-slate-500 mt-2 max-w-xl mx-auto">
+              Add your students once — one by one or by uploading a CSV class list. Then on every assessment you
+              simply search and select the student instead of typing their details.
+            </p>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-6">
+              <Link
+                to="/students"
+                className="px-6 py-3 rounded-2xl bg-indigo-600 text-white text-sm font-bold shadow-lg shadow-indigo-600/20 hover:bg-indigo-700"
+              >
+                Register Students
+              </Link>
+              <button
+                type="button"
+                onClick={() => setSkipRegistration(true)}
+                className="px-6 py-3 rounded-2xl text-sm font-bold text-slate-500 hover:text-slate-800"
+              >
+                Skip for now
+              </button>
+            </div>
+          </div>
+        ) : studentCount > 0 ? (
+          <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-4 py-3 rounded-2xl bg-indigo-50 border border-indigo-100 text-sm">
+            <span className="font-semibold text-indigo-900">
+              {selectedStudent ? (
+                <>
+                  Assessing <strong>{studentLabel(selectedStudent)}</strong> ({selectedStudent.yearGroup}) — you can change the
+                  student on the assessment form.
+                </>
+              ) : (
+                <>
+                  <strong>{studentCount}</strong> registered student{studentCount === 1 ? '' : 's'} — pick one on the assessment form.
+                </>
+              )}
+            </span>
+            <Link to="/students" className="font-bold text-indigo-600 hover:underline shrink-0">
+              Manage students →
+            </Link>
+          </div>
+        ) : null}
+
         {/* Stage Toggle Bar (Kept below, exactly as requested) */}
         <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
           <div className="inline-flex bg-slate-200/80 p-1.5 rounded-2xl shadow-inner gap-1">

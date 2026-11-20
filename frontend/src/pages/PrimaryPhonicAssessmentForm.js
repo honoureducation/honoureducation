@@ -1,4 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import StudentPicker from '../components/StudentPicker';
+import { studentLabel, studentYearClass } from '../utils/students';
+import StageSelector from '../components/StageSelector';
 import { useNavigate, useSearchParams, useLocation, Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { assessmentAPI } from '../services/api';
@@ -538,7 +541,7 @@ export default function PrimaryPhonicAssessmentForm() {
       <div className="max-w-5xl mx-auto space-y-6">
 
         {/* Top Navigation & Stage Switcher */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="space-y-4">
           <Link
             to="/assessments?tier=primary"
             className="inline-flex items-center text-sm font-bold text-amber-600 hover:text-amber-700 bg-white px-3.5 py-1.5 rounded-full border border-amber-200 shadow-2xs transition-colors self-start sm:self-auto"
@@ -549,92 +552,13 @@ export default function PrimaryPhonicAssessmentForm() {
             Back to Assessment Selector
           </Link>
 
-          {/* Stage Selector Toggle */}
-          <div className="inline-flex bg-slate-200/90 p-1.5 rounded-2xl shadow-inner gap-1 flex-wrap self-start sm:self-auto">
-            <button
-              type="button"
-              onClick={() => handleStageSwitch('FS1')}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-200 ${
-                selectedStage === 'FS1'
-                  ? 'bg-white text-amber-700 shadow-sm scale-[1.02]'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/50'
-              }`}
-            >
-              <span>🌸 FS1</span>
-              <span
-                className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
-                  selectedStage === 'FS1'
-                    ? 'bg-amber-100 text-amber-800'
-                    : 'bg-slate-300 text-slate-700'
-                }`}
-              >
-                Nursery
-              </span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleStageSwitch('FS2 - KG1')}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-200 ${
-                selectedStage === 'FS2 - KG1'
-                  ? 'bg-white text-amber-700 shadow-sm scale-[1.02]'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/50'
-              }`}
-            >
-              <span>🌼 FS2 - KG1</span>
-              <span
-                className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
-                  selectedStage === 'FS2 - KG1'
-                    ? 'bg-amber-100 text-amber-800'
-                    : 'bg-slate-300 text-slate-700'
-                }`}
-              >
-                Reception
-              </span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleStageSwitch('KG2 / Year 1')}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-200 ${
-                selectedStage === 'KG2 / Year 1'
-                  ? 'bg-white text-amber-700 shadow-sm scale-[1.02]'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/50'
-              }`}
-            >
-              <span>🎒 KG2 / Year 1 (Phase 2 & 3)</span>
-              <span
-                className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
-                  selectedStage === 'KG2 / Year 1'
-                    ? 'bg-amber-100 text-amber-800'
-                    : 'bg-slate-300 text-slate-700'
-                }`}
-              >
-                Foundation
-              </span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleStageSwitch('KG2 / Year 1 (Phase 4 & 5)')}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-200 ${
-                selectedStage === 'KG2 / Year 1 (Phase 4 & 5)'
-                  ? 'bg-white text-amber-700 shadow-sm scale-[1.02]'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/50'
-              }`}
-            >
-              <span>⚡ KG2 / Year 1 (Phase 4 & 5)</span>
-              <span
-                className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
-                  selectedStage === 'KG2 / Year 1 (Phase 4 & 5)'
-                    ? 'bg-amber-100 text-amber-800'
-                    : 'bg-slate-300 text-slate-700'
-                }`}
-              >
-                Higher Blends
-              </span>
-            </button>
-          </div>
+          <StageSelector
+            stages={['FS1', 'FS2 - KG1', 'KG2 / Year 1', 'KG2 / Year 1 (Phase 4 & 5)']}
+            value={selectedStage}
+            onChange={handleStageSwitch}
+            theme="amber"
+            labels={{ 'KG2 / Year 1': { short: 'KG2', sub: 'Phase 2 & 3' } }}
+          />
         </div>
 
         {/* Hero Header Banner (Amber Theme) */}
@@ -657,16 +581,6 @@ export default function PrimaryPhonicAssessmentForm() {
               </p>
             </div>
 
-            <button
-              type="button"
-              onClick={() => setShowSheetModal(true)}
-              className="self-start md:self-auto inline-flex items-center gap-2 bg-white text-amber-700 font-bold px-4 py-2.5 rounded-2xl shadow-lg hover:bg-amber-50 transition-all hover:scale-105 text-sm"
-            >
-              <svg className="w-5 h-5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
-              </svg>
-              View Printable Sheet
-            </button>
           </div>
         </div>
 
@@ -719,6 +633,18 @@ export default function PrimaryPhonicAssessmentForm() {
               <span className="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
               Student & Assessment Details
             </h3>
+            <StudentPicker
+              tier="primary"
+              value={formData.studentName}
+              onSelect={(s) => {
+                if (['FS1', 'FS2 - KG1', 'KG2 / Year 1'].includes(s.yearGroup)) handleStageSwitch(s.yearGroup);
+                setFormData((p) => ({
+                  ...p,
+                  studentName: studentLabel(s),
+                  yearGroupAndClass: studentYearClass(s),
+                }));
+              }}
+            />
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
               <div>
                 <label className="block text-xs font-black uppercase tracking-wider text-slate-500 mb-1">
