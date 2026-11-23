@@ -30,6 +30,12 @@ app.use(cors({
   },
   credentials: true
 }));
+
+// Course store (separate feature, see backend/lms). Stripe webhooks and file
+// streams need the raw request body, so these routes are mounted before express.json().
+const lms = require('./lms');
+app.use('/api/lms', lms.rawRouter);
+
 app.use(express.json());
 
 // MongoDB Connection
@@ -57,6 +63,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/schools', schoolRoutes);
 app.use('/api/students', studentRoutes);
 app.use('/api/contact', contactRoutes);
+app.use('/api/lms', lms.router);
 
 // Health check
 app.get('/api/health', (req, res) => {
