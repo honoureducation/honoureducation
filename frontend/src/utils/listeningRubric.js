@@ -343,6 +343,106 @@ function matchesPhraseFuzzy(text, phrase, wordsList) {
   return wordsList.some((w) => isFuzzyWordMatch(w, normPhrase));
 }
 
+const FILLERS_RE = /\b(um+|uh+|er+|ah+|hmm+|you\s+know|basically|actually|well|i\s+mean)\b/gi;
+// A sentence needs a subject the pupil says ("I", "my", "we", "it", "there"...)
+const SUBJECT_RE = /\b(i|my|me|mine|we|our|us|he|his|she|her|they|their|them|it|there|this|that)\b/;
+// ...or a verb ("Pizza is my favourite", "Ali and Omar play with me")
+const VERB_RE = /\b(am|is|are|was|were|be|been|have|has|had|do|does|did|like|likes|liked|love|loves|live|lives|lived|go|goes|went|play|plays|played|eat|eats|ate|can|will|call|called|born|got|get|gets|come|came|walk|walked|take|took|want|wants|enjoy|enjoys|wake|wakes|woke|travel|travels|watch|watches|read|reads|help|helps|work|works|study|studies)\b/;
+const MIN_SENTENCE_WORDS = 3;
+
+/**
+ * Is this a full-sentence answer to the question?
+ * One- or two-word answers ("Shakir", "Yes", "Pizza") are NOT acceptable —
+ * the pupil must answer in a sentence ("My name is Shakir").
+ * @returns {{ acceptable: boolean|null, wordCount: number, reason: string }}
+ *          acceptable is null when nothing has been said yet.
+ */
+/** Spoken text prepared for keyword matching: "6:30" → "6 30", "six" → "6" */
+function keywordText(answerText) {
+  let text = normalizeSpokenText(answerText || '')
+    .replace(/(\d)[:.](\d)/g, '$1 $2')
+    .replace(/[^\w\s']/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  const withDigits = Object.entries(NUMBER_WORDS_MAP).reduce(
+    (t, [word, digit]) => t.replace(new RegExp(`\\b${word}\\b`, 'g'), digit),
+    text,
+  );
+  return { text, withDigits, words: text.split(' ').filter(Boolean) };
+}
+
+/**
+ * Which of the given keywords/phrases appear in the answer (fuzzy, accent-tolerant).
+ * Keywords are only used internally for marking — never shown on screen.
+ */
+export function findKeywords(answerText, phrases = []) {
+  const { text, withDigits, words } = keywordText(answerText);
+  if (!text) return [];
+  return phrases.filter(
+    (p) => matchesPhraseFuzzy(text, p, words) || matchesPhraseFuzzy(withDigits, p, words),
+  );
+}
+
+/**
+ * Marks an answer against an answer key made of "ideas". Each idea is a list of
+ * alternative keywords; an idea counts if any one of them is said.
+ *   key = { ideas: [["bus"], ["football","soccer"]], need?: number }
+ * 2 = every needed idea given in a full sentence, 1 = partly right, 0 = wrong / none.
+ */
+export function scoreAgainstKey(answerText, key) {
+  const ideas = key?.ideas || [];
+  const need = Math.min(key?.need || ideas.length, ideas.length);
+  const sentence = judgeSentenceAnswer('', answerText);
+  if (!sentence.wordCount) return { score: 0, matched: 0, need, reason: 'No response' };
+  const matched = ideas.filter((alts) => findKeywords(answerText, alts).length > 0).length;
+  if (matched === 0) {
+    return { score: 0, matched, need, reason: 'Answer does not match the listening text' };
+  }
+  if (matched >= need && sentence.acceptable) {
+    return { score: 2, matched, need, reason: 'Correct and complete answer' };
+  }
+  return {
+    score: 1,
+    matched,
+    need,
+    reason:
+      matched < need
+        ? `Partly correct (${matched} of ${need} key points)`
+        : `Correct, but ${sentence.reason.toLowerCase()}`,
+  };
+}
+
+/**
+ * @param keyPhrases optional words that show the answer is ON TOPIC for the
+ *        question (e.g. "born", "from" for "Where were you born?"). When given,
+ *        a sentence that doesn't use any of them is not acceptable.
+ */
+export function judgeSentenceAnswer(questionText, answerText, keyPhrases = null) {
+  const normalized = normalizeSpokenText(answerText || '').replace(FILLERS_RE, ' ');
+  const words = normalized.replace(/[^\w\s]/g, ' ').split(/\s+/).filter(Boolean);
+  const wordCount = words.length;
+  if (wordCount === 0) return { acceptable: null, wordCount, reason: 'No response yet' };
+  if (wordCount < MIN_SENTENCE_WORDS) {
+    return {
+      acceptable: false,
+      wordCount,
+      reason: `${wordCount === 1 ? 'One-word' : 'Two-word'} answer: a full sentence is needed`,
+    };
+  }
+  const joined = words.join(' ');
+  if (!SUBJECT_RE.test(joined) && !VERB_RE.test(joined)) {
+    return { acceptable: false, wordCount, reason: 'Not a full sentence (just a list of words)' };
+  }
+  if (keyPhrases && keyPhrases.length && findKeywords(answerText, keyPhrases).length === 0) {
+    return { acceptable: false, wordCount, reason: 'Does not answer the question asked' };
+  }
+  return {
+    acceptable: true,
+    wordCount,
+    reason: keyPhrases ? 'Full-sentence answer to the question' : 'Full-sentence answer',
+  };
+}
+
 /**
  * Fast real-time evaluation of a student's answer.
  * Understands both target keywords and natural/relatable everyday student expressions.
@@ -388,18 +488,15 @@ export function evaluateAnswer(questionIndex, answerText, customItem = null) {
     (LISTENING_PART_1_QUESTIONS && LISTENING_PART_1_QUESTIONS[questionIndex]);
 
   if (!item) {
+    const judged = judgeSentenceAnswer("", raw);
+    const score = judged.acceptable ? 2 : judged.wordCount >= 2 ? 1 : 0;
     return {
-      score: wordCount >= 3 ? 2 : wordCount > 0 ? 1 : 0,
+      score,
       detectedKeywords: [],
       relatableKeywords: [],
       wordCount,
-      confidence: wordCount >= 3 ? "medium" : wordCount > 0 ? "low" : "none",
-      reason:
-        wordCount >= 3
-          ? "Spoken response provided"
-          : wordCount > 0
-          ? "Brief response"
-          : "No response",
+      confidence: score === 2 ? "medium" : wordCount > 0 ? "low" : "none",
+      reason: judged.acceptable ? "Full-sentence response" : judged.reason,
     };
   }
 
@@ -475,12 +572,13 @@ export function evaluateAnswer(questionIndex, answerText, customItem = null) {
     reason = "No response";
   } else if (!customItem && questionIndex === 0) {
     // Q1: Name
-    if (totalMatches > 0 || wordCount >= 1) {
+    // Must actually give a name ("My name is…", "I am…", "Call me…")
+    if (totalMatches > 0) {
       score = 2;
       reason = "Full comprehension: Name provided";
     } else {
-      score = 1;
-      reason = "Some comprehension";
+      score = 0;
+      reason = "Not acceptable: answer does not give a name";
     }
   } else if (!customItem && questionIndex === 1) {
     // Q2: Age
@@ -520,12 +618,24 @@ export function evaluateAnswer(questionIndex, answerText, customItem = null) {
       wordCount >= 2
         ? "Full comprehension: Direct relatable answer"
         : "Some comprehension: Keyword mentioned";
-  } else if (detectedCategories.length > 0 || wordCount >= 3) {
-    score = 1;
-    reason = "Some comprehension: General context detected";
   } else {
-    score = wordCount >= 1 ? 1 : 0;
-    reason = wordCount >= 1 ? "Minimal response" : "No response";
+    // No keyword for this question: the answer doesn't show the pupil understood it
+    score = 0;
+    reason =
+      wordCount >= 1
+        ? "Not acceptable: answer does not match the question"
+        : "No response";
+  }
+
+  // One-word answers are not acceptable; two words earn at most partial credit.
+  // Full marks need a full sentence (e.g. "My name is Sara", not "Sara").
+  const sentence = judgeSentenceAnswer(item.question || "", raw);
+  if (sentence.wordCount <= 1) {
+    score = 0;
+    reason = "Not acceptable: one-word answer (a full sentence is needed)";
+  } else if (!sentence.acceptable && score > 1) {
+    score = 1;
+    reason = `Partial: ${sentence.reason}`;
   }
 
   return {

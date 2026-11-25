@@ -99,6 +99,10 @@ const TYPE_META = {
     label: "Grade 4 Listening",
     color: "bg-cyan-100 text-cyan-800",
   },
+  "Grade 5 / Year 6 Listening Assessment": {
+    label: "Grade 5 Listening",
+    color: "bg-cyan-100 text-cyan-800",
+  },
   // Primary Speaking
   "FS1 Speaking Assessment": {
     label: "FS1 Speaking",
@@ -126,6 +130,10 @@ const TYPE_META = {
   },
   "Grade 4 / Year 5 Speaking Assessment": {
     label: "Grade 4 Speaking",
+    color: "bg-violet-100 text-violet-800",
+  },
+  "Grade 5 / Year 6 Speaking Assessment": {
+    label: "Grade 5 Speaking",
     color: "bg-violet-100 text-violet-800",
   },
   // Primary Reading

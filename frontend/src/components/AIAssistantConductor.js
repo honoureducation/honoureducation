@@ -164,6 +164,9 @@ function ReadingMistakesPanel({ analysis }) {
   );
 }
 
+// Same word splitting as the analyser, so the passage doesn't shift once colours appear
+const tokenWords = (text) => analyseReading(text, "").words;
+
 const DEFAULT_READING_INSTRUCTION = (item) =>
   `${item.label}. Please read this ${item.kind || "text"} out loud. Take your time.`;
 
@@ -489,7 +492,7 @@ export default function AIAssistantConductor({
         <div className="text-center py-10 bg-slate-50 rounded-xl border border-slate-100 relative">
           <p className="text-gray-600 mb-6 font-semibold max-w-xl mx-auto">
             {isReading
-              ? "Ready to start? The pupil presses 🎤 Start Reading and reads the text aloud. The AI only listens — it never reads anything out — and marks any words they misread, skip, or add."
+              ? "Ready to start? The pupil presses 🎤 Start Reading and reads the text aloud. The AI only listens. Words turn green when read well and red when not right. No hints are given."
               : "Ready to start? I will read the questions aloud and evaluate the student's answers as they speak."}
           </p>
           <button
@@ -545,48 +548,46 @@ export default function AIAssistantConductor({
                   <span className="block text-[11px] font-black uppercase tracking-wider text-slate-400 mb-2">
                     Pupil reads this aloud
                   </span>
-                  <p className="font-serif text-2xl font-bold text-gray-900 leading-relaxed">
-                    {currentReading && currentReading.analysis.hasReading
-                      ? currentReading.analysis.words.map((w, i) => {
-                          const inserted = currentReading.analysis.insertions.filter(
-                            (x) => x.beforeIndex === i,
-                          );
-                          return (
-                            <React.Fragment key={i}>
-                              {inserted.map((x, k) => (
-                                <span
-                                  key={`ins-${k}`}
-                                  className="text-base font-sans font-bold text-violet-700 bg-violet-50 border border-violet-200 rounded px-1 mx-0.5 align-middle"
-                                  title="Extra word the pupil added"
-                                >
-                                  +{x.word}
-                                </span>
-                              ))}
-                              <span
-                                className={
-                                  w.status === "correct"
-                                    ? "text-emerald-700"
-                                    : w.status === "substituted"
-                                      ? "text-amber-700 bg-amber-100 rounded px-0.5 underline decoration-wavy decoration-amber-500"
-                                      : w.status === "omitted"
-                                        ? "text-rose-600 bg-rose-50 rounded px-0.5 line-through"
-                                        : "text-gray-900"
-                                }
-                                title={
-                                  w.status === "substituted"
-                                    ? `Pupil said "${w.said}"`
-                                    : w.status === "omitted"
-                                      ? "Skipped"
-                                      : undefined
-                                }
-                              >
-                                {w.word}
-                              </span>{" "}
-                            </React.Fragment>
-                          );
-                        })
-                      : questions[currentIdx]}
+                  {/* Only green (read correctly) or red (not right) — never a hint,
+                      the correct word, or what the pupil said. */}
+                  <p className="font-serif text-2xl font-bold text-gray-900 leading-[2.1]">
+                    {(currentReading && currentReading.analysis.hasReading
+                      ? currentReading.analysis.words
+                      : tokenWords(questions[currentIdx])
+                    ).map((w, i) => (
+                      <React.Fragment key={i}>
+                        <span
+                          className={`rounded-md px-1 py-0.5 transition-colors duration-300 ${
+                            w.status === "correct"
+                              ? "bg-emerald-200 text-emerald-950"
+                              : w.status === "substituted" || w.status === "omitted"
+                                ? "bg-rose-200 text-rose-950"
+                                : ""
+                          }`}
+                        >
+                          {w.word}
+                        </span>{" "}
+                      </React.Fragment>
+                    ))}
                   </p>
+                  {currentReading && currentReading.analysis.hasReading && (
+                    <div className="mt-4 pt-3 border-t border-slate-100 flex flex-wrap items-center gap-2 text-sm font-bold">
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 text-emerald-800">
+                        <span className="w-3 h-3 rounded-sm bg-emerald-300" />
+                        {currentReading.analysis.correctCount} read well
+                      </span>
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-100 text-rose-800">
+                        <span className="w-3 h-3 rounded-sm bg-rose-300" />
+                        {currentReading.analysis.substitutions.length +
+                          currentReading.analysis.omissions.length}{" "}
+                        not right
+                      </span>
+                      <span className="text-slate-400 font-semibold">
+                        {currentReading.analysis.wordsReached} of{" "}
+                        {currentReading.analysis.totalWords} words
+                      </span>
+                    </div>
+                  )}
                 </div>
               </>
             ) : (
@@ -631,10 +632,41 @@ export default function AIAssistantConductor({
                 key={currentIdx}
                 onStart={handleStartDictation}
                 onInterimResult={updateLiveAnswer}
+                hasAnswer={!!(answers[currentIdx] || "").trim()}
+                onClear={() => {
+                  baseTextRef.current = "";
+                  setAnswers((prev) => {
+                    const next = [...prev];
+                    next[currentIdx] = "";
+                    return next;
+                  });
+                }}
                 idleLabel={isReading ? "Start Reading" : undefined}
                 activeLabel={isReading ? "Listening… (Tap when finished)" : undefined}
               />
             </div>
+            {isReading ? (
+              <details className="group rounded-xl border border-slate-200 bg-white">
+                <summary className="cursor-pointer select-none list-none px-4 py-3 text-sm font-bold text-slate-600 flex items-center justify-between">
+                  <span>👩‍🏫 Teacher view: what was heard &amp; mistake details</span>
+                  <span className="text-slate-400 group-open:rotate-180 transition-transform">▾</span>
+                </summary>
+                <div className="px-4 pb-4 space-y-3">
+                  <textarea
+                    value={answers[currentIdx] || ""}
+                    onChange={handleManualEdit}
+                    rows={4}
+                    placeholder="The pupil's reading is captured here. You can correct anything the microphone misheard."
+                    className="w-full px-4 py-3 bg-white border-2 border-slate-200 rounded-xl focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/20 outline-none transition-all text-base resize-none shadow-inner"
+                  />
+                  {currentReading && currentReading.analysis.hasReading ? (
+                    <ReadingMistakesPanel analysis={currentReading.analysis} />
+                  ) : (
+                    <div className="text-xs text-slate-400">Nothing read yet.</div>
+                  )}
+                </div>
+              </details>
+            ) : (
             <textarea
               value={answers[currentIdx] || ""}
               onChange={handleManualEdit}
@@ -646,20 +678,16 @@ export default function AIAssistantConductor({
               }
               className="w-full px-5 py-4 bg-white border-2 border-slate-200 rounded-xl focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/20 outline-none transition-all text-lg resize-none shadow-inner"
             />
+            )}
 
-            {/* Real-time AI Understanding Badge / Reading Mistakes */}
+            {/* Real-time AI Understanding Badge / Reading legend */}
             <div className="pt-2">
               {isReading ? (
-                currentReading && currentReading.analysis.hasReading ? (
-                  <ReadingMistakesPanel analysis={currentReading.analysis} />
-                ) : (
-                  <div className="text-xs text-slate-400 py-1">
-                    Waiting for the pupil to read. Mistakes are marked as they
-                    read: <span className="text-amber-700 font-bold">misread</span>,{" "}
-                    <span className="text-rose-600 font-bold">skipped</span>,{" "}
-                    <span className="text-violet-700 font-bold">added</span>.
-                  </div>
-                )
+                <div className="flex flex-wrap items-center gap-3 text-xs font-semibold text-slate-500 py-1">
+                  <span>As the pupil reads, each word turns:</span>
+                  <span className="px-2 py-0.5 rounded-md bg-emerald-200 text-emerald-950">green = read well</span>
+                  <span className="px-2 py-0.5 rounded-md bg-rose-200 text-rose-950">red = not right</span>
+                </div>
               ) : currentEvaluation && currentAnswer.trim().length > 0 ? (
                 <div
                   className={`p-4 rounded-xl border transition-all ${

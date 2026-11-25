@@ -1561,10 +1561,9 @@ export default function PrimaryWritingAssessmentForm() {
     term: preSelectedTerm,
   });
 
-  const [selectedLevel, setSelectedLevel] = useState(null);
+  // Teacher override — null means "use the AI-recommended level"
+  const [manualLevel, setSelectedLevel] = useState(null);
   const [usedKeywords, setUsedKeywords] = useState([]);
-  const [formationQuality, setFormationQuality] = useState("Developing");
-  const [pencilGrip, setPencilGrip] = useState("Dynamic Tripod");
   const [teachingFocusNotes, setTeachingFocusNotes] = useState("");
 
   // ------------------------------------------
@@ -1813,8 +1812,7 @@ export default function PrimaryWritingAssessmentForm() {
     // B2–C1: Fluent, confident sentences, high keyword detection
     if (
       (sentenceMatches.length >= 2 ||
-        (sentenceText.split(/\s+/).length >= 5 && totalAiMatches >= 6)) &&
-      formationQuality === "Clear & Confident"
+        (sentenceText.split(/\s+/).length >= 5 && totalAiMatches >= 6))
     ) {
       return "B2–C1";
     }
@@ -1839,13 +1837,13 @@ export default function PrimaryWritingAssessmentForm() {
     }
 
     // A1.0–A1.2: Initial sounds of words
-    if (wordCountTotal >= 1 || formationQuality === "Emerging") {
+    if (wordCountTotal >= 1) {
       return "A1.0–A1.2";
     }
 
     // Pre-A1: Mark-making / poor legibility
     return "Pre-A1";
-  }, [activeAnswers, detectedPerQuestion, totalAiMatches, formationQuality]);
+  }, [activeAnswers, detectedPerQuestion, totalAiMatches]);
 
   const grade2CountCorrect = grade2Statuses.filter(
     (s) => s === "correct",
@@ -1943,6 +1941,14 @@ export default function PrimaryWritingAssessmentForm() {
         ? fs1RecommendedLevel
         : pictureAiRecommendedLevel;
 
+  // Auto-select the AI level in the CEFR rubric once the pupil has written something
+  const hasWritingData =
+    Object.values(activeAnswers || {}).some((v) => typeof v === "string" && v.trim()) ||
+    [...earlyWritten, ...grade2Written, ...grade3Written].some((v) => (v || "").trim()) ||
+    [...earlyStatuses, ...itemStatuses, ...grade2Statuses, ...grade3Statuses].some(Boolean);
+  const selectedLevel = manualLevel || (hasWritingData ? currentRecommendedLevel : null);
+  const isAiLevel = !manualLevel && !!selectedLevel;
+
   // Toggle keyword chip (common)
   // ------------------------------------------
   // Form Submission
@@ -2020,8 +2026,6 @@ export default function PrimaryWritingAssessmentForm() {
         score: grade3CountCorrect,
         totalScore: grade3CountCorrect,
         totalPossible: GRADE3_WRITING_ITEMS.length,
-        formationQuality,
-        pencilGrip,
         keyWordsUsed: usedKeywords,
         teachingFocus: teachingFocusNotes,
         detailedResponses,
@@ -2059,8 +2063,6 @@ export default function PrimaryWritingAssessmentForm() {
         score: grade2CountCorrect,
         totalScore: grade2CountCorrect,
         totalPossible: GRADE2_WRITING_ITEMS.length,
-        formationQuality,
-        pencilGrip,
         keyWordsUsed: usedKeywords,
         teachingFocus: teachingFocusNotes,
         detailedResponses,
@@ -2093,8 +2095,6 @@ export default function PrimaryWritingAssessmentForm() {
         score: correct,
         totalScore: correct,
         totalPossible: EARLY_WORD_ITEMS.length,
-        formationQuality,
-        pencilGrip,
         keyWordsUsed: usedKeywords,
         teachingFocus: teachingFocusNotes,
         detailedResponses,
@@ -2127,8 +2127,6 @@ export default function PrimaryWritingAssessmentForm() {
         score: totalAiMatches,
         totalScore: totalAiMatches,
         totalPossible: totalAiPossible,
-        formationQuality,
-        pencilGrip,
         keyWordsUsed: usedKeywords,
         teachingFocus: teachingFocusNotes,
         fs2WritingAnswers: writingAnswers,
@@ -2166,8 +2164,6 @@ export default function PrimaryWritingAssessmentForm() {
         score: countCorrect,
         totalScore: countCorrect,
         totalPossible: FS1_WRITING_ITEMS.length,
-        formationQuality,
-        pencilGrip,
         keyWordsUsed: usedKeywords,
         teachingFocus: teachingFocusNotes,
         detailedResponses,
@@ -2569,58 +2565,6 @@ export default function PrimaryWritingAssessmentForm() {
                   <option value="T1">Term 1 (T1)</option>
                   <option value="T2">Term 2 (T2)</option>
                   <option value="T3">Term 3 (T3)</option>
-                </select>
-              </div>
-            </div>
-
-            {/* Pencil Grip and Formation Quality Options */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4 pt-4 border-t border-slate-100">
-              <div>
-                <label className="block text-xs font-black uppercase tracking-wider text-slate-500 mb-1">
-                  Pencil Grip Observed
-                </label>
-                <select
-                  value={pencilGrip}
-                  onChange={(e) => setPencilGrip(e.target.value)}
-                  className="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs font-semibold bg-white focus:ring-2 focus:ring-pink-500"
-                >
-                  <option value="Dynamic Tripod">
-                    Dynamic Tripod (Age appropriate)
-                  </option>
-                  <option value="Static Tripod">
-                    Static Tripod (Developing)
-                  </option>
-                  <option value="Digital Pronate">
-                    Digital Pronate (Four-finger grasp)
-                  </option>
-                  <option value="Palmar Supinate">
-                    Palmar Supinate (Fist grip)
-                  </option>
-                  <option value="Left-handed grip">Left-handed grip</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs font-black uppercase tracking-wider text-slate-500 mb-1">
-                  Letter Formation Quality
-                </label>
-                <select
-                  value={formationQuality}
-                  onChange={(e) => setFormationQuality(e.target.value)}
-                  className="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs font-semibold bg-white focus:ring-2 focus:ring-pink-500"
-                >
-                  <option value="Clear & Confident">
-                    Clear, confident, legible letter formation
-                  </option>
-                  <option value="Developing">
-                    Developing (some reversals or sizing inconsistencies)
-                  </option>
-                  <option value="Emerging">
-                    Emerging (identifiable initial sounds only)
-                  </option>
-                  <option value="Mark-making">
-                    Mark-making / Scribbles / Tracing only
-                  </option>
                 </select>
               </div>
             </div>
@@ -3408,7 +3352,7 @@ export default function PrimaryWritingAssessmentForm() {
                             onChange={(e) =>
                               handleAnswerChange(idx, e.target.value)
                             }
-                            placeholder={q.placeholder}
+                            placeholder="Type the pupil's written response here…"
                             className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-medium bg-white focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-all"
                           />
                         </div>
@@ -3562,7 +3506,7 @@ export default function PrimaryWritingAssessmentForm() {
                                 });
                               }
                             }}
-                            placeholder={`e.g. ${item.targetWord}`}
+                            placeholder="Type what the pupil wrote…"
                             className="w-full text-base font-bold font-mono tracking-wider px-3.5 py-2.5 rounded-xl border-2 border-slate-200 focus:border-pink-500 focus:outline-none transition-colors uppercase"
                           />
 
@@ -3807,7 +3751,7 @@ export default function PrimaryWritingAssessmentForm() {
                                   });
                                 }
                               }}
-                              placeholder={`Write '${item.targetWord}'...`}
+                              placeholder="Type what the pupil wrote…"
                               className={`w-full px-3 py-2 text-base font-bold font-mono tracking-wider rounded-lg border-b-2 border-t-0 border-x-0 bg-white focus:outline-none focus:ring-0 transition-colors ${
                                 isMatch
                                   ? "border-emerald-500 text-emerald-700 bg-emerald-50/50"
@@ -4045,16 +3989,16 @@ export default function PrimaryWritingAssessmentForm() {
                 </p>
               </div>
               <div className="flex items-center gap-2 text-xs font-bold">
-                <span className="text-slate-400">Auto Suggested:</span>
+                <span className="text-slate-400">{isAiLevel ? "✨ AI selected:" : "AI suggests:"}</span>
                 <span className="px-3 py-1 rounded-full bg-pink-100 text-pink-800 border border-pink-200 font-black">
                   {currentRecommendedLevel}
                 </span>
                 <button
                   type="button"
-                  onClick={() => setSelectedLevel(currentRecommendedLevel)}
-                  className="text-pink-600 hover:underline text-xs font-bold"
+                  onClick={() => setSelectedLevel(null)}
+                  className={`text-pink-600 hover:underline text-xs font-bold ${isAiLevel ? "hidden" : ""}`}
                 >
-                  Apply
+                  Use AI level
                 </button>
               </div>
             </div>

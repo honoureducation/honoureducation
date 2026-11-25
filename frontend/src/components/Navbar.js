@@ -33,6 +33,7 @@ const NAV_LINKS = [
       </svg>
     )
   },
+  { to: '/learn', label: 'Courses' },
   { to: '/about', label: 'About' },
   { to: '/contact', label: 'Contact' },
 ];

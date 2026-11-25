@@ -14,6 +14,10 @@ const NUMBER_WORDS = {
   15: 'fifteen', 17: 'seventeen', 20: 'twenty', 45: 'forty-five', 100: 'hundred',
 };
 
+// Speech recognition spells some short words as sound-alikes ("son" for "sun").
+// They sound identical when read aloud, so treat them as the same word.
+const SOUND_ALIKES = { son: 'sun', webb: 'web', bugg: 'bug', dogg: 'dog' };
+
 // Lowercase, strip accents/punctuation so "São" == "sao", "field's" == "fields"
 export function normaliseWord(word) {
   if (!word) return '';
@@ -24,6 +28,7 @@ export function normaliseWord(word) {
     .replace(/[’']/g, '')
     .replace(/[^a-z0-9-]/g, '');
   if (/^\d+$/.test(w) && NUMBER_WORDS[w]) w = NUMBER_WORDS[w];
+  if (SOUND_ALIKES[w]) w = SOUND_ALIKES[w];
   return w.replace(/-/g, '');
 }
 

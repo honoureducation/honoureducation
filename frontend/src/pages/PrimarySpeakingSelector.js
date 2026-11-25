@@ -107,6 +107,21 @@ const OPTIONS = [
     ),
     route: '/assessment/grade4-speaking',
   },
+  {
+    id: 'grade5-year6',
+    subtitle: 'Stage 8 · Year 6',
+    title: 'Grade 5 / Year 6 Speaking Assessment',
+    tag: 'Grade 5 · Year 6 · Age 10–11',
+    desc: '4 story prompts with mountain walk, cliff & paragliding pictures, story sequencing, and CEFR scoring.',
+    color: 'bg-violet-500',
+    lightColor: 'bg-violet-50 text-violet-500 border-violet-200',
+    icon: (
+      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+      </svg>
+    ),
+    route: '/assessment/grade5-speaking',
+  },
 ];
 
 export default function PrimarySpeakingSelector() {

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import StudentPicker from "../components/StudentPicker";
 import { studentLabel, studentYearClass } from "../utils/students";
-import StageSelector from '../components/StageSelector';
+import StageSelector, { PRIMARY_STAGES } from '../components/StageSelector';
+import { speakingAutoLevel } from '../utils/speakingAutoLevel';
 import {
   useNavigate,
   useSearchParams,
@@ -31,6 +32,10 @@ import grade4SpeakingSheet from "../assets/grade4-year5-speaking-sheet.jpg";
 import grade4SpeakingStrip from "../assets/grade4-speaking-ocean-strip.jpg";
 import grade4SpeakingReef from "../assets/grade4-speaking-coral-reef.jpg";
 import grade4SpeakingShark from "../assets/grade4-speaking-shark.jpg";
+import grade5SpeakingSheet from "../assets/grade5-year6-speaking-sheet.jpg";
+import grade5SpeakingWalk from "../assets/grade5-speaking-mountain-walk.jpg";
+import grade5SpeakingCliff from "../assets/grade5-speaking-cliff.jpg";
+import grade5SpeakingGlide from "../assets/grade5-speaking-paragliding.jpg";
 
 // ==========================================
 // 6 QUESTIONS FROM FS1 / FS2 / KG2 SPEAKING ASSESSMENT
@@ -43,6 +48,51 @@ const FS1_SPEAKING_QUESTIONS = [
   { id: 5, text: "How are they feeling?" },
   { id: 6, text: "How do you know this?" },
 ];
+
+// ==========================================
+// KEY WORDS PER STAGE — internal marking only, NEVER shown on screen.
+// Grade 3 and Grade 5 lists are from the 2026 Primary pack sheets; the others
+// describe what is in each stage's pictures. Answers that use none of these
+// words are treated as off-topic and pull the CEFR level down.
+// ==========================================
+// Story connectives ("then", "first") are left out on purpose: any answer can use them.
+const SPEAKING_KEYWORDS = {
+  family: [
+    "family", "mum", "mom", "mother", "dad", "father", "brother", "sister", "baby", "grandma",
+    "table", "dinner", "lunch", "eat", "eating", "food", "plate", "rice", "chicken", "bread",
+    "spoon", "fork", "knife", "hands", "chopsticks", "happy", "sad", "smiling", "hungry",
+    "laughing", "together", "no food", "empty",
+  ],
+  grade1: [
+    "paul", "grandma", "grandmother", "granny", "car", "arrive", "came",
+    "tennis", "racket", "ball", "walk", "walking", "park", "beach", "sea", "sand", "horse",
+    "riding", "video game", "game", "games", "playing", "play", "tv", "happy", "fun",
+  ],
+  grade2: [
+    "class", "classroom", "teacher", "children", "students", "pupils",
+    "talking", "discussion", "discussing", "girl", "board", "chalkboard", "writing",
+    "presenting", "reading", "book", "books", "circle", "carpet", "sitting", "listening",
+    "school", "learning",
+  ],
+  grade3: [
+    "talking", "speaking", "conversation", "discussing", "listening", "sharing",
+    "sitting", "table", "friends", "people", "explaining", "asking", "answering", "headphones",
+    "watching", "reading", "learning", "studying", "tablet", "screen", "child", "technology",
+    "audio", "rocket", "space", "launch", "flying", "blasting off", "sky", "adventure",
+    "astronaut", "fire", "smoke", "countdown", "mission",
+  ],
+  grade4: [
+    "ocean", "sea", "underwater", "water", "coral", "reef", "fish", "colourful",
+    "colorful", "shark", "swimming", "swim", "deep", "kelp", "seaweed", "diving", "diver",
+    "dangerous", "scary", "teeth", "plants",
+  ],
+  grade5: [
+    "mountain", "walking", "climbing", "grass", "rocks", "journey", "exploring",
+    "cliff", "clouds", "mountains", "sitting", "thinking", "view", "landscape", "parachute",
+    "flying", "forest", "houses", "sky", "gliding", "paragliding", "canopy", "adventure",
+    "hiking", "path", "valley",
+  ],
+};
 
 // ==========================================
 // 4 QUESTIONS FROM GRADE 1 / YEAR 2 SPEAKING ASSESSMENT
@@ -133,6 +183,65 @@ const GRADE4_SPEAKING_QUESTIONS = [
   { id: 2, text: "Can you explain what happens next?" },
   { id: 3, text: "Can you tell the story in order?" },
   { id: 4, text: "Can you tell me what you like about this story?" },
+];
+
+// ==========================================
+// GRADE 5 / YEAR 6 SPEAKING — exact from the 2026 Primary pack sheet
+// ==========================================
+const GRADE5_SPEAKING_QUESTIONS = [
+  { id: 1, text: "What is happening in picture 1?" },
+  { id: 2, text: "Can you explain what happens next?" },
+  { id: 3, text: "Can you tell the story in order?" },
+  { id: 4, text: "Can you tell me what you like about this story?" },
+];
+
+const GRADE5_SPEAKING_PICTURES = [
+  { src: grade5SpeakingWalk, alt: "Two people walking up a mountain path", label: "1. Walking to the Mountain" },
+  { src: grade5SpeakingCliff, alt: "Person sitting on a cliff edge above the valley", label: "2. On the Cliff" },
+  { src: grade5SpeakingGlide, alt: "Two people paragliding over a forest", label: "3. Paragliding" },
+];
+
+const GRADE5_SPEAKING_RUBRIC = [
+  {
+    level: "A1.0–A1.2",
+    description:
+      "Uses 1–3 word answers or none; cannot explain the picture; extremely limited spoken output.",
+    badgeBg: "bg-orange-100 text-orange-800 border-orange-200",
+    activeBg: "bg-orange-50 border-orange-400 text-orange-900",
+    indicator: "bg-orange-500",
+  },
+  {
+    level: "A2.0–A2.2",
+    description:
+      "Uses 2–5 word answers; confused explanation; short, simple sentences with limited clarity.",
+    badgeBg: "bg-amber-100 text-amber-800 border-amber-200",
+    activeBg: "bg-amber-50 border-amber-400 text-amber-900",
+    indicator: "bg-amber-500",
+  },
+  {
+    level: "A2.3–B1.1",
+    description:
+      "Uses 5–10 words in a sentence; includes conjunctions; mixes short and longer sentences with relevant vocabulary.",
+    badgeBg: "bg-blue-100 text-blue-800 border-blue-200",
+    activeBg: "bg-blue-50 border-blue-400 text-blue-900",
+    indicator: "bg-blue-600",
+  },
+  {
+    level: "B1.2–B1.3",
+    description:
+      "Speaks more fluently; explains the gist without hesitation; uses conjunctions and adds extra details confidently.",
+    badgeBg: "bg-indigo-100 text-indigo-800 border-indigo-200",
+    activeBg: "bg-indigo-50 border-indigo-400 text-indigo-900",
+    indicator: "bg-indigo-600",
+  },
+  {
+    level: "B2–C1",
+    description:
+      "Fluent, confident explanation; adds supporting details; uses strong vocabulary and clear sentence structures; fully coherent storytelling.",
+    badgeBg: "bg-emerald-100 text-emerald-800 border-emerald-200",
+    activeBg: "bg-emerald-50 border-emerald-400 text-emerald-900",
+    indicator: "bg-emerald-600",
+  },
 ];
 
 // ==========================================
@@ -378,15 +487,23 @@ export default function PrimarySpeakingAssessmentForm() {
   const [searchParams] = useSearchParams();
   const preSelectedTerm = searchParams.get("term") || "T1";
 
+  const isGrade5Initial =
+    location.pathname.includes("grade5") ||
+    location.pathname.includes("year6") ||
+    ["grade5", "year6"].includes(searchParams.get("grade")) ||
+    ["grade5", "year6"].includes(searchParams.get("stage"));
+
   const isGrade4Initial =
-    location.pathname.includes("grade4") ||
+    !isGrade5Initial &&
+    (location.pathname.includes("grade4") ||
     location.pathname.includes("year5") ||
     searchParams.get("grade") === "grade4" ||
     searchParams.get("grade") === "year5" ||
     searchParams.get("stage") === "grade4" ||
-    searchParams.get("stage") === "year5";
+    searchParams.get("stage") === "year5");
 
   const isGrade3Initial =
+    !isGrade5Initial &&
     !isGrade4Initial &&
     (location.pathname.includes("grade3") ||
       location.pathname.includes("year4") ||
@@ -438,7 +555,9 @@ export default function PrimarySpeakingAssessmentForm() {
       searchParams.get("grade") === "fs2" ||
       searchParams.get("stage") === "fs2");
 
-  const initialStage = isGrade4Initial
+  const initialStage = isGrade5Initial
+    ? "Grade 5 / Year 6"
+    : isGrade4Initial
     ? "Grade 4 / Year 5"
     : isGrade3Initial
     ? "Grade 3 / Year 4"
@@ -454,6 +573,8 @@ export default function PrimarySpeakingAssessmentForm() {
 
   const [selectedStage, setSelectedStage] = useState(initialStage);
   const [showSheetModal, setShowSheetModal] = useState(false);
+
+  const isGrade5Stage = selectedStage === "Grade 5 / Year 6";
 
   const isGrade4Stage =
     selectedStage === "Grade 4 / Year 5" ||
@@ -480,7 +601,9 @@ export default function PrimarySpeakingAssessmentForm() {
       selectedStage.includes("Grade 1") ||
       selectedStage.includes("Year 2"));
 
-  const activeQuestions = isGrade4Stage
+  const activeQuestions = isGrade5Stage
+    ? GRADE5_SPEAKING_QUESTIONS
+    : isGrade4Stage
     ? GRADE4_SPEAKING_QUESTIONS
     : isGrade3Stage
     ? GRADE3_SPEAKING_QUESTIONS
@@ -514,13 +637,16 @@ export default function PrimarySpeakingAssessmentForm() {
         prev.yearGroupAndClass === "Grade 1 / Year 2" ||
         prev.yearGroupAndClass === "Grade 2 / Year 3" ||
         prev.yearGroupAndClass === "Grade 3 / Year 4" ||
-        prev.yearGroupAndClass === "Grade 4 / Year 5"
+        prev.yearGroupAndClass === "Grade 4 / Year 5" ||
+        prev.yearGroupAndClass === "Grade 5 / Year 6"
           ? newStage
           : prev.yearGroupAndClass,
     }));
   };
 
-  const activeRubric = isGrade4Stage
+  const activeRubric = isGrade5Stage
+    ? GRADE5_SPEAKING_RUBRIC
+    : isGrade4Stage
     ? GRADE4_SPEAKING_RUBRIC
     : isGrade3Stage
     ? GRADE3_SPEAKING_RUBRIC
@@ -532,7 +658,9 @@ export default function PrimarySpeakingAssessmentForm() {
     ? KG2_SPEAKING_RUBRIC
     : CEFR_RUBRIC_LEVELS;
 
-  const activeSheet = isGrade4Stage
+  const activeSheet = isGrade5Stage
+    ? grade5SpeakingSheet
+    : isGrade4Stage
     ? grade4SpeakingSheet
     : isGrade3Stage
     ? grade3SpeakingSheet
@@ -546,7 +674,9 @@ export default function PrimarySpeakingAssessmentForm() {
     ? fs2SpeakingSheet
     : fs1SpeakingSheet;
 
-  const activePromptImage = isGrade4Stage
+  const activePromptImage = isGrade5Stage
+    ? grade5SpeakingWalk
+    : isGrade4Stage
     ? grade4SpeakingStrip
     : isGrade3Stage
     ? grade3SpeakingStrip
@@ -560,7 +690,30 @@ export default function PrimarySpeakingAssessmentForm() {
   const [questionNotes, setQuestionNotes] = useState(
     Array(8).fill(""),
   );
-  const [selectedLevel, setSelectedLevel] = useState(null); // 'Pre-A1' | 'A1.0–A1.2' etc.
+  // Teacher override — null means "use the AI-selected level"
+  const [manualLevel, setSelectedLevel] = useState(null); // 'Pre-A1' | 'A1.0–A1.2' etc.
+  const stageKeywords = isGrade5Stage
+    ? SPEAKING_KEYWORDS.grade5
+    : isGrade4Stage
+    ? SPEAKING_KEYWORDS.grade4
+    : isGrade3Stage
+    ? SPEAKING_KEYWORDS.grade3
+    : isGrade2Stage
+    ? SPEAKING_KEYWORDS.grade2
+    : isGrade1Stage
+    ? SPEAKING_KEYWORDS.grade1
+    : SPEAKING_KEYWORDS.family;
+  const aiLevel = speakingAutoLevel(
+    questionNotes,
+    activeQuestions.length,
+    activeRubric,
+    stageKeywords,
+  );
+  const selectedLevel =
+    manualLevel && activeRubric.some((r) => r.level === manualLevel)
+      ? manualLevel
+      : aiLevel.level;
+  const isAiLevel = selectedLevel && selectedLevel !== manualLevel;
   const [usedKeywords] = useState([]);
   const [teacherGeneralComments, setTeacherGeneralComments] = useState("");
   const [showFullPicture, setShowFullPicture] = useState(false);
@@ -613,14 +766,16 @@ export default function PrimarySpeakingAssessmentForm() {
     }
     if (!selectedLevel) {
       toast.error(
-        "Please select the evaluated CEFR Level from the rubric table.",
+        "No level yet. Let the pupil answer first, or select a CEFR level from the rubric table.",
       );
       return;
     }
 
     setLoading(true);
     const assessmentType =
-      selectedStage === "Grade 4 / Year 5"
+      selectedStage === "Grade 5 / Year 6"
+        ? "Grade 5 / Year 6 Speaking Assessment"
+        : selectedStage === "Grade 4 / Year 5"
         ? "Grade 4 / Year 5 Speaking Assessment"
         : selectedStage === "Grade 3 / Year 4"
         ? "Grade 3 / Year 4 Speaking Assessment"
@@ -704,6 +859,7 @@ export default function PrimarySpeakingAssessmentForm() {
           </Link>
 
           <StageSelector
+            stages={[...PRIMARY_STAGES, "Grade 5 / Year 6"]}
             value={selectedStage}
             onChange={handleStageSwitch}
             theme="violet"
@@ -729,7 +885,9 @@ export default function PrimarySpeakingAssessmentForm() {
                 {selectedStage} Speaking Assessment
               </h1>
               <p className="text-slate-500 text-sm mt-2 max-w-2xl">
-                {selectedStage === "Grade 3 / Year 4"
+                {isGrade5Stage
+                  ? "3-picture mountain adventure story prompts (Mountain Walk, Cliff, Paragliding), sequential storytelling, and CEFR level evaluation for Grade 5 / Year 6 pupils."
+                  : selectedStage === "Grade 3 / Year 4"
                   ? "3-picture story prompts (Conversation, Tablet, Space Launch), sequential storytelling, and CEFR level evaluation for Grade 3 / Year 4 pupils."
                   : selectedStage === "Grade 2 / Year 3"
                   ? "Classroom 3-picture story prompts, sequential storytelling, fluency, and CEFR level evaluation for Grade 2 / Year 3 pupils."
@@ -773,9 +931,13 @@ export default function PrimarySpeakingAssessmentForm() {
                 <div>
                   <h3 className="text-xs font-black uppercase tracking-wider text-violet-900 flex items-center gap-2 mb-2">
                     <span className="w-2.5 h-2.5 rounded-full bg-violet-600"></span>
-                    {isGrade4Stage || isGrade3Stage || isGrade2Stage || isGrade1Stage ? "Speaking Prompts" : "Instructions for assessor"}
+                    {isGrade5Stage || isGrade4Stage || isGrade3Stage || isGrade2Stage || isGrade1Stage ? "Speaking Prompts" : "Instructions for assessor"}
                   </h3>
-                  {isGrade4Stage ? (
+                  {isGrade5Stage ? (
+                    <p className="text-xs text-slate-700 font-bold">
+                      Show the student the 3 story pictures below (Walking to the Mountain, On the Cliff, Paragliding). Ask each speaking prompt in order to assess story sequencing, description, and fluency.
+                    </p>
+                  ) : isGrade4Stage ? (
                     <p className="text-xs text-slate-700 font-bold">
                       Show the student the 2 ocean story pictures below (Coral Reef and Shark in Deep Water). Ask each speaking prompt in order to assess story sequencing, description, and fluency.
                     </p>
@@ -825,7 +987,22 @@ export default function PrimarySpeakingAssessmentForm() {
                   className="cursor-pointer group relative rounded-2xl overflow-hidden border-2 border-violet-300 shadow-md bg-white transition-all hover:scale-102 hover:shadow-xl w-full"
                   title="Click to view large prompt image"
                 >
-                  {isGrade4Stage ? (
+                  {isGrade5Stage ? (
+                    <div className="grid grid-cols-3 gap-1.5 p-2 bg-slate-50">
+                      {GRADE5_SPEAKING_PICTURES.map((pic) => (
+                        <div key={pic.label} className="flex flex-col items-center">
+                          <img
+                            src={pic.src}
+                            alt={pic.alt}
+                            className="h-40 sm:h-48 w-full object-cover rounded-xl border border-slate-200 shadow-xs"
+                          />
+                          <span className="text-[10px] font-bold text-slate-600 mt-1 text-center">
+                            {pic.label}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : isGrade4Stage ? (
                     <div className="grid grid-cols-2 gap-2 p-2 bg-slate-50">
                       <div className="flex flex-col items-center">
                         <img
@@ -928,7 +1105,9 @@ export default function PrimarySpeakingAssessmentForm() {
                   </div>
                 </div>
                 <span className="text-[11px] font-bold text-slate-500 mt-2 text-center">
-                  {isGrade4Stage
+                  {isGrade5Stage
+                    ? "Story Prompts (1. Walking to the Mountain, 2. On the Cliff, 3. Paragliding)"
+                    : isGrade4Stage
                     ? "Story Prompts (1. Coral Reef with Fish, 2. Shark in Deep Water)"
                     : isGrade3Stage
                     ? "Story Prompts (Table Discussion, Audio Learning, Rocket Launch)"
@@ -964,13 +1143,32 @@ export default function PrimarySpeakingAssessmentForm() {
                   ✕
                 </button>
               </div>
-              <img
-                src={activePromptImage}
-                alt={`${selectedStage} speaking prompt large`}
-                className="w-full max-h-[75vh] object-contain rounded-2xl border"
-              />
+              {isGrade5Stage ? (
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {GRADE5_SPEAKING_PICTURES.map((pic) => (
+                    <figure key={pic.label} className="flex flex-col items-center">
+                      <img
+                        src={pic.src}
+                        alt={pic.alt}
+                        className="w-full max-h-[60vh] object-contain rounded-2xl border"
+                      />
+                      <figcaption className="text-xs font-bold text-slate-600 mt-1.5">
+                        {pic.label}
+                      </figcaption>
+                    </figure>
+                  ))}
+                </div>
+              ) : (
+                <img
+                  src={activePromptImage}
+                  alt={`${selectedStage} speaking prompt large`}
+                  className="w-full max-h-[75vh] object-contain rounded-2xl border"
+                />
+              )}
               <p className="text-center text-xs text-slate-500 mt-3 font-semibold">
-                {isGrade4Stage
+                {isGrade5Stage
+                  ? "Show these 3 story pictures (1. Two people walking up a mountain path, 2. A person sitting on a cliff edge, 3. Paragliding over the forest) to the student."
+                  : isGrade4Stage
                   ? "Show these 2 ocean story pictures (1. Coral reef with colourful fish, 2. Shark swimming in deep water kelp forest) to the student."
                   : isGrade3Stage
                   ? "Show these 3 story pictures (1. People discussing at table, 2. Child listening with headphones on tablet, 3. Rocket launch into space) to the student."
@@ -999,7 +1197,7 @@ export default function PrimarySpeakingAssessmentForm() {
               tier="primary"
               value={formData.studentName}
               onSelect={(s) => {
-                if (['FS1', 'FS2 - KG1', 'KG2 / Year 1', 'Grade 1 / Year 2', 'Grade 2 / Year 3', 'Grade 3 / Year 4', 'Grade 4 / Year 5'].includes(s.yearGroup)) handleStageSwitch(s.yearGroup);
+                if (['FS1', 'FS2 - KG1', 'KG2 / Year 1', 'Grade 1 / Year 2', 'Grade 2 / Year 3', 'Grade 3 / Year 4', 'Grade 4 / Year 5', 'Grade 5 / Year 6'].includes(s.yearGroup)) handleStageSwitch(s.yearGroup);
                 setFormData((p) => ({
                   ...p,
                   studentName: studentLabel(s),
@@ -1109,7 +1307,7 @@ export default function PrimarySpeakingAssessmentForm() {
                     placeholder={
                       isGrade1Stage
                         ? `Student's response to Prompt ${q.id} appears here — or type a note...`
-                        : "Child's answer appears here as they speak — or type a note (e.g. 'eating rice', points to plate)..."
+                        : "Child's answer appears here as they speak — or type a note..."
                     }
                   />
                 </div>
@@ -1128,19 +1326,33 @@ export default function PrimarySpeakingAssessmentForm() {
                   CEFR Level Rubric & Evaluation
                 </h2>
                 <p className="text-xs text-slate-500 mt-1">
-                  Click on the row that best matches the student's verbal
-                  response to select their CEFR level.
+                  The AI selects the level from the pupil's answers. Click a
+                  different row only if you disagree.
                 </p>
               </div>
 
               {selectedLevel && (
-                <div className="bg-violet-50 border border-violet-200 px-4 py-2 rounded-2xl flex items-center gap-2">
+                <div className="bg-violet-50 border border-violet-200 px-4 py-2 rounded-2xl flex flex-wrap items-center gap-2">
                   <span className="text-xs font-bold text-violet-700">
-                    Selected Level:
+                    {isAiLevel ? "✨ AI selected:" : "Selected Level:"}
                   </span>
                   <span className="text-xs font-black text-violet-900 bg-white px-2 py-0.5 rounded-lg border border-violet-200">
                     {selectedLevel}
                   </span>
+                  {isAiLevel && (
+                    <span className="text-[11px] font-semibold text-violet-600">
+                      {aiLevel.reason}
+                    </span>
+                  )}
+                  {!isAiLevel && aiLevel.level && aiLevel.level !== selectedLevel && (
+                    <button
+                      type="button"
+                      onClick={() => setSelectedLevel(null)}
+                      className="text-[11px] font-bold text-violet-700 underline"
+                    >
+                      Use AI level ({aiLevel.level})
+                    </button>
+                  )}
                 </div>
               )}
             </div>
@@ -1224,14 +1436,15 @@ export default function PrimarySpeakingAssessmentForm() {
             <div className="text-xs text-slate-500 font-medium">
               {selectedLevel ? (
                 <span>
-                  Assigned Level:{" "}
+                  {isAiLevel ? "✨ AI-selected level" : "Assigned Level"}:{" "}
                   <strong className="text-violet-700 font-black">
                     {selectedLevel}
                   </strong>
+                  <span className="text-slate-400"> · ready to submit</span>
                 </span>
               ) : (
-                <span className="text-rose-600 font-bold">
-                  Please select a CEFR level from the rubric table above
+                <span className="text-slate-600 font-bold">
+                  The level is selected automatically once the pupil answers.
                 </span>
               )}
             </div>

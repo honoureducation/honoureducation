@@ -57,6 +57,7 @@ import WritingAssessmentLandmarkStudentSheet from "./pages/WritingAssessmentLand
 import AssessmentList from "./pages/AssessmentList";
 import Profile from "./pages/Profile";
 import SetPassword from "./pages/SetPassword";
+import LearnRoutes from "./lms/LearnRoutes";
 import "./index.css";
 
 // Scroll to top on route change
@@ -110,6 +111,9 @@ function App() {
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/register" element={<Register />} />
           <Route path="/set-password/:token" element={<SetPassword />} />
+
+          {/* Course store (separate feature, see src/lms) */}
+          <Route path="/learn/*" element={<LearnRoutes />} />
 
           {/* Account Status Routes */}
           <Route path="/pending-approval" element={<PendingApproval />} />
@@ -330,6 +334,30 @@ function App() {
             }
           />
           <Route
+            path="/assessment/grade5-listening"
+            element={
+              <ProtectedRoute requireApprovedTeacher={true}>
+                <PrimaryListeningAssessmentForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/assessment/year6-listening"
+            element={
+              <ProtectedRoute requireApprovedTeacher={true}>
+                <PrimaryListeningAssessmentForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/assessment/grade5-year6-listening"
+            element={
+              <ProtectedRoute requireApprovedTeacher={true}>
+                <PrimaryListeningAssessmentForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/assessment/primary-speaking"
             element={
               <ProtectedRoute requireApprovedTeacher={true}>
@@ -475,6 +503,30 @@ function App() {
           />
           <Route
             path="/assessment/grade4-year5-speaking"
+            element={
+              <ProtectedRoute requireApprovedTeacher={true}>
+                <PrimarySpeakingAssessmentForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/assessment/grade5-speaking"
+            element={
+              <ProtectedRoute requireApprovedTeacher={true}>
+                <PrimarySpeakingAssessmentForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/assessment/year6-speaking"
+            element={
+              <ProtectedRoute requireApprovedTeacher={true}>
+                <PrimarySpeakingAssessmentForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/assessment/grade5-year6-speaking"
             element={
               <ProtectedRoute requireApprovedTeacher={true}>
                 <PrimarySpeakingAssessmentForm />

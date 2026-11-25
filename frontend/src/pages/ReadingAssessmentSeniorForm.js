@@ -5,6 +5,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { assessmentAPI } from '../services/api';
 import AIAssistantConductor from '../components/AIAssistantConductor';
+import { aggregateReading, secondaryLevel } from '../utils/readingAutoScore';
 import readin2nd1 from '../assets/readin2nd1.jpg.jpeg';
 import readin2nd2 from '../assets/readin2nd2.jpg.jpeg';
 import reading2nd3 from '../assets/reading2nd3.jpg.jpeg';
@@ -58,11 +59,17 @@ export default function ReadingAssessmentSeniorForm() {
     term: preSelectedTerm
   });
 
-  const [score, setScore] = useState(null);
+  const [manualScore, setScore] = useState(null);
   const [teacherNotes, setTeacherNotes] = useState('');
   const [loading, setLoading] = useState(false);
   const [aiAnswers, setAiAnswers] = useState([]);
   const [readingResults, setReadingResults] = useState([]);
+
+  // Auto-score from what the AI heard; the teacher only needs to submit
+  const readingAgg = aggregateReading(readingResults);
+  const autoScore = secondaryLevel(readingAgg);
+  const score = manualScore || autoScore;
+  const isAutoScore = !manualScore && !!autoScore;
 
   // Write the AI-captured reading mistakes into the Teacher Notes
   useEffect(() => {
@@ -105,7 +112,7 @@ export default function ReadingAssessmentSeniorForm() {
     }
 
     if (score === null) {
-      toast.error('❌ Please select a reading assessment score', {
+      toast.error('No score yet. Let the pupil read first, or select a reading assessment score', {
         position: 'top-right',
         autoClose: 4000,
       });
@@ -317,6 +324,21 @@ export default function ReadingAssessmentSeniorForm() {
               </svg>
               Reading Assessment Score
             </h3>
+            {score && (
+              <div className="mb-4 flex flex-wrap items-center gap-2 px-4 py-3 rounded-xl bg-emerald-50 border border-emerald-200 text-sm">
+                <span className="font-bold text-emerald-800">{isAutoScore ? '✨ Auto-scored from the reading:' : 'Selected level:'}</span>
+                <span className="font-black text-emerald-900 bg-white px-2 py-0.5 rounded-lg border border-emerald-200">{score}</span>
+                {readingAgg.hasReading && (
+                  <span className="text-emerald-700 text-xs font-semibold">{readingAgg.accuracy}% accuracy · {readingAgg.errorsPer100} errors / 100 words</span>
+                )}
+                {!isAutoScore && autoScore && autoScore !== score && (
+                  <button type="button" onClick={() => setScore(null)} className="text-xs font-bold text-emerald-700 underline">Use AI score ({autoScore})</button>
+                )}
+              </div>
+            )}
+            {!score && (
+              <p className="mb-4 text-xs font-semibold text-slate-500">The score is selected automatically once the pupil has read. Click a different row only if you disagree.</p>
+            )}
             
             <div className="space-y-3 md:space-y-0 md:bg-white md:border md:border-purple-500 md:rounded-xl md:overflow-hidden">
               {/* Desktop Header */}

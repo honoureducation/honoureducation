@@ -4,6 +4,8 @@ import { adminService, authService } from '../services/authService';
 import TeacherAnalytics from './TeacherAnalytics';
 import AdminContactMessages from './AdminContactMessages';
 import AssessmentList from './AssessmentList';
+import LmsAdmin, { LMS_NAV } from '../lms/admin/LmsAdmin';
+import WorkspaceSwitcher, { readWorkspace, saveWorkspace } from '../lms/admin/WorkspaceSwitcher';
 
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -24,6 +26,21 @@ export default function AdminDashboard() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [teacherAssessments, setTeacherAssessments] = useState([]);
   const [actionLoading, setActionLoading] = useState({});
+
+  // Workspace switcher: "assessments" (existing dashboard) or "courses" (course store).
+  // Only platform admins can manage courses.
+  const isPlatformAdmin = authService.getCurrentUser('admin')?.role === 'platform_admin';
+  const [workspace, setWorkspace] = useState(() => (isPlatformAdmin ? readWorkspace() : 'assessments'));
+  const [lmsTab, setLmsTab] = useState('overview');
+  const [lmsRefresh, setLmsRefresh] = useState(0);
+  const inCourses = workspace === 'courses';
+  const tabView = inCourses ? '__courses__' : activeTab;
+
+  const switchWorkspace = (ws) => {
+    setWorkspace(ws);
+    saveWorkspace(ws);
+    setIsMobileMenuOpen(false);
+  };
 
   useEffect(() => {
     loadDashboardData();
@@ -196,6 +213,32 @@ export default function AdminDashboard() {
             </button>
           </div>
 
+          {isPlatformAdmin && <WorkspaceSwitcher value={workspace} onChange={switchWorkspace} />}
+
+          {inCourses ? (
+            <nav className="space-y-1">
+              {LMS_NAV.map(item => (
+                <button
+                  key={item.id}
+                  onClick={() => {
+                    setLmsTab(item.id);
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${item.cta
+                    ? `mb-4 justify-center font-bold border ${lmsTab === item.id ? 'bg-emerald-500 border-emerald-400 text-white shadow-lg shadow-emerald-500/30' : 'bg-emerald-500/10 border-emerald-500/40 text-emerald-300 hover:bg-emerald-500 hover:text-white'}`
+                    : lmsTab === item.id
+                      ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-500/20'
+                      : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                    }`}
+                >
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={item.icon} />
+                  </svg>
+                  <span className="font-medium">{item.label}</span>
+                </button>
+              ))}
+            </nav>
+          ) : (
           <nav className="space-y-1">
             {[
               { id: 'overview', label: 'Dashboard', icon: 'M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z' },
@@ -222,6 +265,7 @@ export default function AdminDashboard() {
               </button>
             ))}
           </nav>
+          )}
         </div>
 
         <div className="mt-auto p-6 border-t border-slate-800">
@@ -251,7 +295,9 @@ export default function AdminDashboard() {
               </svg>
             </button>
             <div>
-              <h2 className="text-lg lg:text-xl font-bold text-slate-800 capitalize leading-tight">{activeTab} View</h2>
+              <h2 className="text-lg lg:text-xl font-bold text-slate-800 capitalize leading-tight">
+                {inCourses ? `Courses · ${(LMS_NAV.find((n) => n.id === lmsTab) || LMS_NAV[0]).label}` : `${activeTab} View`}
+              </h2>
               <p className="text-[10px] lg:text-sm text-slate-500">System Status: <span className="text-emerald-500 font-semibold">Healthy</span></p>
             </div>
           </div>
@@ -267,7 +313,7 @@ export default function AdminDashboard() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
               </svg>
             </div>
-            <button onClick={loadDashboardData} className="p-2 text-slate-400 hover:text-indigo-600 transition-colors">
+            <button onClick={inCourses ? () => setLmsRefresh((n) => n + 1) : loadDashboardData} className="p-2 text-slate-400 hover:text-indigo-600 transition-colors">
               <svg className="w-5 h-5 lg:w-6 lg:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
@@ -288,7 +334,7 @@ export default function AdminDashboard() {
         </header>
 
         <div className="p-4 lg:p-8 space-y-8 animate-fade-in-up">
-          {activeTab === 'overview' && (
+          {tabView === 'overview' && (
             <>
               {/* Summary Stats */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -455,17 +501,19 @@ export default function AdminDashboard() {
               </div>
             </>
           )}
-          {activeTab === 'assessments' && (
+          {tabView === 'assessments' && (
             <AssessmentList />
           )}
 
-          {activeTab === 'students' && (
+          {tabView === 'students' && (
             <TeacherAnalytics />
           )}
 
-          {activeTab === 'messages' && <AdminContactMessages />}
+          {tabView === 'messages' && <AdminContactMessages />}
 
-          {activeTab === 'teachers' && (
+          {inCourses && <LmsAdmin tab={lmsTab} onTabChange={setLmsTab} refreshKey={lmsRefresh} />}
+
+          {tabView === 'teachers' && (
             <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
               <div className="p-8 border-b border-slate-100 flex items-center justify-between">
                 <h3 className="text-lg font-bold text-slate-800">All Registered Teachers</h3>
@@ -609,7 +657,7 @@ export default function AdminDashboard() {
             </div>
           )}
 
-          {activeTab === 'schools' && (
+          {tabView === 'schools' && (
             <div className="bg-white rounded-3xl p-12 text-center border border-slate-100 shadow-sm">
               <div className="w-20 h-20 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
                 <svg className="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">

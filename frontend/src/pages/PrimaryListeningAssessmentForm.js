@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import StudentPicker from "../components/StudentPicker";
 import { studentLabel, studentYearClass } from "../utils/students";
-import StageSelector from '../components/StageSelector';
+import StageSelector, { PRIMARY_STAGES } from '../components/StageSelector';
 import {
   useNavigate,
   useSearchParams,
@@ -11,6 +11,7 @@ import {
 import { toast } from "react-toastify";
 import { assessmentAPI } from "../services/api";
 import AIAssistantConductor from "../components/AIAssistantConductor";
+import { judgeSentenceAnswer } from "../utils/listeningRubric";
 import fs1Sheet from "../assets/fs1-listening-sheet.png";
 import fs2Sheet from "../assets/fs2-listening-sheet.png";
 import kg2Sheet from "../assets/kg2-year1-listening-sheet.png";
@@ -18,21 +19,24 @@ import grade1Sheet from "../assets/grade1-year2-listening-sheet.png";
 import grade2Sheet from "../assets/grade2-year3-listening-sheet.png";
 import grade3Sheet from "../assets/grade3-year4-listening-sheet.png";
 import grade4Sheet from "../assets/grade4-year5-listening-sheet.png";
+import grade5Sheet from "../assets/grade5-year6-listening-sheet.jpg";
 
 // ==========================================
 // 10 QUESTIONS FROM FS1 LISTENING ASSESSMENT
 // ==========================================
+// keywords: internal only — an answer must use at least one of them to show it
+// actually answers the question (never displayed on screen)
 const FS1_QUESTIONS = [
-  { id: 1, text: "What is your name?" },
-  { id: 2, text: "How old are you ?" },
-  { id: 3, text: "Where were you born?" },
-  { id: 4, text: "Where do you live now?" },
-  { id: 5, text: "Who do you live with?" },
-  { id: 6, text: "Have you got any brothers or sisters?" },
-  { id: 7, text: "Who are your friends?" },
-  { id: 8, text: "Can you tell me about the things you like?" },
-  { id: 9, text: "Tell me about your house?" },
-  { id: 10, text: "What is your favorite food?" },
+  { id: 1, text: "What is your name?", keywords: ["name", "my name", "i am", "called", "call me"] },
+  { id: 2, text: "How old are you ?", keywords: ["years", "year old", "old", "age", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13"] },
+  { id: 3, text: "Where were you born?", keywords: ["born", "from", "hospital", "country", "city"] },
+  { id: 4, text: "Where do you live now?", keywords: ["live", "living", "stay", "home", "house", "flat", "apartment", "villa"] },
+  { id: 5, text: "Who do you live with?", keywords: ["live with", "mum", "mom", "mother", "dad", "father", "parents", "family", "brother", "sister", "grandma", "grandmother", "grandpa", "grandfather", "aunt", "uncle", "baby", "nanny", "cousin"] },
+  { id: 6, text: "Have you got any brothers or sisters?", keywords: ["brother", "brothers", "sister", "sisters", "sibling", "siblings", "only child", "baby", "twin", "no", "none"] },
+  { id: 7, text: "Who are your friends?", keywords: ["friend", "friends", "best friend", "play with", "classmate"] },
+  { id: 8, text: "Can you tell me about the things you like?", keywords: ["like", "love", "enjoy", "favourite", "favorite", "play", "fun", "toys", "games"] },
+  { id: 9, text: "Tell me about your house?", keywords: ["house", "home", "room", "bedroom", "kitchen", "garden", "big", "small", "flat", "apartment", "villa", "floor", "garden", "pool", "live"] },
+  { id: 10, text: "What is your favorite food?", keywords: ["food", "eat", "like", "love", "favourite", "favorite", "pizza", "rice", "chicken", "burger", "pasta", "fries", "fruit", "yummy", "delicious"] },
 ];
 
 // ==========================================
@@ -439,6 +443,7 @@ const GRADE4_YEAR5_RUBRIC_BANDS = [
 
 function calculateListeningLevel(score, stage) {
   if (
+    stage === "Grade 5 / Year 6" ||
     stage === "Grade 4 / Year 5" ||
     stage === "Grade 3 / Year 4" ||
     stage === "Grade 2 / Year 3"
@@ -645,15 +650,23 @@ export default function PrimaryListeningAssessmentForm() {
   const [searchParams] = useSearchParams();
   const preSelectedTerm = searchParams.get("term") || "T1";
 
+  const isGrade5Initial =
+    location.pathname.includes("grade5") ||
+    location.pathname.includes("year6") ||
+    ["grade5", "year6"].includes(searchParams.get("grade")) ||
+    ["grade5", "year6"].includes(searchParams.get("stage"));
+
   const isGrade4Initial =
-    location.pathname.includes("grade4") ||
+    !isGrade5Initial &&
+    (location.pathname.includes("grade4") ||
     location.pathname.includes("year5") ||
     searchParams.get("grade") === "grade4" ||
     searchParams.get("grade") === "year5" ||
     searchParams.get("stage") === "grade4" ||
-    searchParams.get("stage") === "year5";
+    searchParams.get("stage") === "year5");
 
   const isGrade3Initial =
+    !isGrade5Initial &&
     !isGrade4Initial &&
     (location.pathname.includes("grade3") ||
       location.pathname.includes("year4") ||
@@ -705,7 +718,9 @@ export default function PrimaryListeningAssessmentForm() {
       searchParams.get("grade") === "fs2" ||
       searchParams.get("stage") === "fs2");
 
-  const initialStage = isGrade4Initial
+  const initialStage = isGrade5Initial
+    ? "Grade 5 / Year 6"
+    : isGrade4Initial
     ? "Grade 4 / Year 5"
     : isGrade3Initial
       ? "Grade 3 / Year 4"
@@ -746,14 +761,16 @@ export default function PrimaryListeningAssessmentForm() {
         prev.yearGroupAndClass === "Grade 1 / Year 2" ||
         prev.yearGroupAndClass === "Grade 2 / Year 3" ||
         prev.yearGroupAndClass === "Grade 3 / Year 4" ||
-        prev.yearGroupAndClass === "Grade 4 / Year 5"
+        prev.yearGroupAndClass === "Grade 4 / Year 5" ||
+        prev.yearGroupAndClass === "Grade 5 / Year 6"
           ? newStage
           : prev.yearGroupAndClass,
     }));
   };
 
   // Each item in answers: null | true (Acceptable) | false (Not acceptable)
-  const [answers, setAnswers] = useState(
+  // Teacher overrides — null means "use the AI judgement"
+  const [manualAnswers, setAnswers] = useState(
     Array(FS1_QUESTIONS.length).fill(null),
   );
   const [aiAnswers, setAiAnswers] = useState(
@@ -762,22 +779,14 @@ export default function PrimaryListeningAssessmentForm() {
   const [questionNotes] = useState(Array(FS1_QUESTIONS.length).fill(""));
   const [loading, setLoading] = useState(false);
 
-  // Automatically suggest acceptable when AI captures an answer
-  useEffect(() => {
-    if (aiAnswers && aiAnswers.length > 0) {
-      setAnswers((prev) => {
-        let changed = false;
-        const updated = [...prev];
-        aiAnswers.forEach((ans, idx) => {
-          if (ans && ans.trim().length > 0 && updated[idx] === null) {
-            updated[idx] = true;
-            changed = true;
-          }
-        });
-        return changed ? updated : prev;
-      });
-    }
-  }, [aiAnswers]);
+  // AI marks each answer: a full sentence is Acceptable, a one- or two-word
+  // answer ("Shakir" instead of "My name is Shakir") is Not acceptable.
+  const aiJudgements = FS1_QUESTIONS.map((q, idx) =>
+    judgeSentenceAnswer(q.text, (aiAnswers && aiAnswers[idx]) || "", q.keywords),
+  );
+  const answers = manualAnswers.map((m, idx) =>
+    m !== null ? m : aiJudgements[idx].acceptable,
+  );
 
   useEffect(() => {
     if (preSelectedTerm) {
@@ -805,10 +814,13 @@ export default function PrimaryListeningAssessmentForm() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  // Teacher override for one question only — the others keep their AI marks
   const handleAnswerSelect = (index, isAcceptable) => {
-    const nextAnswers = [...answers];
-    nextAnswers[index] = isAcceptable;
-    setAnswers(nextAnswers);
+    setAnswers((prev) => {
+      const next = [...prev];
+      next[index] = isAcceptable;
+      return next;
+    });
   };
 
   // Score count = acceptable answers only
@@ -837,7 +849,9 @@ export default function PrimaryListeningAssessmentForm() {
 
     setLoading(true);
     const assessmentType =
-      selectedStage === "Grade 4 / Year 5"
+      selectedStage === "Grade 5 / Year 6"
+        ? "Grade 5 / Year 6 Listening Assessment"
+        : selectedStage === "Grade 4 / Year 5"
         ? "Grade 4 / Year 5 Listening Assessment"
         : selectedStage === "Grade 3 / Year 4"
         ? "Grade 3 / Year 4 Listening Assessment"
@@ -918,6 +932,7 @@ export default function PrimaryListeningAssessmentForm() {
           </Link>
 
           <StageSelector
+            stages={[...PRIMARY_STAGES, "Grade 5 / Year 6"]}
             value={selectedStage}
             onChange={handleStageSwitch}
             theme="cyan"
@@ -943,7 +958,9 @@ export default function PrimaryListeningAssessmentForm() {
                 {selectedStage} Listening Assessment
               </h1>
               <p className="text-slate-500 text-sm mt-2 max-w-2xl">
-                {selectedStage === "Grade 2 / Year 3"
+                {["Grade 3 / Year 4", "Grade 4 / Year 5", "Grade 5 / Year 6"].includes(selectedStage)
+                  ? `One-to-one auditory and competent response evaluation for ${selectedStage} pupils with CEFR mapping.`
+                  : selectedStage === "Grade 2 / Year 3"
                   ? "One-to-one auditory and competent response evaluation for Grade 2 / Year 3 pupils with CEFR mapping and key words."
                   : selectedStage === "Grade 1 / Year 2"
                     ? "One-to-one auditory and competent response evaluation for Grade 1 / Year 2 pupils with CEFR mapping and key words."
@@ -1001,14 +1018,16 @@ export default function PrimaryListeningAssessmentForm() {
               </svg>
               Instructions for assessor:
             </h3>
-            {selectedStage === "Grade 3 / Year 4" ||
+            {selectedStage === "Grade 5 / Year 6" ||
+            selectedStage === "Grade 4 / Year 5" ||
+            selectedStage === "Grade 3 / Year 4" ||
             selectedStage === "Grade 2 / Year 3" ||
             selectedStage === "Grade 1 / Year 2" ? (
               <ul className="space-y-1.5 text-xs text-slate-600 font-medium list-disc list-inside">
                 <li>Ask each question once only.</li>
                 <li>
-                  Accept the first answer given (1–3 words acceptable if
-                  relevant).
+                  Accept the first answer given. One-word answers are not
+                  acceptable: the pupil should answer in a sentence.
                 </li>
                 <li>Do not probe further.</li>
                 <li>
@@ -1020,8 +1039,8 @@ export default function PrimaryListeningAssessmentForm() {
               <ul className="space-y-1.5 text-xs text-slate-600 font-medium list-disc list-inside">
                 <li>Ask each question once only.</li>
                 <li>
-                  Accept the first answer given (1–3 words are acceptable if
-                  relevant).
+                  Accept the first answer given. One-word answers are not
+                  acceptable: the pupil should answer in a sentence.
                 </li>
                 <li>Do not probe further.</li>
                 <li>
@@ -1048,7 +1067,7 @@ export default function PrimaryListeningAssessmentForm() {
               tier="primary"
               value={formData.studentName}
               onSelect={(s) => {
-                if (['FS1', 'FS2 - KG1', 'KG2 / Year 1', 'Grade 1 / Year 2', 'Grade 2 / Year 3', 'Grade 3 / Year 4', 'Grade 4 / Year 5'].includes(s.yearGroup)) handleStageSwitch(s.yearGroup);
+                if (['FS1', 'FS2 - KG1', 'KG2 / Year 1', 'Grade 1 / Year 2', 'Grade 2 / Year 3', 'Grade 3 / Year 4', 'Grade 4 / Year 5', 'Grade 5 / Year 6'].includes(s.yearGroup)) handleStageSwitch(s.yearGroup);
                 setFormData((p) => ({
                   ...p,
                   studentName: studentLabel(s),
@@ -1193,6 +1212,15 @@ export default function PrimaryListeningAssessmentForm() {
                           {aiAnswers && aiAnswers[idx] && aiAnswers[idx].trim().length > 0 && (
                             <div className="mt-3 text-sm text-indigo-700 bg-indigo-50/50 p-3 rounded-xl border border-indigo-100 shadow-inner">
                               <span className="font-bold mr-1">Student Answer (AI):</span> "{aiAnswers[idx]}"
+                              <span
+                                className={`block mt-1.5 text-xs font-bold ${
+                                  aiJudgements[idx].acceptable ? "text-emerald-700" : "text-rose-600"
+                                }`}
+                              >
+                                {aiJudgements[idx].acceptable ? "✓ " : "✗ "}
+                                {aiJudgements[idx].reason}
+                                {manualAnswers[idx] !== null && " · teacher override"}
+                              </span>
                             </div>
                           )}
                         </td>
@@ -1254,11 +1282,11 @@ export default function PrimaryListeningAssessmentForm() {
               <button
                 type="button"
                 onClick={() =>
-                  setAnswers(Array(FS1_QUESTIONS.length).fill(true))
+                  setAnswers(Array(FS1_QUESTIONS.length).fill(null))
                 }
                 className="text-amber-700 hover:text-amber-800 font-bold underline"
               >
-                Mark all acceptable
+                Reset to AI marking
               </button>
             </div>
           </div>
@@ -1310,7 +1338,8 @@ export default function PrimaryListeningAssessmentForm() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200 text-slate-700">
-                  {(selectedStage === "Grade 4 / Year 5"
+                  {(selectedStage === "Grade 5 / Year 6" ||
+                  selectedStage === "Grade 4 / Year 5"
                     ? GRADE4_YEAR5_RUBRIC_BANDS
                     : selectedStage === "Grade 3 / Year 4"
                       ? GRADE3_YEAR4_RUBRIC_BANDS
@@ -1424,7 +1453,9 @@ export default function PrimaryListeningAssessmentForm() {
             <div className="p-4 overflow-y-auto flex-1 flex justify-center bg-slate-100">
               <img
                 src={
-                  selectedStage === "Grade 4 / Year 5"
+                  selectedStage === "Grade 5 / Year 6"
+                    ? grade5Sheet
+                    : selectedStage === "Grade 4 / Year 5"
                     ? grade4Sheet
                     : selectedStage === "Grade 3 / Year 4"
                       ? grade3Sheet

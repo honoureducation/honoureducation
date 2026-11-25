@@ -5,6 +5,7 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { assessmentAPI } from '../services/api';
 import AIAssistantConductor from '../components/AIAssistantConductor';
+import { scoreAgainstKey } from '../utils/listeningRubric';
 
 /* ── Data ─────────────────────────────────────────────────── */
 const QUESTIONS_JUNIOR = [
@@ -25,6 +26,28 @@ const QUESTIONS_SENIOR = [
   'Which student qualities were mentioned positively?',
   'Identify one challenge and one positive outcome mentioned in the passage.',
   'Summarise the overall success of the event in one sentence.',
+];
+
+// Answer keys taken from the teacher script (internal marking only — never shown).
+// Each idea lists alternative words; "need" = ideas required for full marks.
+const ANSWER_KEY_JUNIOR = [
+  { ideas: [["6 30", "630", "six thirty", "half past six", "6 and 30"]] },
+  { ideas: [["bus", "school bus"]] },
+  { ideas: [["science"]] },
+  { ideas: [["football", "soccer"], ["movie", "movies", "film", "films"]], need: 2 },
+];
+
+const ANSWER_KEY_SENIOR = [
+  { ideas: [["food bank", "food"], ["beach", "clean up", "cleanup", "cleaning"], ["elderly", "old people", "older people", "digital", "computer", "technology"]], need: 2 },
+  { ideas: [["200", "two hundred", "more than 200"]] },
+  { ideas: [["weather", "forecast", "rain", "storm"], ["delay", "delays", "late", "beach"]], need: 2 },
+  { ideas: [["instructions", "information", "directions", "guidance"], ["clear", "clearer", "better", "more"]], need: 2 },
+  { ideas: [["beach", "clean up", "cleanup"], ["weather", "forecast", "rain"]], need: 2 },
+  { ideas: [["positive", "good", "great", "excellent", "happy", "pleased", "appreciated"]] },
+  { ideas: [["positive", "feedback", "success", "successful", "appreciated", "went well"], ["monthly", "every month", "month", "more often", "annual", "every year"]], need: 2 },
+  { ideas: [["professional", "professionalism"], ["teamwork", "team work", "team", "together"]], need: 2 },
+  { ideas: [["weather", "forecast", "delay", "instructions"], ["positive", "feedback", "teamwork", "professional", "200", "two hundred", "success"]], need: 2 },
+  { ideas: [["success", "successful", "positive", "went well", "great", "good"]] },
 ];
 
 const CEFR_BANDS_JUNIOR = [
@@ -75,6 +98,7 @@ export default function ListeningAssessmentPart2Form({ yearGroupProp }) {
   const isJunior = yearGroup === 'junior';
 
   const questions = isJunior ? QUESTIONS_JUNIOR : QUESTIONS_SENIOR;
+  const answerKey = isJunior ? ANSWER_KEY_JUNIOR : ANSWER_KEY_SENIOR;
   const cefrBands = isJunior ? CEFR_BANDS_JUNIOR : CEFR_BANDS_SENIOR;
   const maxScore = isJunior ? 8 : 20;
   const getCefr = isJunior ? getCefrJunior : getCefrSenior;
@@ -106,9 +130,9 @@ export default function ListeningAssessmentPart2Form({ yearGroupProp }) {
 
     aiAnswers.forEach((ans, i) => {
       if (ans && ans.trim().length > 0) {
-        const words = ans.trim().split(/\s+/).length;
-        // Simple heuristic: > 3 words is full comprehension (2), less is some (1)
-        let inferredScore = words >= 3 ? 2 : 1;
+        // Marked against the answer key: 2 = correct & complete sentence,
+        // 1 = partly correct (or correct but one/two words), 0 = wrong
+        const inferredScore = scoreAgainstKey(ans, answerKey[i]).score;
 
         if (nextScores[i] !== inferredScore) {
           nextScores[i] = inferredScore;
@@ -340,6 +364,9 @@ export default function ListeningAssessmentPart2Form({ yearGroupProp }) {
                             {aiAnswers[i] && (
                               <div className="mt-2 text-sm text-indigo-700 bg-indigo-50/50 p-2.5 rounded-lg border border-indigo-100 shadow-inner mb-3">
                                 <span className="font-bold mr-1">Student Answer (AI):</span> "{aiAnswers[i]}"
+                                <span className="block mt-1 text-xs font-bold text-slate-600">
+                                  AI mark: {scoreAgainstKey(aiAnswers[i], answerKey[i]).score}/2 · {scoreAgainstKey(aiAnswers[i], answerKey[i]).reason}
+                                </span>
                               </div>
                             )}
                           </td>

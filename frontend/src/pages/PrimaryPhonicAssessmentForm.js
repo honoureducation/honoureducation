@@ -299,7 +299,7 @@ export default function PrimaryPhonicAssessmentForm() {
       newStage.includes('Phase 4') ||
       newStage.includes('Phase 5');
 
-    if (isNewStagePhase45 && selectedLevel === 'Pre-A1') {
+    if (isNewStagePhase45 && manualLevel === 'Pre-A1') {
       setSelectedLevel(null);
     }
 
@@ -349,7 +349,8 @@ export default function PrimaryPhonicAssessmentForm() {
         ...PHASE_3_SETS.map((s) => ({ keyPhrases: s.exampleWords, relatablePhrases: s.sounds })),
       ];
 
-  const [selectedLevel, setSelectedLevel] = useState(null);
+  // Teacher override — null means "use the AI-recommended level"
+  const [manualLevel, setSelectedLevel] = useState(null);
   const [notes, setNotes] = useState('');
   const [showSheetModal, setShowSheetModal] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -432,6 +433,11 @@ export default function PrimaryPhonicAssessmentForm() {
   };
 
   const recommendedLevel = getRecommendedLevel();
+
+  // Auto-select the recommended level in the CEFR rubric once sounds are marked
+  const hasPhonicsData = [...phase2Checks, ...phase3Checks, ...phase4Checks, ...phase5Checks].some(Boolean);
+  const selectedLevel = manualLevel || (hasPhonicsData ? recommendedLevel : null);
+  const isAiLevel = !manualLevel && !!selectedLevel;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -1107,16 +1113,16 @@ export default function PrimaryPhonicAssessmentForm() {
                 </p>
               </div>
               <div className="flex items-center gap-2 text-xs font-bold">
-                <span className="text-slate-400">Auto Suggested:</span>
+                <span className="text-slate-400">{isAiLevel ? "✨ Auto selected:" : "Suggested:"}</span>
                 <span className="px-3 py-1 rounded-full bg-amber-100 text-amber-800 border border-amber-200 font-black">
                   {recommendedLevel}
                 </span>
                 <button
                   type="button"
-                  onClick={() => setSelectedLevel(recommendedLevel)}
-                  className="text-amber-600 hover:underline text-xs font-bold"
+                  onClick={() => setSelectedLevel(null)}
+                  className={`text-amber-600 hover:underline text-xs font-bold ${isAiLevel ? "hidden" : ""}`}
                 >
-                  Apply
+                  Use suggested level
                 </button>
               </div>
             </div>

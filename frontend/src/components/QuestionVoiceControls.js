@@ -67,7 +67,16 @@ export default function QuestionVoiceControls({
           </svg>
           {isSpeaking ? 'Reading…' : 'Read Question'}
         </button>
-        <VoiceDictation onStart={handleStart} onInterimResult={handleSpeech} idleLabel="Answer" />
+        <VoiceDictation
+          onStart={handleStart}
+          onInterimResult={handleSpeech}
+          idleLabel="Answer"
+          hasAnswer={!!(answer || '').trim()}
+          onClear={() => {
+            baseRef.current = '';
+            onAnswerChange('');
+          }}
+        />
       </div>
 
       {(alwaysShowAnswer || (answer || '').length > 0) && (

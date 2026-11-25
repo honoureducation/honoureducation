@@ -5,14 +5,15 @@ import React, { useState, useEffect, useRef } from 'react';
  * Features:
  * - maxAlternatives = 3 (captures accented / soft variations)
  * - Auto-restart keep-alive on speech pauses (prevents abrupt browser silence cut-offs)
- * - Only auto-finishes after a long silence (SILENCE_TIMEOUT_MS)
+ * - Auto-finishes after 5 seconds without speech (SILENCE_TIMEOUT_MS)
+ * - Optional ↻ clear button (onClear) so the pupil can answer again from scratch
  * - Error resilience ('no-speech' does not kill the session)
  * - Visual live audio wave indicator
  */
 
-// How long the student can stay silent before the mic auto-finishes.
-// Short browser pauses are bridged automatically; only a genuinely long pause ends the answer.
-const SILENCE_TIMEOUT_MS = 10000;
+// How long the student can stay silent before the mic stops listening —
+// both before they start answering and after they finish.
+const SILENCE_TIMEOUT_MS = 5000;
 
 // Browsers allow only one speech-recognition session at a time. When several
 // dictation buttons are on a page (e.g. one per question), starting one stops the others.
@@ -25,6 +26,14 @@ export default function VoiceDictation({
     onStart,
     idleLabel = 'Answer with Voice',
     activeLabel = 'Listening... (Click to Finish)',
+    // Optional: (text) => boolean. When it returns true the mic stops by itself
+    // shortly after (e.g. once the pupil has said the target word).
+    stopWhen,
+    className = '',
+    // Optional: show a ↻ button that clears the captured answer so the pupil can
+    // answer again (the new answer starts fresh instead of adding to the old one)
+    onClear,
+    hasAnswer = false,
 }) {
     const [isListening, setIsListening] = useState(false);
     const recognitionRef = useRef(null);
@@ -40,16 +49,20 @@ export default function VoiceDictation({
     // identities on every result) never tear down the recognition session.
     const onInterimResultRef = useRef(onInterimResult);
     const onStartRef = useRef(onStart);
+    const stopWhenRef = useRef(stopWhen);
+    const autoStopRef = useRef(null);
     useEffect(() => {
         onInterimResultRef.current = onInterimResult;
         onStartRef.current = onStart;
-    }, [onInterimResult, onStart]);
+        stopWhenRef.current = stopWhen;
+    }, [onInterimResult, onStart, stopWhen]);
 
     const stopListening = () => {
         if (activeDictationId === idRef.current) activeDictationId = null;
         isListeningRef.current = false;
         clearTimeout(restartTimeoutRef.current);
         clearTimeout(silenceTimeoutRef.current);
+        clearTimeout(autoStopRef.current);
         if (recognitionRef.current) {
             try {
                 recognitionRef.current.stop();
@@ -114,6 +127,12 @@ export default function VoiceDictation({
             const currentSessionText = (accumulatedTextRef.current + interimTranscript).trim();
             if (currentSessionText && onInterimResultRef.current) {
                 onInterimResultRef.current(currentSessionText);
+            }
+            if (currentSessionText && stopWhenRef.current && stopWhenRef.current(currentSessionText)) {
+                clearTimeout(autoStopRef.current);
+                autoStopRef.current = setTimeout(() => {
+                    if (isListeningRef.current) stopListeningRef.current();
+                }, 1200);
             }
         };
 
@@ -201,11 +220,19 @@ export default function VoiceDictation({
         return null;
     }
 
+    const clearAnswer = () => {
+        if (isListeningRef.current) stopListening();
+        accumulatedTextRef.current = '';
+        interimTextRef.current = '';
+        if (onClear) onClear();
+    };
+
     return (
+        <span className="inline-flex items-center gap-1.5">
         <button
             type="button"
             onClick={toggleListen}
-            className={`flex items-center gap-2.5 px-4 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all shadow-sm select-none ${
+            className={`${className} flex items-center gap-2.5 px-4 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all shadow-sm select-none ${
                 isListening
                     ? 'bg-rose-50 text-rose-600 border border-rose-300 ring-2 ring-rose-200'
                     : 'bg-white text-blue-600 border border-blue-200 hover:bg-blue-50 hover:border-blue-300 hover:shadow'
@@ -231,5 +258,19 @@ export default function VoiceDictation({
                 </>
             )}
         </button>
+        {onClear && hasAnswer && !isListening && (
+            <button
+                type="button"
+                onClick={clearAnswer}
+                title="Clear this answer so the pupil can answer again"
+                aria-label="Clear answer and answer again"
+                className="inline-flex items-center justify-center w-9 h-9 rounded-xl border border-slate-200 bg-white text-slate-500 hover:text-rose-600 hover:border-rose-200 hover:bg-rose-50 transition-colors shadow-sm"
+            >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+                </svg>
+            </button>
+        )}
+        </span>
     );
 }

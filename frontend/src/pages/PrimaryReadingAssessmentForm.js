@@ -6,6 +6,17 @@ import { useNavigate, useSearchParams, useLocation, Link } from 'react-router-do
 import { toast } from 'react-toastify';
 import { assessmentAPI } from '../services/api';
 import AIAssistantConductor from '../components/AIAssistantConductor';
+import VoiceDictation from '../components/VoiceDictation';
+import {
+  aggregateReading,
+  aggregateWordStatuses,
+  judgeCvcWord,
+  accuracyOutOf10,
+  fluencyLabel,
+  primaryPassageLevel,
+  passageStatus,
+  cvcLevel,
+} from '../utils/readingAutoScore';
 
 import henImg from '../assets/cvc/cvc-hen.jpg';
 import dogImg from '../assets/cvc/cvc-dog.jpg';
@@ -889,32 +900,61 @@ export default function PrimaryReadingAssessmentForm() {
   };
 
   // Observations per CVC word (FS1 & FS2)
-  const [itemStatuses, setItemStatuses] = useState(Array(READING_ITEMS.length).fill(null));
+  // Teacher overrides — null means "use the AI score"
+  const [manualItemStatuses, setItemStatuses] = useState(Array(READING_ITEMS.length).fill(null));
   const [itemNotes, setItemNotes] = useState(Array(READING_ITEMS.length).fill(''));
-  const [selectedLevel, setSelectedLevel] = useState(null);
+  const [manualLevel, setSelectedLevel] = useState(null);
   const [usedKeywords] = useState([]);
   const [teachingFocusNotes, setTeachingFocusNotes] = useState('');
   const [loading, setLoading] = useState(false);
 
   // Passages State (KG2 / Year 1, Grade 1 / Year 2, Grade 2 / Year 3, Grade 3 / Year 4, Grade 4 / Year 5)
-  const [passageStatuses, setPassageStatuses] = useState(Array(8).fill(null));
+  const [manualPassageStatuses, setPassageStatuses] = useState(Array(8).fill(null));
   const [passageNotes, setPassageNotes] = useState(Array(8).fill(''));
-  const [kg2Accuracy, setKg2Accuracy] = useState('10');
-  const [kg2Fluency, setKg2Fluency] = useState('Smooth');
+  const [manualAccuracy, setKg2Accuracy] = useState(null);
+  const [manualFluency, setKg2Fluency] = useState(null);
   const [kg2Comments, setKg2Comments] = useState('');
   const [, setAiAnswers] = useState([]);
   const [readingResults, setReadingResults] = useState([]);
+  // FS1 / FS2: what the pupil said for each picture word (one mic per card)
+  const [cvcHeard, setCvcHeard] = useState(Array(READING_ITEMS.length).fill(''));
+  const setHeardFor = (idx, text) =>
+    setCvcHeard((prev) => {
+      const next = [...prev];
+      next[idx] = text;
+      return next;
+    });
+
+  // Auto-score from what the AI heard; the teacher only needs to submit.
+  // FS1 / FS2 words: ✓ Fluent / ~ Support / ✗ Error from each answer
+  const aiWordStatuses = READING_ITEMS.map((item, i) => judgeCvcWord(item.word, cvcHeard[i]));
+  const itemStatuses = manualItemStatuses.map((s, i) => s || aiWordStatuses[i]);
+  const readingAgg = isPassageStage
+    ? aggregateReading(readingResults)
+    : aggregateWordStatuses(itemStatuses);
+  const autoLevel = isPassageStage ? primaryPassageLevel(readingAgg) : cvcLevel(readingAgg);
+  const selectedLevel = manualLevel || autoLevel;
+  const isAutoLevel = !manualLevel && !!autoLevel;
+  const passageStatuses = manualPassageStatuses.map(
+    (s, i) => s || (isPassageStage && readingAgg.perItem[i] ? passageStatus(readingAgg.perItem[i]) : null),
+  );
+  const kg2Accuracy = manualAccuracy ?? accuracyOutOf10(readingAgg) ?? '';
+  const kg2Fluency = manualFluency || fluencyLabel(readingAgg) || 'Smooth';
+
+  // A different stage is a fresh assessment — drop the previous overrides
+  useEffect(() => {
+    setItemStatuses(Array(READING_ITEMS.length).fill(null));
+    setCvcHeard(Array(READING_ITEMS.length).fill(''));
+    setPassageStatuses(Array(8).fill(null));
+    setSelectedLevel(null);
+    setKg2Accuracy(null);
+    setKg2Fluency(null);
+  }, [selectedStage]);
 
   // Reading conductor items: the AI only instructs the pupil to read — it never
   // reads the text (or the target word) aloud itself.
-  const conductorReadingItems = isPassageStage
-    ? activePassages.map((p) => ({ label: p.box, text: p.passage }))
-    : READING_ITEMS.map((item, idx) => ({
-        label: `Picture ${idx + 1}`,
-        text: item.word,
-        kind: 'word',
-        instruction: `Picture ${idx + 1}. Look at the picture and read the word out loud. Say each sound, then blend them together.`,
-      }));
+  // (FS1 / FS2 picture words are answered one by one on each card instead.)
+  const conductorReadingItems = activePassages.map((p) => ({ label: p.box, text: p.passage }));
 
   // How the reading passage is laid out — mirrors each official sheet
   const passageLayout =
@@ -1007,10 +1047,13 @@ export default function PrimaryReadingAssessmentForm() {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  // Teacher override for one word only — the other words keep their AI marks
   const handleStatusChange = (index, status) => {
-    const nextStatuses = [...itemStatuses];
-    nextStatuses[index] = status;
-    setItemStatuses(nextStatuses);
+    setItemStatuses((prev) => {
+      const next = [...prev];
+      next[index] = status;
+      return next;
+    });
   };
 
   const handleItemNoteChange = (index, value) => {
@@ -1020,9 +1063,11 @@ export default function PrimaryReadingAssessmentForm() {
   };
 
   const handlePassageStatusChange = (index, status) => {
-    const next = [...passageStatuses];
-    next[index] = status;
-    setPassageStatuses(next);
+    setPassageStatuses((prev) => {
+      const next = [...prev];
+      next[index] = status;
+      return next;
+    });
   };
 
   const handlePassageNoteChange = (index, value) => {
@@ -1048,7 +1093,7 @@ export default function PrimaryReadingAssessmentForm() {
       return;
     }
     if (!selectedLevel) {
-      toast.error('Please select the evaluated CEFR Level from the rubric table.');
+      toast.error('No score yet. Let the pupil read first, or select a CEFR level from the rubric table.');
       return;
     }
 
@@ -1108,7 +1153,7 @@ export default function PrimaryReadingAssessmentForm() {
             : READING_ITEMS.map((item, idx) => ({
                 word: item.word,
                 status: itemStatuses[idx] || 'unassessed',
-                notes: [itemNotes[idx], readingResults[idx]?.analysis?.hasReading ? readingResults[idx].summary : '']
+                notes: [itemNotes[idx], cvcHeard[idx] ? `AI heard: "${cvcHeard[idx]}"` : '']
                   .filter(Boolean)
                   .join(' | '),
               })),
@@ -1207,6 +1252,11 @@ export default function PrimaryReadingAssessmentForm() {
                 }`}>
                   {selectedLevel || 'Not Selected'}
                 </span>
+                {isAutoLevel && (
+                  <span className="block mt-1 text-[10px] font-bold text-emerald-700">
+                    ✨ Auto-scored · {readingAgg.accuracy}% accuracy
+                  </span>
+                )}
               </div>
             </div>
           </div>
@@ -1407,14 +1457,16 @@ export default function PrimaryReadingAssessmentForm() {
             </div>
           </div>
 
-          {/* AI Assessment Conductor */}
-          <AIAssistantConductor
-            mode="reading"
-            readingItems={conductorReadingItems}
-            title={`${selectedStage} Reading Conductor`}
-            onAnswersArrayChange={setAiAnswers}
-            onReadingResultsChange={setReadingResults}
-          />
+          {/* AI Assessment Conductor (passage stages; FS1/FS2 words have a mic on each card) */}
+          {isPassageStage && (
+            <AIAssistantConductor
+              mode="reading"
+              readingItems={conductorReadingItems}
+              title={`${selectedStage} Reading Conductor`}
+              onAnswersArrayChange={setAiAnswers}
+              onReadingResultsChange={setReadingResults}
+            />
+          )}
 
           {isPassageStage ? (
             /* Reading Passages / Lines (KG2 / Year 1, Grade 1 / Year 2, Grade 2 / Year 3) */
@@ -1705,7 +1757,8 @@ export default function PrimaryReadingAssessmentForm() {
                     Picture Prompt & CVC Reading Cards
                   </h2>
                   <p className="text-xs text-slate-500 mt-1">
-                    Point to each picture and ask the child to sound out and read each word.
+                    Point to each picture. The pupil presses 🎤 Read under the picture and reads that word.
+                    The AI marks it ✓ Fluent, ~ Support (sounded out) or ✗ Error, and selects the CEFR level.
                   </p>
                 </div>
 
@@ -1732,11 +1785,20 @@ export default function PrimaryReadingAssessmentForm() {
                 </div>
                 <div className="p-5 sm:p-8 bg-white grid grid-cols-2 sm:grid-cols-3 gap-x-6 gap-y-10">
                   {READING_ITEMS.map((item, idx) => {
-                    const result = readingResults[idx];
-                    const heard = result?.analysis?.hasReading;
-                    const correct = heard && result.analysis.errorCount === 0;
+                    const status = itemStatuses[idx];
                     return (
-                      <div key={item.id} className="flex flex-col items-center">
+                      <div
+                        key={item.id}
+                        className={`flex flex-col items-center rounded-2xl p-3 border-2 transition-colors ${
+                          status === 'fluent'
+                            ? 'border-emerald-400 bg-emerald-50/40'
+                            : status === 'support'
+                            ? 'border-amber-400 bg-amber-50/40'
+                            : status === 'error'
+                            ? 'border-rose-400 bg-rose-50/40'
+                            : 'border-transparent'
+                        }`}
+                      >
                         <button
                           type="button"
                           onClick={() =>
@@ -1752,20 +1814,64 @@ export default function PrimaryReadingAssessmentForm() {
                         >
                           <img src={item.image} alt={item.label} className="max-h-full max-w-full object-contain" />
                         </button>
-                        <p className="mt-3 text-3xl sm:text-4xl text-slate-900 font-medium tracking-[0.35em] pl-[0.35em]">
+                        <p
+                          className={`mt-3 text-3xl sm:text-4xl font-medium tracking-[0.35em] pl-[0.35em] pr-1 rounded-lg ${
+                            status === 'fluent'
+                              ? 'bg-emerald-200 text-emerald-950'
+                              : status === 'support'
+                              ? 'bg-amber-200 text-amber-950'
+                              : status === 'error'
+                              ? 'bg-rose-200 text-rose-950'
+                              : 'text-slate-900'
+                          }`}
+                        >
                           {item.word}
                         </p>
-                        {heard && (
-                          <span
-                            className={`mt-2 text-[11px] font-bold px-2 py-0.5 rounded-full border ${
-                              correct
-                                ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                                : 'bg-amber-50 text-amber-800 border-amber-200'
-                            }`}
-                          >
-                            {correct ? '✓ Read correctly' : `Heard: "${result.transcript.trim()}"`}
-                          </span>
-                        )}
+
+                        {/* Pupil answers this word here — one mic per picture */}
+                        <div className="mt-3 flex flex-col items-center gap-1.5">
+                          <VoiceDictation
+                            key={`${selectedStage}-${idx}`}
+                            idleLabel={cvcHeard[idx] ? 'Read again' : 'Read'}
+                            activeLabel="Listening…"
+                            onStart={() => {
+                              setHeardFor(idx, '');
+                              // a fresh answer replaces any earlier teacher override
+                              setItemStatuses((prev) => {
+                                const next = [...prev];
+                                next[idx] = null;
+                                return next;
+                              });
+                            }}
+                            onInterimResult={(text) => setHeardFor(idx, text)}
+                            hasAnswer={!!cvcHeard[idx] || !!manualItemStatuses[idx]}
+                            onClear={() => {
+                              setHeardFor(idx, '');
+                              setItemStatuses((prev) => {
+                                const next = [...prev];
+                                next[idx] = null;
+                                return next;
+                              });
+                            }}
+                            stopWhen={(text) => {
+                              const r = judgeCvcWord(item.word, text);
+                              return r === 'fluent' || r === 'support';
+                            }}
+                          />
+                          {status && (
+                            <span
+                              className={`text-[11px] font-bold px-2 py-0.5 rounded-full border ${
+                                status === 'fluent'
+                                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                  : status === 'support'
+                                  ? 'bg-amber-50 text-amber-800 border-amber-200'
+                                  : 'bg-rose-50 text-rose-700 border-rose-200'
+                              }`}
+                            >
+                              {status === 'fluent' ? '✓ Fluent' : status === 'support' ? '~ Support' : '✗ Error'}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     );
                   })}
@@ -1856,16 +1962,27 @@ export default function PrimaryReadingAssessmentForm() {
                   CEFR Reading Rubric & Level Assignment
                 </h2>
                 <p className="text-xs text-slate-500 mt-1">
-                  Click on the row that reflects the student's reading accuracy and CVC blending capability.
+                  The level is selected automatically from the pupil's reading. Click a different row only if you disagree.
                 </p>
               </div>
 
               {selectedLevel && (
                 <div className="bg-emerald-50 border border-emerald-200 px-4 py-2 rounded-2xl flex items-center gap-2">
-                  <span className="text-xs font-bold text-emerald-700">Assigned:</span>
+                  <span className="text-xs font-bold text-emerald-700">
+                    {isAutoLevel ? '✨ AI score:' : 'Assigned:'}
+                  </span>
                   <span className="text-xs font-black text-emerald-900 bg-white px-2 py-0.5 rounded-lg border border-emerald-200">
                     {selectedLevel}
                   </span>
+                  {manualLevel && autoLevel && manualLevel !== autoLevel && (
+                    <button
+                      type="button"
+                      onClick={() => setSelectedLevel(null)}
+                      className="text-[11px] font-bold text-emerald-700 underline"
+                    >
+                      Use AI score ({autoLevel})
+                    </button>
+                  )}
                 </div>
               )}
             </div>
@@ -1940,9 +2057,15 @@ export default function PrimaryReadingAssessmentForm() {
           <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="text-xs text-slate-500 font-medium">
               {selectedLevel ? (
-                <span>Assigned Level: <strong className="text-emerald-700 font-black">{selectedLevel}</strong></span>
+                <span>
+                  {isAutoLevel ? '✨ Auto-scored level' : 'Assigned Level'}:{' '}
+                  <strong className="text-emerald-700 font-black">{selectedLevel}</strong>
+                  {readingAgg.hasReading && (
+                    <span className="text-slate-400"> · {readingAgg.accuracy}% accuracy · ready to submit</span>
+                  )}
+                </span>
               ) : (
-                <span className="text-rose-600 font-bold">Please select a CEFR level from the rubric table above</span>
+                <span className="text-slate-600 font-bold">The score fills in automatically once the pupil has read.</span>
               )}
             </div>
 
