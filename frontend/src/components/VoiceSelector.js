@@ -11,7 +11,7 @@ import {
 export default function VoiceSelector({ className = "", compact = false }) {
   const [selectedVoiceId, setSelectedVoiceId] = useState(getPreferredVoiceId);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [activeVoiceName, setActiveVoiceName] = useState("");
+  const [, setActiveVoiceName] = useState("");
 
   useEffect(() => {
     const handleVoiceChange = (e) => {
@@ -79,13 +79,7 @@ export default function VoiceSelector({ className = "", compact = false }) {
             <span className="text-[11px] font-black uppercase tracking-wider text-slate-500">
               AI Voice
             </span>
-            <span className="text-[10px] font-black px-1.5 py-0.2 rounded-full bg-cyan-100 text-cyan-800 border border-cyan-200">
-              American Accent
-            </span>
           </div>
-          <p className="text-[11px] text-slate-400 font-medium hidden sm:block truncate max-w-[150px]">
-            {activeVoiceName || "US English"}
-          </p>
         </div>
       </div>
 
@@ -96,11 +90,11 @@ export default function VoiceSelector({ className = "", compact = false }) {
             value={selectedVoiceId}
             onChange={handleSelect}
             className="appearance-none bg-slate-50 hover:bg-slate-100 border border-slate-200 hover:border-slate-300 text-slate-800 text-xs font-bold py-1.5 pl-3 pr-8 rounded-xl cursor-pointer focus:outline-none focus:ring-2 focus:ring-cyan-500 transition-colors"
-            title="Choose between American Accent Female or Male AI Voice"
+            title="Choose between Female or Male AI Voice"
           >
             {VOICE_OPTIONS.map((opt) => (
               <option key={opt.id} value={opt.id}>
-                {opt.flag} {opt.label}
+                {opt.label}
               </option>
             ))}
           </select>
@@ -126,7 +120,7 @@ export default function VoiceSelector({ className = "", compact = false }) {
               ? "bg-rose-500 hover:bg-rose-600 text-white shadow-xs animate-pulse"
               : "bg-cyan-500 hover:bg-cyan-600 text-white shadow-xs"
           }`}
-          title={isPlaying ? "Stop preview" : "Click to preview sample in this American voice"}
+          title={isPlaying ? "Stop preview" : "Click to preview sample in this voice"}
         >
           {isPlaying ? (
             <>

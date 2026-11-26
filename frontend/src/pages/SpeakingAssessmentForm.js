@@ -5,6 +5,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { assessmentAPI } from '../services/api';
 import QuestionVoiceControls from '../components/QuestionVoiceControls';
+import { scoreSpeakingAnswer, getSpeakingCefr, SPEAKING_DESCRIPTORS } from '../utils/speakingRubric';
 import car1 from '../assets/car1.png'; // Using car2 as a temporary placeholder since car1 is missing
 import car2 from '../assets/car2.png';
 import car3 from '../assets/car3.png';
@@ -65,9 +66,9 @@ export default function SpeakingAssessmentForm() {
 
     aiAnswers.forEach((ans, i) => {
       if (ans && ans.trim().length > 0) {
-        const words = ans.trim().split(/\s+/).length;
-        // Simple heuristic: > 3 words is full comprehension (2), less is some (1)
-        let inferredScore = words >= 3 ? 2 : 1;
+        // Marked against the secondary speaking rubric (relevance, detail,
+        // full sentences, length and linking language for each question)
+        const inferredScore = scoreSpeakingAnswer(ans, i, 'junior').score;
 
         if (nextScores[i] !== inferredScore) {
           nextScores[i] = inferredScore;
@@ -82,14 +83,7 @@ export default function SpeakingAssessmentForm() {
       const total = nextScores.reduce((sum, s) => sum + (s !== null ? s : 0), 0);
       setTotalScore(total);
 
-      let nextCefrLevel = '';
-      if (total <= 2) nextCefrLevel = 'A1';
-      else if (total <= 4) nextCefrLevel = 'A2';
-      else if (total <= 6) nextCefrLevel = 'B1';
-      else if (total <= 8) nextCefrLevel = 'B2';
-      else if (total <= 10) nextCefrLevel = 'C1';
-      else nextCefrLevel = 'C2';
-      setCefrLevel(nextCefrLevel);
+      setCefrLevel(getSpeakingCefr(total));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [aiAnswers]);
@@ -214,7 +208,7 @@ export default function SpeakingAssessmentForm() {
               Speaking
             </button>
             <span className="text-slate-300">/</span>
-            <span className="text-slate-900 font-semibold">Junior</span>
+            <span className="text-slate-900 font-semibold">Year 7–9</span>
           </nav>
 
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
@@ -235,26 +229,6 @@ export default function SpeakingAssessmentForm() {
       </div>
 
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-        {/* Pictures Section */}
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden p-6">
-          <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4 flex items-center gap-2">
-            <svg className="w-4 h-4 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
-            </svg>
-            Visual Prompts
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {[0, 1, 2].map((i) => (
-              <div key={i} className="aspect-video rounded-xl overflow-hidden border border-slate-100 bg-slate-50 shadow-sm">
-                <img
-                  src={getPictureUrl(i)}
-                  alt={`Assessment scene ${i + 1}`}
-                  className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
-                />
-              </div>
-            ))}
-          </div>
-        </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Student Information */}
@@ -342,6 +316,27 @@ export default function SpeakingAssessmentForm() {
             </div>
           </div>
 
+          {/* Pictures Section */}
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden p-6">
+            <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4 flex items-center gap-2">
+              <svg className="w-4 h-4 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+              </svg>
+              Visual Prompts
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {[0, 1, 2].map((i) => (
+                <div key={i} className="aspect-video rounded-xl overflow-hidden border border-slate-100 bg-slate-50 shadow-sm">
+                  <img
+                    src={getPictureUrl(i)}
+                    alt={`Assessment scene ${i + 1}`}
+                    className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+
           {/* Questions Table */}
           <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
             <div className="p-6 border-b border-slate-100">
@@ -372,6 +367,15 @@ export default function SpeakingAssessmentForm() {
                           answer={aiAnswers[index] || ''}
                           onAnswerChange={(text) => handleAnswerChange(index, text)}
                         />
+                        <p className="mt-2 text-xs text-slate-400 leading-relaxed">{SPEAKING_DESCRIPTORS[index]}</p>
+                        {(aiAnswers[index] || '').trim() && (() => {
+                          const mark = scoreSpeakingAnswer(aiAnswers[index], index, 'junior');
+                          return (
+                            <p className={`mt-1 text-xs font-bold ${mark.score === 2 ? 'text-emerald-600' : mark.score === 1 ? 'text-amber-600' : 'text-red-600'}`}>
+                              AI mark: {mark.score}/2 · {mark.reason}
+                            </p>
+                          );
+                        })()}
                       </td>
                       <td className="px-6 py-5 text-center">
                         <label className="relative flex items-center justify-center cursor-pointer group">

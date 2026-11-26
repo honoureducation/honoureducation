@@ -108,7 +108,7 @@ export default function WritingAssessmentLandmarkStudentSheet() {
             Writing
           </button>
           <span className="text-slate-300">/</span>
-          <span className="text-slate-900">Senior (Landmarks)</span>
+          <span className="text-slate-900">Year 10–13 (Landmarks)</span>
         </nav>
 
         {/* Header */}
@@ -117,33 +117,6 @@ export default function WritingAssessmentLandmarkStudentSheet() {
           <p className="text-gray-600 mb-6 font-medium uppercase tracking-wider text-xs">Year 10-13 / Grade 9-12</p>
         </div>
 
-        {/* Questions + Pictures */}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <h2 className="text-lg font-bold text-gray-900 mb-2">Picture Prompts</h2>
-
-          {/* 3 Landmark Pictures */}
-          <div className="grid grid-cols-3 gap-4">
-            {PICTURES.map((url, i) => (
-              <img
-                key={i}
-                src={url}
-                alt={`Writing prompt scene ${i + 1}`}
-                className="w-full h-44 object-cover rounded-lg shadow-md border-4 border-purple-300"
-                onError={(e) => {
-                  e.target.src = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300'%3E%3Crect fill='%23e5e7eb' width='400' height='300'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial' font-size='16' fill='%236b7280'%3EPicture ${i + 1}%3C/text%3E%3C/svg%3E`;
-                }}
-              />
-            ))}
-          </div>
-        </div>
-
-        {/* Questions — read aloud by AI, answers typed by the student */}
-        <WritingQuestions
-          questions={WRITING_QUESTIONS}
-          answers={aiAnswers}
-          onAnswerChange={handleWritingAnswer}
-          note="Allow 10 minutes for the student to write."
-        />
 
 
         {/* Student Info + Submit */}
@@ -185,6 +158,34 @@ export default function WritingAssessmentLandmarkStudentSheet() {
               </div>
             </div>
           </div>
+
+          {/* Questions + Pictures */}
+          <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+            <h2 className="text-lg font-bold text-gray-900 mb-2">Picture Prompts</h2>
+
+            {/* 3 Landmark Pictures */}
+            <div className="grid grid-cols-3 gap-4">
+              {PICTURES.map((url, i) => (
+                <img
+                  key={i}
+                  src={url}
+                  alt={`Writing prompt scene ${i + 1}`}
+                  className="w-full h-44 object-cover rounded-lg shadow-md border-4 border-purple-300"
+                  onError={(e) => {
+                    e.target.src = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300'%3E%3Crect fill='%23e5e7eb' width='400' height='300'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial' font-size='16' fill='%236b7280'%3EPicture ${i + 1}%3C/text%3E%3C/svg%3E`;
+                  }}
+                />
+              ))}
+            </div>
+          </div>
+
+          {/* Questions — read aloud by AI, answers typed by the student */}
+          <WritingQuestions
+            questions={WRITING_QUESTIONS}
+            answers={aiAnswers}
+            onAnswerChange={handleWritingAnswer}
+            note="Allow 10 minutes for the student to write."
+          />
 
           <button
             type="submit"

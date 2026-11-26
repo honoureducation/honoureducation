@@ -54,9 +54,9 @@ const STATS = [
 
 const ASSESSMENTS = [
   { icon: '🎧', label: 'Listening',  desc: 'Parts 1 & 2 · CEFR A1–C2',  to: '/assessment/listening',  color: 'bg-blue-50 text-blue-600 border-blue-200' },
-  { icon: '🎙️', label: 'Speaking',   desc: 'Junior & Senior · CEFR A1–C2', to: '/assessment/speaking', color: 'bg-violet-50 text-violet-600 border-violet-200' },
-  { icon: '📖', label: 'Reading',    desc: 'Junior & Senior · A–E',       to: '/assessment/reading',   color: 'bg-emerald-50 text-emerald-600 border-emerald-200' },
-  { icon: '✏️', label: 'Writing',    desc: 'Junior & Senior · A–E',       to: '/assessment/writing',   color: 'bg-amber-50 text-amber-600 border-amber-200' },
+  { icon: '🎙️', label: 'Speaking',   desc: 'Year 7–13 · CEFR A1–C2', to: '/assessment/speaking', color: 'bg-violet-50 text-violet-600 border-violet-200' },
+  { icon: '📖', label: 'Reading',    desc: 'Year 7–13 · A–E',       to: '/assessment/reading',   color: 'bg-emerald-50 text-emerald-600 border-emerald-200' },
+  { icon: '✏️', label: 'Writing',    desc: 'Year 7–13 · A–E',       to: '/assessment/writing',   color: 'bg-amber-50 text-amber-600 border-amber-200' },
 ];
 
 export default function Home() {
@@ -85,10 +85,13 @@ export default function Home() {
                 <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
                 Student Assessment Platform
               </span>
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight tracking-tight mb-6">
-                Assess Multilingual <br />
-                <span className="text-blue-400 text-3xl md:text-5xl lg:text-6xl">students the right way.</span>
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight tracking-tight mb-4">
+                Multilingual <br />
+                <span className="text-blue-400">Mapping Programme</span>
               </h1>
+              <p className="text-xl md:text-2xl font-medium text-slate-300 mb-6">
+                Assess students the right way.
+              </p>
               <p className="text-lg text-slate-400 mb-10 max-w-xl leading-relaxed mx-auto md:mx-0">
                 A comprehensive assessment platform for educators to assess and evaluate student language proficiency and progress across Reading, writing, listening and speaking. CEFR Aligned of scores.
               </p>

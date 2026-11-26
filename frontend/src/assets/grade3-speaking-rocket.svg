@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" role="img" aria-label="Rocket launching into space">
+  <rect width="400" height="400" fill="#ffffff"/>
+  <!-- Flame -->
+  <path d="M168 300 Q172 350 200 392 Q228 350 232 300 Z" fill="#f97316"/>
+  <path d="M182 300 Q186 340 200 368 Q214 340 218 300 Z" fill="#facc15"/>
+  <!-- Fins -->
+  <path d="M160 214 Q112 246 112 306 Q140 286 166 284 Z" fill="#a855f7"/>
+  <path d="M240 214 Q288 246 288 306 Q260 286 234 284 Z" fill="#a855f7"/>
+  <!-- Body -->
+  <path d="M200 20 Q256 80 248 220 Q244 270 232 300 L168 300 Q156 270 152 220 Q144 80 200 20 Z" fill="#e5e7eb" stroke="#9ca3af" stroke-width="4"/>
+  <path d="M200 20 Q236 56 244 104 L156 104 Q164 56 200 20 Z" fill="#a855f7"/>
+  <!-- Porthole -->
+  <circle cx="200" cy="168" r="30" fill="#374151" stroke="#9ca3af" stroke-width="8"/>
+  <circle cx="190" cy="158" r="9" fill="#ffffff" opacity="0.55"/>
+  <!-- Centre fin -->
+  <rect x="192" y="232" width="16" height="72" rx="8" fill="#a855f7"/>
+  <!-- Nozzle -->
+  <rect x="168" y="296" width="64" height="12" rx="4" fill="#6b7280"/>
+  <!-- Stars -->
+  <path d="M60 70 l4 10 l10 4 l-10 4 l-4 10 l-4 -10 l-10 -4 l10 -4 Z" fill="#facc15"/>
+  <path d="M334 120 l4 10 l10 4 l-10 4 l-4 10 l-4 -10 l-10 -4 l10 -4 Z" fill="#facc15"/>
+  <circle cx="90" cy="180" r="4" fill="#c4b5fd"/>
+  <circle cx="316" cy="60" r="4" fill="#c4b5fd"/>
+</svg>

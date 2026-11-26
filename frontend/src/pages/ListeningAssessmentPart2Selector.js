@@ -5,7 +5,7 @@ const OPTIONS = [
   {
     id: 'junior',
     title: 'Year 7–9 / Grade 6–8',
-    subtitle: 'Junior',
+    subtitle: 'Part 2',
     desc: '4 comprehension questions based on a short paragraph read aloud. CEFR level scoring (A1–C1/C2). Max score: 8.',
     color: 'bg-blue-600',
     route: '/assessment/listening-part2/junior',
@@ -13,7 +13,7 @@ const OPTIONS = [
   {
     id: 'senior',
     title: 'Year 10–13 / Grade 9–12',
-    subtitle: 'Senior',
+    subtitle: 'Part 2',
     desc: '10 comprehension questions based on an extended paragraph read aloud. CEFR level scoring (A1–C2). Max score: 20.',
     color: 'bg-cyan-600',
     route: '/assessment/listening-part2/senior',

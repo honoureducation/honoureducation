@@ -152,7 +152,7 @@ export default function ReadingAssessmentForm() {
             <span className="breadcrumb-sep">/</span>
             <button onClick={() => navigate('/assessment/reading')} className="hover:text-slate-700 transition-colors">Reading</button>
             <span className="breadcrumb-sep">/</span>
-            <span className="text-slate-700 font-medium">Junior</span>
+            <span className="text-slate-700 font-medium">Year 7–9</span>
           </nav>
           <div className="flex items-start justify-between gap-4">
             <div>
@@ -170,58 +170,6 @@ export default function ReadingAssessmentForm() {
 
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
 
-        {/* Instructions */}
-        <div className="info-banner">
-          <svg className="info-banner-icon w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
-          </svg>
-          <div>
-            <p className="font-semibold text-slate-800 mb-1">Instructions for assessor</p>
-            <ul className="text-slate-600 space-y-0.5 text-xs list-disc list-inside">
-              <li>Present the story and ask the pupil to read aloud.</li>
-              <li>Allow 10–20 seconds per line.</li>
-              <li>Use the Teacher Notes box to mark accuracy, fluency, and comments.</li>
-            </ul>
-          </div>
-        </div>
-
-        {/* AI Assessment Conductor */}
-        <AIAssistantConductor
-          mode="reading"
-          readingItems={READING_ITEMS}
-          title="AI Reading Conductor"
-          onAnswersArrayChange={setAiAnswers}
-          onReadingResultsChange={setReadingResults}
-        />
-
-        {/* Story */}
-        <div className="card-section">
-          <h2 className="section-heading">
-            <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
-            </svg>
-            Reading Passage
-          </h2>
-          <div className="bg-slate-50 rounded-xl border border-slate-200 p-5 mb-5 text-sm text-slate-700 leading-relaxed">
-            {STORY.split('\n\n').map((para, i) => (
-              <div key={i} className="mb-4 last:mb-0">
-                <p className={`${i === 0 ? 'font-semibold text-slate-900 mb-2' : 'mb-2'}`}>{para}</p>
-                {i > 0 && aiAnswers && aiAnswers[i - 1] && (
-                  <div className="mt-2 mb-3 text-sm text-indigo-700 bg-indigo-50/50 p-3 rounded-xl border border-indigo-100 shadow-inner">
-                    <span className="font-bold mr-1">AI Reading Check:</span> {readingResults[i - 1]?.summary || `"${aiAnswers[i - 1]}"`}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-          <div className="grid grid-cols-3 gap-3">
-            {PICTURES.map((src, i) => (
-              <div key={i} className="rounded-xl overflow-hidden border border-slate-200 bg-slate-100">
-                <img src={src} alt={`Story scene ${i + 1}`} className="w-full h-auto object-contain" />
-              </div>
-            ))}
-          </div>
-        </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Student info */}
@@ -269,6 +217,59 @@ export default function ReadingAssessmentForm() {
                   <option value="T3">Term 3 (T3)</option>
                 </select>
               </div>
+            </div>
+          </div>
+
+          {/* Instructions */}
+          <div className="info-banner">
+            <svg className="info-banner-icon w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
+            </svg>
+            <div>
+              <p className="font-semibold text-slate-800 mb-1">Instructions for assessor</p>
+              <ul className="text-slate-600 space-y-0.5 text-xs list-disc list-inside">
+                <li>Present the story and ask the pupil to read aloud.</li>
+                <li>Allow 10–20 seconds per line.</li>
+                <li>Use the Teacher Notes box to mark accuracy, fluency, and comments.</li>
+              </ul>
+            </div>
+          </div>
+
+          {/* AI Assessment Conductor */}
+          <AIAssistantConductor
+            mode="reading"
+            readingItems={READING_ITEMS}
+            title="AI Reading Conductor"
+            onAnswersArrayChange={setAiAnswers}
+            onReadingResultsChange={setReadingResults}
+          />
+
+          {/* Story */}
+          <div className="card-section">
+            <h2 className="section-heading">
+              <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+              </svg>
+              Reading Passage
+            </h2>
+            <div className="bg-slate-50 rounded-xl border border-slate-200 p-5 mb-5 text-sm text-slate-700 leading-relaxed">
+              {STORY.split('\n\n').map((para, i) => (
+                <div key={i} className="mb-4 last:mb-0">
+                  <p className={`${i === 0 ? 'font-semibold text-slate-900 mb-2' : 'mb-2'}`}>{para}</p>
+                  {i > 0 && aiAnswers && aiAnswers[i - 1] && (
+                    <div className="mt-2 mb-3 text-sm text-indigo-700 bg-indigo-50/50 p-3 rounded-xl border border-indigo-100 shadow-inner">
+                      <span className="font-bold mr-1">AI Reading Check:</span> {readingResults[i - 1]?.summary || `"${aiAnswers[i - 1]}"`}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              {PICTURES.map((src, i) => (
+                <div key={i} className="rounded-xl overflow-hidden border border-slate-200 bg-slate-100">
+                  <img src={src} alt={`Story scene ${i + 1}`} className="w-full h-auto object-contain" />
+                </div>
+              ))}
             </div>
           </div>
 

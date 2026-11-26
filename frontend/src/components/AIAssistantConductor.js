@@ -10,7 +10,7 @@ import {
   setPreferredVoiceId,
   pickAmericanVoice,
 } from "../utils/voiceUtils";
-import { analyseReading, summariseReading } from "../utils/readingMistakes";
+import { analyseReading, summariseReading, applyReadingOverrides } from "../utils/readingMistakes";
 
 const FEMALE_VOICE_KEYWORDS = [
   "female",
@@ -205,6 +205,8 @@ export default function AIAssistantConductor({
     Array(questions ? questions.length : 0).fill(""),
   );
   const [isSpeaking, setIsSpeaking] = useState(false);
+  // Teacher's manual word marks for reading mode: { [itemIdx]: { [wordIdx]: 'correct' | 'error' } }
+  const [wordOverrides, setWordOverrides] = useState({});
   const synth = typeof window !== "undefined" ? window.speechSynthesis : null;
   const baseTextRef = useRef("");
 
@@ -248,6 +250,7 @@ export default function AIAssistantConductor({
         return Array(questions.length).fill("");
       });
       setCurrentIdx(-1);
+      setWordOverrides({});
     }
   }, [questions]);
 
@@ -360,7 +363,10 @@ export default function AIAssistantConductor({
   const readingResults = useMemo(() => {
     if (!isReading) return null;
     return readingItems.map((item, idx) => {
-      const analysis = analyseReading(item.text, answers[idx] || "");
+      const analysis = applyReadingOverrides(
+        analyseReading(item.text, answers[idx] || ""),
+        wordOverrides[idx],
+      );
       return {
         label: item.label,
         transcript: answers[idx] || "",
@@ -368,7 +374,7 @@ export default function AIAssistantConductor({
         summary: summariseReading(item.label, analysis),
       };
     });
-  }, [isReading, readingItems, answers]);
+  }, [isReading, readingItems, answers, wordOverrides]);
 
   const readingResultsKey = readingResults
     ? readingResults.map((r) => r.summary).join("\n")
@@ -386,6 +392,15 @@ export default function AIAssistantConductor({
     isReading && currentIdx >= 0 && readingResults
       ? readingResults[currentIdx]
       : null;
+
+  // Teacher clicks a word to switch it between green (read well) and red (not right)
+  const toggleWord = (wordIdx, currentStatus) => {
+    const isGreen = currentStatus === "correct";
+    setWordOverrides((prev) => ({
+      ...prev,
+      [currentIdx]: { ...(prev[currentIdx] || {}), [wordIdx]: isGreen ? "error" : "correct" },
+    }));
+  };
 
 
   return (
@@ -450,23 +465,9 @@ export default function AIAssistantConductor({
             </span>
             <span className="tracking-wide">
               {preferredVoiceId === "american-male"
-                ? "👨‍🏫 American Male Voice"
-                : "👩‍🏫 American Female Voice"}
+                ? "👨‍🏫 Male Voice"
+                : "👩‍🏫 Female Voice"}
             </span>
-            {selectedVoice && (
-              <span
-                className={`font-normal pl-1.5 border-l max-w-[130px] truncate ${
-                  preferredVoiceId === "american-male"
-                    ? "text-blue-600 border-blue-200"
-                    : "text-pink-600 border-pink-200"
-                }`}
-                title={selectedVoice.name}
-              >
-                {selectedVoice.name
-                  .replace(/Microsoft |Google |\(.*?\)/gi, "")
-                  .trim() || selectedVoice.name}
-              </span>
-            )}
           </div>
 
           <select
@@ -481,7 +482,7 @@ export default function AIAssistantConductor({
           >
             {VOICE_OPTIONS.map((opt) => (
               <option key={opt.id} value={opt.id}>
-                {opt.flag} {opt.label}
+                {opt.label}
               </option>
             ))}
           </select>
@@ -557,8 +558,20 @@ export default function AIAssistantConductor({
                     ).map((w, i) => (
                       <React.Fragment key={i}>
                         <span
-                          className={`rounded-md px-1 py-0.5 transition-colors duration-300 ${
-                            w.status === "correct"
+                          role="button"
+                          tabIndex={0}
+                          onClick={() => toggleWord(i, w.unmarked || !(currentReading && currentReading.analysis.hasReading) ? "correct" : w.status)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              toggleWord(i, w.unmarked || !(currentReading && currentReading.analysis.hasReading) ? "correct" : w.status);
+                            }
+                          }}
+                          title="Click to change: green = read well, red = not right"
+                          className={`cursor-pointer select-none rounded-md px-1 py-0.5 transition-colors duration-300 hover:ring-2 hover:ring-indigo-300 ${
+                            w.unmarked
+                              ? ""
+                              : w.status === "correct"
                               ? "bg-emerald-200 text-emerald-950"
                               : w.status === "substituted" || w.status === "omitted"
                                 ? "bg-rose-200 text-rose-950"
@@ -569,6 +582,9 @@ export default function AIAssistantConductor({
                         </span>{" "}
                       </React.Fragment>
                     ))}
+                  </p>
+                  <p className="mt-3 text-xs font-semibold text-slate-400">
+                    👩‍🏫 Teacher: click any word to switch it between green (read well) and red (not right).
                   </p>
                   {currentReading && currentReading.analysis.hasReading && (
                     <div className="mt-4 pt-3 border-t border-slate-100 flex flex-wrap items-center gap-2 text-sm font-bold">
@@ -635,6 +651,7 @@ export default function AIAssistantConductor({
                 hasAnswer={!!(answers[currentIdx] || "").trim()}
                 onClear={() => {
                   baseTextRef.current = "";
+                  setWordOverrides((prev) => ({ ...prev, [currentIdx]: {} }));
                   setAnswers((prev) => {
                     const next = [...prev];
                     next[currentIdx] = "";

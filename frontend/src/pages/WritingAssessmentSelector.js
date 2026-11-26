@@ -3,14 +3,6 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 
 const OPTIONS = [
   {
-    id: 'junior-student',
-    title: 'Year 7–9 / Grade 6–8',
-    subtitle: 'Student Writing Sheet',
-    desc: 'Student writing sheet with sports picture prompts and lined writing space.',
-    color: 'bg-pink-500',
-    route: '/assessment/writing/junior-student',
-  },
-  {
     id: 'junior-assessor',
     title: 'Year 7–9 / Grade 6–8',
     subtitle: 'Assessor Form',
@@ -19,28 +11,12 @@ const OPTIONS = [
     route: '/assessment/writing/junior',
   },
   {
-    id: 'senior-student',
-    title: 'Year 10–13 / Grade 9–12',
-    subtitle: 'Student Writing Sheet',
-    desc: 'Student writing sheet with landmark picture prompts and lined writing space.',
-    color: 'bg-pink-500',
-    route: '/assessment/writing/senior-student',
-  },
-  {
     id: 'senior-assessor',
     title: 'Year 10–13 / Grade 9–12',
     subtitle: 'Assessor Form',
     desc: 'Writing assessment with sports picture prompts. A–E scoring rubric and teacher observations.',
     color: 'bg-pink-500',
     route: '/assessment/writing/senior',
-  },
-  {
-    id: 'senior-landmark-student',
-    title: 'Year 10–13 / Grade 9-12',
-    subtitle: 'Student Writing Sheet',
-    desc: 'Student writing sheet with landmark picture prompts and lined writing space.',
-    color: 'bg-pink-500',
-    route: '/assessment/writing/senior-landmark-student',
   },
   {
     id: 'senior-landmark-assessor',

@@ -936,7 +936,7 @@ const PRIMARY_STAGES = [
   "Grade 4 / Year 5",
   "Grade 5 / Year 6",
 ];
-const SECONDARY_STAGES = ["Junior (Year 7–9)", "Senior (Year 10–13)"];
+const SECONDARY_STAGES = ["Year 7–9", "Year 10–13"];
 
 function skillOf(a) {
   const t = (a.assessmentType || "").toLowerCase();

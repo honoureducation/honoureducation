@@ -5,9 +5,20 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { assessmentAPI } from '../services/api';
 import AIAssistantConductor from '../components/AIAssistantConductor';
+import ReadAloudButton from '../components/ReadAloudButton';
 import { scoreAgainstKey } from '../utils/listeningRubric';
 
 /* ── Data ─────────────────────────────────────────────────── */
+const PASSAGE_JUNIOR = [
+  'I usually wake up at 6:30 in the morning. After breakfast, I take the bus to school. I enjoy science because we do lots of experiments. At the weekend, I like to play football with my friends or watch movies with my family.',
+];
+
+const PASSAGE_SENIOR = [
+  'Last weekend, our school organised a community volunteering event in the city. Students were able to choose from several activities, including helping at a local food bank, supporting a beach clean-up, and assisting elderly residents with digital skills training. More than two hundred students took part.',
+  'Although the event was successful overall, the organisers identified a few challenges. Firstly, the weather forecast changed unexpectedly, causing delays for the beach clean-up team. Secondly, some students mentioned that they would have liked clearer instructions before arriving at their assigned locations.',
+  "Despite these issues, feedback from community partners was extremely positive. They especially appreciated the students' professionalism and teamwork. As a result, the school is considering making the event a monthly programme rather than an annual one.",
+];
+
 const QUESTIONS_JUNIOR = [
   'What time does the student wake up?',
   'How does the student travel to school?',
@@ -98,6 +109,7 @@ export default function ListeningAssessmentPart2Form({ yearGroupProp }) {
   const isJunior = yearGroup === 'junior';
 
   const questions = isJunior ? QUESTIONS_JUNIOR : QUESTIONS_SENIOR;
+  const passage = isJunior ? PASSAGE_JUNIOR : PASSAGE_SENIOR;
   const answerKey = isJunior ? ANSWER_KEY_JUNIOR : ANSWER_KEY_SENIOR;
   const cefrBands = isJunior ? CEFR_BANDS_JUNIOR : CEFR_BANDS_SENIOR;
   const maxScore = isJunior ? 8 : 20;
@@ -224,7 +236,7 @@ export default function ListeningAssessmentPart2Form({ yearGroupProp }) {
               Listening Part 2
             </button>
             <span className="breadcrumb-sep">/</span>
-            <span className="text-slate-700 font-medium">{isJunior ? 'Junior' : 'Senior'}</span>
+            <span className="text-slate-700 font-medium">{isJunior ? 'Year 7–9' : 'Year 10–13'}</span>
           </nav>
           <div className="flex items-start justify-between gap-4">
             <div>
@@ -243,30 +255,6 @@ export default function ListeningAssessmentPart2Form({ yearGroupProp }) {
       </div>
 
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-
-        {/* Teacher script */}
-        <div className="info-banner">
-          <svg className="info-banner-icon w-5 h-5 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z" />
-          </svg>
-          <div>
-            <p className="font-semibold text-slate-800 mb-2">Teacher script (read aloud):</p>
-            {isJunior ? (
-              <p className="text-slate-700 text-sm leading-relaxed">
-                "I usually wake up at 6:30 in the morning. After breakfast, I take the bus to school. I enjoy science because we do lots of experiments. At the weekend, I like to play football with my friends or watch movies with my family."
-              </p>
-            ) : (
-              <div className="text-slate-700 text-sm leading-relaxed space-y-2">
-                <p>"Last weekend, our school organised a community volunteering event in the city. Students were able to choose from several activities, including helping at a local food bank, supporting a beach clean-up, and assisting elderly residents with digital skills training. More than two hundred students took part.</p>
-                <p>Although the event was successful overall, the organisers identified a few challenges. Firstly, the weather forecast changed unexpectedly, causing delays for the beach clean-up team. Secondly, some students mentioned that they would have liked clearer instructions before arriving at their assigned locations.</p>
-                <p>Despite these issues, feedback from community partners was extremely positive. They especially appreciated the students' professionalism and teamwork. As a result, the school is considering making the event a monthly programme rather than an annual one."</p>
-              </div>
-            )}
-            <p className="text-xs text-slate-500 mt-3">
-              Record score '0' for no response, '1' for good response and '2' for a complete response.
-            </p>
-          </div>
-        </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
 
@@ -315,6 +303,29 @@ export default function ListeningAssessmentPart2Form({ yearGroupProp }) {
                   <option value="T3">Term 3 (T3)</option>
                 </select>
               </div>
+            </div>
+          </div>
+
+          {/* Listening passage — read by the teacher or by the AI voice (🔊) */}
+          <div className="info-banner">
+            <svg className="info-banner-icon w-6 h-6 flex-shrink-0 mt-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z" />
+            </svg>
+            <div className="flex-1 min-w-0">
+              <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
+                <p className="font-semibold text-slate-800 text-lg">Listening passage (read aloud):</p>
+                <ReadAloudButton text={passage.join(' ')} label="Listen to Passage" />
+              </div>
+              <div className="text-slate-800 text-lg md:text-xl leading-relaxed space-y-3">
+                {passage.map((para, i) => (
+                  <p key={i}>
+                    {i === 0 ? '"' : ''}{para}{i === passage.length - 1 ? '"' : ''}
+                  </p>
+                ))}
+              </div>
+              <p className="text-sm text-slate-500 mt-4">
+                Record score '0' for no response, '1' for good response and '2' for a complete response.
+              </p>
             </div>
           </div>
 

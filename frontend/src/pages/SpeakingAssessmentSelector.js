@@ -10,7 +10,7 @@ export default function SpeakingAssessmentSelector() {
     {
       id: 'junior',
       title: 'Year 7–9 / Grade 6–8',
-      subtitle: 'Junior',
+      subtitle: 'Speaking',
       desc: '6 speaking comprehension questions with CEFR level scoring (A1–C2). Max score: 12.',
       color: 'bg-violet-500',
       route: '/assessment/speaking/junior'
@@ -18,7 +18,7 @@ export default function SpeakingAssessmentSelector() {
     {
       id: 'senior',
       title: 'Year 10–13 / Grade 9–12',
-      subtitle: 'Senior',
+      subtitle: 'Speaking',
       desc: '6 advanced speaking comprehension questions with CEFR level scoring (A1–C2). Max score: 12.',
       color: 'bg-violet-500',
       route: '/assessment/speaking/senior'

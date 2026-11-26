@@ -157,7 +157,7 @@ const SECONDARY_ACTION_CARDS = [
   {
     id: 'listening',
     title: 'Listening Assessment',
-    badge: 'Year 7–13 · Junior & Senior',
+    badge: 'Year 7–13 · Grade 6–12',
     description: 'Comprehensive evaluation of auditory comprehension across CEFR levels.',
     icon: 'listening',
     color: 'bg-cyan-500',
@@ -167,7 +167,7 @@ const SECONDARY_ACTION_CARDS = [
   {
     id: 'speaking',
     title: 'Speaking Assessment',
-    badge: 'Year 7–13 · Junior & Senior',
+    badge: 'Year 7–13 · Grade 6–12',
     description: 'Assess verbal fluency, pronunciation, and interactive communication.',
     icon: 'speaking',
     color: 'bg-violet-500',
@@ -177,7 +177,7 @@ const SECONDARY_ACTION_CARDS = [
   {
     id: 'reading',
     title: 'Reading Assessment',
-    badge: 'Year 7–13 · Junior & Senior',
+    badge: 'Year 7–13 · Grade 6–12',
     description: 'Evaluate textual comprehension, vocabulary usage, and speed.',
     icon: 'reading',
     color: 'bg-emerald-500',
@@ -187,7 +187,7 @@ const SECONDARY_ACTION_CARDS = [
   {
     id: 'writing',
     title: 'Writing Assessment',
-    badge: 'Year 7–13 · Junior & Senior',
+    badge: 'Year 7–13 · Grade 6–12',
     description: 'Assess grammatical accuracy, structure, and written expression.',
     icon: 'writing',
     color: 'bg-pink-500',
@@ -702,7 +702,7 @@ export default function TeacherDashboard() {
             )}
             {activeTier === 'secondary' && (
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200 text-xs font-black">
-                📘 Year 7–9 (Junior) · Year 10–13 (Senior)
+                📘 Year 7–9 · Year 10–13
               </span>
             )}
           </div>

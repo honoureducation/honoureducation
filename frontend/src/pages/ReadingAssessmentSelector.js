@@ -5,7 +5,7 @@ const OPTIONS = [
   {
     id: 'junior',
     title: 'Year 7–9 / Grade 6–8',
-    subtitle: 'Junior',
+    subtitle: 'Reading',
     desc: 'Reading accuracy with "The Mountain Field" passage. CEFR scoring based on decoding, blending, and fluency.',
     color: 'bg-emerald-500',
     route: '/assessment/reading/junior',
@@ -13,7 +13,7 @@ const OPTIONS = [
   {
     id: 'senior',
     title: 'Year 10–13 / Grade 9–12',
-    subtitle: 'Senior',
+    subtitle: 'Reading',
     desc: 'Advanced reading with "A World Between Worlds" passage. CEFR scoring for older learners.',
     color: 'bg-emerald-500',
     route: '/assessment/reading/senior',

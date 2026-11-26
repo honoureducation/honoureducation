@@ -179,7 +179,7 @@ export default function ReadingAssessmentSeniorForm() {
             Reading
           </button>
           <span className="text-slate-300">/</span>
-          <span className="text-slate-900">Senior</span>
+          <span className="text-slate-900">Year 10–13</span>
         </nav>
 
         {/* Header */}
@@ -196,47 +196,6 @@ export default function ReadingAssessmentSeniorForm() {
           </div>
         </div>
 
-        {/* AI Assessment Conductor */}
-        <AIAssistantConductor
-          mode="reading"
-          readingItems={READING_ITEMS}
-          title="AI Reading Conductor"
-          onAnswersArrayChange={setAiAnswers}
-          onReadingResultsChange={setReadingResults}
-        />
-
-        {/* Story Section */}
-        <div className="bg-gray-100 rounded-lg p-8 mb-8">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">The Story</h2>
-          <div className="bg-white p-6 rounded-lg mb-6 text-gray-800 leading-relaxed border-l-4 border-teal-500">
-            {READING_STORY_SENIOR.split('\n\n').map((paragraph, idx) => (
-              <div key={idx} className="mb-4 last:mb-0">
-                <p className={`${idx === 0 ? 'font-bold text-gray-900 mb-2' : 'mb-2'}`}>{paragraph}</p>
-                {idx > 0 && aiAnswers && aiAnswers[idx - 1] && (
-                  <div className="mt-2 mb-3 text-sm text-indigo-700 bg-indigo-50/50 p-3 rounded-xl border border-indigo-100 shadow-inner">
-                    <span className="font-bold mr-1">AI Reading Check:</span> {readingResults[idx - 1]?.summary || `"${aiAnswers[idx - 1]}"`}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-
-          {/* Supporting Pictures */}
-          <div className="grid grid-cols-3 gap-4">
-            {[0, 1, 2].map((i) => (
-              <div key={i} className="relative bg-gray-100 rounded-lg overflow-hidden">
-                <img
-                  src={getPictureUrlSenior(i)}
-                  alt={`Story scene ${i + 1}`}
-                  className="w-full h-48 object-cover rounded-lg shadow-md border-2 border-teal-300"
-                  onError={(e) => {
-                    e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="300"%3E%3Crect fill="%23e5e7eb" width="400" height="300"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="Arial" font-size="16" fill="%236b7280"%3EImage ' + (i + 1) + '%3C/text%3E%3C/svg%3E';
-                  }}
-                />
-              </div>
-            ))}
-          </div>
-        </div>
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-8">
@@ -313,6 +272,48 @@ export default function ReadingAssessmentSeniorForm() {
                   <option value="T3">Term 3 (T3)</option>
                 </select>
               </div>
+            </div>
+          </div>
+
+          {/* AI Assessment Conductor */}
+          <AIAssistantConductor
+            mode="reading"
+            readingItems={READING_ITEMS}
+            title="AI Reading Conductor"
+            onAnswersArrayChange={setAiAnswers}
+            onReadingResultsChange={setReadingResults}
+          />
+
+          {/* Story Section */}
+          <div className="bg-gray-100 rounded-lg p-8 mb-8">
+            <h2 className="text-xl font-bold text-gray-900 mb-4">The Story</h2>
+            <div className="bg-white p-6 rounded-lg mb-6 text-gray-800 leading-relaxed border-l-4 border-teal-500">
+              {READING_STORY_SENIOR.split('\n\n').map((paragraph, idx) => (
+                <div key={idx} className="mb-4 last:mb-0">
+                  <p className={`${idx === 0 ? 'font-bold text-gray-900 mb-2' : 'mb-2'}`}>{paragraph}</p>
+                  {idx > 0 && aiAnswers && aiAnswers[idx - 1] && (
+                    <div className="mt-2 mb-3 text-sm text-indigo-700 bg-indigo-50/50 p-3 rounded-xl border border-indigo-100 shadow-inner">
+                      <span className="font-bold mr-1">AI Reading Check:</span> {readingResults[idx - 1]?.summary || `"${aiAnswers[idx - 1]}"`}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {/* Supporting Pictures */}
+            <div className="grid grid-cols-3 gap-4">
+              {[0, 1, 2].map((i) => (
+                <div key={i} className="relative bg-gray-100 rounded-lg overflow-hidden">
+                  <img
+                    src={getPictureUrlSenior(i)}
+                    alt={`Story scene ${i + 1}`}
+                    className="w-full h-48 object-cover rounded-lg shadow-md border-2 border-teal-300"
+                    onError={(e) => {
+                      e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="300"%3E%3Crect fill="%23e5e7eb" width="400" height="300"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="Arial" font-size="16" fill="%236b7280"%3EImage ' + (i + 1) + '%3C/text%3E%3C/svg%3E';
+                    }}
+                  />
+                </div>
+              ))}
             </div>
           </div>
 

@@ -12,7 +12,8 @@ import {
 import { toast } from "react-toastify";
 import { assessmentAPI } from "../services/api";
 import QuestionVoiceControls from "../components/QuestionVoiceControls";
-import familyPhoto from "../assets/fs1-speaking-family.jpg";
+// Photo credits: see src/assets/IMAGE_CREDITS.md
+import familyPhoto from "../assets/speaking-family-meal.jpg";
 import fs1SpeakingSheet from "../assets/fs1-speaking-sheet.jpg";
 import fs2SpeakingSheet from "../assets/fs2-speaking-sheet.png";
 import kg2SpeakingSheet from "../assets/kg2-speaking-sheet.png";
@@ -24,14 +25,12 @@ import grade2Pic1 from "../assets/grade2-speaking-pic1.jpg";
 import grade2Pic2 from "../assets/grade2-speaking-pic2.jpg";
 import grade2Pic3 from "../assets/grade2-speaking-pic3.jpg";
 import grade3SpeakingSheet from "../assets/grade3-year4-speaking-sheet.png";
-import grade3SpeakingStrip from "../assets/grade3-speaking-strip.png";
-import grade3SpeakingTable from "../assets/grade3-speaking-table.png";
-import grade3SpeakingTablet from "../assets/grade3-speaking-tablet.png";
-import grade3SpeakingRocket from "../assets/grade3-speaking-rocket.png";
+import grade3SpeakingTable from "../assets/grade3-speaking-table.svg";
+import grade3SpeakingTablet from "../assets/grade3-speaking-tablet.svg";
+import grade3SpeakingRocket from "../assets/grade3-speaking-rocket.svg";
 import grade4SpeakingSheet from "../assets/grade4-year5-speaking-sheet.jpg";
-import grade4SpeakingStrip from "../assets/grade4-speaking-ocean-strip.jpg";
-import grade4SpeakingReef from "../assets/grade4-speaking-coral-reef.jpg";
-import grade4SpeakingShark from "../assets/grade4-speaking-shark.jpg";
+import grade4SpeakingReef from "../assets/grade4-speaking-coral-reef-hd.jpg";
+import grade4SpeakingShark from "../assets/grade4-speaking-shark-kelp-hd.jpg";
 import grade5SpeakingSheet from "../assets/grade5-year6-speaking-sheet.jpg";
 import grade5SpeakingWalk from "../assets/grade5-speaking-mountain-walk.jpg";
 import grade5SpeakingCliff from "../assets/grade5-speaking-cliff.jpg";
@@ -676,10 +675,6 @@ export default function PrimarySpeakingAssessmentForm() {
 
   const activePromptImage = isGrade5Stage
     ? grade5SpeakingWalk
-    : isGrade4Stage
-    ? grade4SpeakingStrip
-    : isGrade3Stage
-    ? grade3SpeakingStrip
     : isGrade2Stage
     ? grade2ClassroomStoryImg
     : isGrade1Stage
@@ -922,204 +917,6 @@ export default function PrimarySpeakingAssessmentForm() {
               </div>
             </div>
           </div>
-
-          {/* Picture Prompt & Instructions Box (Exact purple border from source image) */}
-          <div className="mt-8 border-3 border-violet-500 rounded-3xl p-5 sm:p-6 bg-slate-50/60 shadow-xs">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
-              {/* Left Column: Instructions and Questions */}
-              <div className="lg:col-span-7 space-y-5">
-                <div>
-                  <h3 className="text-xs font-black uppercase tracking-wider text-violet-900 flex items-center gap-2 mb-2">
-                    <span className="w-2.5 h-2.5 rounded-full bg-violet-600"></span>
-                    {isGrade5Stage || isGrade4Stage || isGrade3Stage || isGrade2Stage || isGrade1Stage ? "Speaking Prompts" : "Instructions for assessor"}
-                  </h3>
-                  {isGrade5Stage ? (
-                    <p className="text-xs text-slate-700 font-bold">
-                      Show the student the 3 story pictures below (Walking to the Mountain, On the Cliff, Paragliding). Ask each speaking prompt in order to assess story sequencing, description, and fluency.
-                    </p>
-                  ) : isGrade4Stage ? (
-                    <p className="text-xs text-slate-700 font-bold">
-                      Show the student the 2 ocean story pictures below (Coral Reef and Shark in Deep Water). Ask each speaking prompt in order to assess story sequencing, description, and fluency.
-                    </p>
-                  ) : isGrade3Stage ? (
-                    <p className="text-xs text-slate-700 font-bold">
-                      Show the student the 3 story pictures below. Ask each speaking prompt in order to assess story sequencing, description, and fluency.
-                    </p>
-                  ) : isGrade2Stage ? (
-                    <p className="text-xs text-slate-700 font-bold">
-                      Show the student the 3 classroom story pictures below. Ask each speaking prompt in order to assess story sequencing, description, and fluency.
-                    </p>
-                  ) : isGrade1Stage ? (
-                    <p className="text-xs text-slate-700 font-bold">
-                      Show the student the 5 story pictures below. Ask each speaking prompt in order to assess story sequencing, description, and fluency.
-                    </p>
-                  ) : (
-                    <ul className="text-xs text-slate-700 font-bold space-y-1 list-disc list-inside">
-                      <li>Show the student the picture.</li>
-                      <li>Ask each question once only.</li>
-                      <li>Accept the first answer given.</li>
-                      <li>Do not probe or repeat.</li>
-                    </ul>
-                  )}
-                </div>
-
-                <div className="border-t border-slate-200/80 pt-4">
-                  <h4 className="text-xs font-black uppercase tracking-wider text-slate-900 mb-2">
-                    {isGrade2Stage || isGrade1Stage ? "Speaking Prompts:" : "Questions for the student"}
-                  </h4>
-                  <ul className="text-xs sm:text-sm text-slate-800 font-semibold space-y-2">
-                    {activeQuestions.map((q) => (
-                      <li key={q.id} className="flex items-start gap-2">
-                        <span className="text-violet-600 font-extrabold">
-                          {q.id}.
-                        </span>
-                        <span>{q.text}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-
-              {/* Right Column: Photo Prompt */}
-              <div className="lg:col-span-5 flex flex-col items-center">
-                <div
-                  onClick={() => setShowFullPicture(!showFullPicture)}
-                  className="cursor-pointer group relative rounded-2xl overflow-hidden border-2 border-violet-300 shadow-md bg-white transition-all hover:scale-102 hover:shadow-xl w-full"
-                  title="Click to view large prompt image"
-                >
-                  {isGrade5Stage ? (
-                    <div className="grid grid-cols-3 gap-1.5 p-2 bg-slate-50">
-                      {GRADE5_SPEAKING_PICTURES.map((pic) => (
-                        <div key={pic.label} className="flex flex-col items-center">
-                          <img
-                            src={pic.src}
-                            alt={pic.alt}
-                            className="h-40 sm:h-48 w-full object-cover rounded-xl border border-slate-200 shadow-xs"
-                          />
-                          <span className="text-[10px] font-bold text-slate-600 mt-1 text-center">
-                            {pic.label}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  ) : isGrade4Stage ? (
-                    <div className="grid grid-cols-2 gap-2 p-2 bg-slate-50">
-                      <div className="flex flex-col items-center">
-                        <img
-                          src={grade4SpeakingReef}
-                          alt="Coral reef with fish"
-                          className="h-40 sm:h-48 w-full object-cover bg-white rounded-xl border border-slate-200 shadow-xs"
-                        />
-                        <span className="text-[10px] font-bold text-slate-600 mt-1">
-                          1. Coral Reef
-                        </span>
-                      </div>
-                      <div className="flex flex-col items-center">
-                        <img
-                          src={grade4SpeakingShark}
-                          alt="Shark swimming in deep water"
-                          className="h-40 sm:h-48 w-full object-cover bg-white rounded-xl border border-slate-200 shadow-xs"
-                        />
-                        <span className="text-[10px] font-bold text-slate-600 mt-1">
-                          2. Shark in Deep Sea
-                        </span>
-                      </div>
-                    </div>
-                  ) : isGrade3Stage ? (
-                    <div className="grid grid-cols-3 gap-1.5 p-2 bg-slate-50">
-                      <div className="flex flex-col items-center">
-                        <img
-                          src={grade3SpeakingTable}
-                          alt="Conversation at table"
-                          className="h-40 sm:h-48 w-full object-contain bg-white rounded-xl border border-slate-200 shadow-xs p-1"
-                        />
-                        <span className="text-[10px] font-bold text-slate-600 mt-1">
-                          1. Conversation
-                        </span>
-                      </div>
-                      <div className="flex flex-col items-center">
-                        <img
-                          src={grade3SpeakingTablet}
-                          alt="Child with headphones and tablet"
-                          className="h-40 sm:h-48 w-full object-contain bg-white rounded-xl border border-slate-200 shadow-xs p-1"
-                        />
-                        <span className="text-[10px] font-bold text-slate-600 mt-1">
-                          2. Audio / Tablet
-                        </span>
-                      </div>
-                      <div className="flex flex-col items-center">
-                        <img
-                          src={grade3SpeakingRocket}
-                          alt="Rocket launch into space"
-                          className="h-40 sm:h-48 w-full object-contain bg-white rounded-xl border border-slate-200 shadow-xs p-1"
-                        />
-                        <span className="text-[10px] font-bold text-slate-600 mt-1">
-                          3. Space Launch
-                        </span>
-                      </div>
-                    </div>
-                  ) : isGrade2Stage ? (
-                    <div className="grid grid-cols-3 gap-1.5 p-2 bg-slate-50">
-                      <div className="flex flex-col items-center">
-                        <img
-                          src={grade2Pic1}
-                          alt="Classroom Discussion"
-                          className="h-40 sm:h-48 w-full object-cover rounded-xl border border-slate-200 shadow-xs"
-                        />
-                        <span className="text-[10px] font-bold text-slate-600 mt-1">
-                          1. Discussion
-                        </span>
-                      </div>
-                      <div className="flex flex-col items-center">
-                        <img
-                          src={grade2Pic2}
-                          alt="Girl at Board"
-                          className="h-40 sm:h-48 w-full object-cover rounded-xl border border-slate-200 shadow-xs"
-                        />
-                        <span className="text-[10px] font-bold text-slate-600 mt-1">
-                          2. Presentation
-                        </span>
-                      </div>
-                      <div className="flex flex-col items-center">
-                        <img
-                          src={grade2Pic3}
-                          alt="Reading Circle"
-                          className="h-40 sm:h-48 w-full object-cover rounded-xl border border-slate-200 shadow-xs"
-                        />
-                        <span className="text-[10px] font-bold text-slate-600 mt-1">
-                          3. Reading Circle
-                        </span>
-                      </div>
-                    </div>
-                  ) : (
-                    <img
-                      src={activePromptImage}
-                      alt={isGrade1Stage ? "Paul and Grandma Story" : "Family dinner prompt"}
-                      className={`w-full ${isGrade1Stage ? 'h-64 sm:h-72 object-contain bg-slate-100 p-1' : 'h-56 sm:h-64 object-cover'} object-center`}
-                    />
-                  )}
-                  <div className="absolute inset-0 bg-violet-900/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <span className="bg-white/90 text-violet-900 text-xs font-extrabold px-3 py-1.5 rounded-xl shadow-md">
-                      🔍 Tap to Zoom Prompt
-                    </span>
-                  </div>
-                </div>
-                <span className="text-[11px] font-bold text-slate-500 mt-2 text-center">
-                  {isGrade5Stage
-                    ? "Story Prompts (1. Walking to the Mountain, 2. On the Cliff, 3. Paragliding)"
-                    : isGrade4Stage
-                    ? "Story Prompts (1. Coral Reef with Fish, 2. Shark in Deep Water)"
-                    : isGrade3Stage
-                    ? "Story Prompts (Table Discussion, Audio Learning, Rocket Launch)"
-                    : isGrade2Stage
-                    ? "Classroom Story (3 Sequential Pictures)"
-                    : isGrade1Stage
-                    ? "Paul & Grandma 5-Picture Story"
-                    : "Picture Prompt (Family at Table)"}
-                </span>
-              </div>
-            </div>
-          </div>
         </div>
 
         {/* Modal for Full Picture Zoom */}
@@ -1152,10 +949,36 @@ export default function PrimarySpeakingAssessmentForm() {
                         alt={pic.alt}
                         className="w-full max-h-[60vh] object-contain rounded-2xl border"
                       />
-                      <figcaption className="text-xs font-bold text-slate-600 mt-1.5">
-                        {pic.label}
-                      </figcaption>
                     </figure>
+                  ))}
+                </div>
+              ) : isGrade4Stage ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {[
+                    { src: grade4SpeakingReef, alt: "Coral reef with colourful fish" },
+                    { src: grade4SpeakingShark, alt: "Shark swimming through kelp" },
+                  ].map((pic) => (
+                    <img
+                      key={pic.alt}
+                      src={pic.src}
+                      alt={pic.alt}
+                      className="w-full max-h-[70vh] object-cover rounded-2xl border"
+                    />
+                  ))}
+                </div>
+              ) : isGrade3Stage ? (
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {[
+                    { src: grade3SpeakingTable, alt: "Two people talking at a table" },
+                    { src: grade3SpeakingTablet, alt: "Child with headphones holding a tablet" },
+                    { src: grade3SpeakingRocket, alt: "Rocket launching into space" },
+                  ].map((pic) => (
+                    <img
+                      key={pic.alt}
+                      src={pic.src}
+                      alt={pic.alt}
+                      className="w-full max-h-[60vh] object-contain rounded-2xl border bg-white"
+                    />
                   ))}
                 </div>
               ) : (
@@ -1165,19 +988,6 @@ export default function PrimarySpeakingAssessmentForm() {
                   className="w-full max-h-[75vh] object-contain rounded-2xl border"
                 />
               )}
-              <p className="text-center text-xs text-slate-500 mt-3 font-semibold">
-                {isGrade5Stage
-                  ? "Show these 3 story pictures (1. Two people walking up a mountain path, 2. A person sitting on a cliff edge, 3. Paragliding over the forest) to the student."
-                  : isGrade4Stage
-                  ? "Show these 2 ocean story pictures (1. Coral reef with colourful fish, 2. Shark swimming in deep water kelp forest) to the student."
-                  : isGrade3Stage
-                  ? "Show these 3 story pictures (1. People discussing at table, 2. Child listening with headphones on tablet, 3. Rocket launch into space) to the student."
-                  : isGrade2Stage
-                  ? "Show these 3 classroom story pictures (1. Class discussion, 2. Girl presenting at chalkboard, 3. Reading circle on carpet) to the student."
-                  : isGrade1Stage
-                  ? "Show these 5 story pictures (1. Arrival with Grandma, 2. Tennis, 3. Walking, 4. Beach & horse, 5. Video game) to the student."
-                  : "Show this image clearly to the student while asking the 6 questions."}
-              </p>
             </div>
           </div>
         )}
@@ -1264,6 +1074,164 @@ export default function PrimarySpeakingAssessmentForm() {
                   <option value="T2">Term 2 (T2)</option>
                   <option value="T3">Term 3 (T3)</option>
                 </select>
+              </div>
+            </div>
+          </div>
+
+          {/* Picture Prompt & Instructions Box (Exact purple border from source image) */}
+          <div className="mt-8 border-3 border-violet-500 rounded-3xl p-5 sm:p-6 bg-slate-50/60 shadow-xs">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+              {/* Left Column: Instructions and Questions */}
+              <div className="lg:col-span-7 space-y-5">
+                <div>
+                  <h3 className="text-xs font-black uppercase tracking-wider text-violet-900 flex items-center gap-2 mb-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-violet-600"></span>
+                    {isGrade5Stage || isGrade4Stage || isGrade3Stage || isGrade2Stage || isGrade1Stage ? "Speaking Prompts" : "Instructions for assessor"}
+                  </h3>
+                  {isGrade5Stage ? (
+                    <p className="text-xs text-slate-700 font-bold">
+                      Show the student the 3 story pictures below. Ask each speaking prompt in order to assess story sequencing, description, and fluency.
+                    </p>
+                  ) : isGrade4Stage ? (
+                    <p className="text-xs text-slate-700 font-bold">
+                      Show the student the 2 ocean story pictures below. Ask each speaking prompt in order to assess story sequencing, description, and fluency.
+                    </p>
+                  ) : isGrade3Stage ? (
+                    <p className="text-xs text-slate-700 font-bold">
+                      Show the student the 3 story pictures below. Ask each speaking prompt in order to assess story sequencing, description, and fluency.
+                    </p>
+                  ) : isGrade2Stage ? (
+                    <p className="text-xs text-slate-700 font-bold">
+                      Show the student the 3 classroom story pictures below. Ask each speaking prompt in order to assess story sequencing, description, and fluency.
+                    </p>
+                  ) : isGrade1Stage ? (
+                    <p className="text-xs text-slate-700 font-bold">
+                      Show the student the 5 story pictures below. Ask each speaking prompt in order to assess story sequencing, description, and fluency.
+                    </p>
+                  ) : (
+                    <ul className="text-xs text-slate-700 font-bold space-y-1 list-disc list-inside">
+                      <li>Show the student the picture.</li>
+                      <li>Ask each question once only.</li>
+                      <li>Accept the first answer given.</li>
+                      <li>Do not probe or repeat.</li>
+                    </ul>
+                  )}
+                </div>
+
+                <div className="border-t border-slate-200/80 pt-4">
+                  <h4 className="text-xs font-black uppercase tracking-wider text-slate-900 mb-2">
+                    {isGrade2Stage || isGrade1Stage ? "Speaking Prompts:" : "Questions for the student"}
+                  </h4>
+                  <ul className="text-xs sm:text-sm text-slate-800 font-semibold space-y-2">
+                    {activeQuestions.map((q) => (
+                      <li key={q.id} className="flex items-start gap-2">
+                        <span className="text-violet-600 font-extrabold">
+                          {q.id}.
+                        </span>
+                        <span>{q.text}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+
+              {/* Right Column: Photo Prompt */}
+              <div className="lg:col-span-5 flex flex-col items-center">
+                <div
+                  onClick={() => setShowFullPicture(!showFullPicture)}
+                  className="cursor-pointer group relative rounded-2xl overflow-hidden border-2 border-violet-300 shadow-md bg-white transition-all hover:scale-102 hover:shadow-xl w-full"
+                  title="Click to view large prompt image"
+                >
+                  {isGrade5Stage ? (
+                    <div className="grid grid-cols-3 gap-1.5 p-2 bg-slate-50">
+                      {GRADE5_SPEAKING_PICTURES.map((pic) => (
+                        <div key={pic.label} className="flex flex-col items-center">
+                          <img
+                            src={pic.src}
+                            alt={pic.alt}
+                            className="h-40 sm:h-48 w-full object-cover rounded-xl border border-slate-200 shadow-xs"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  ) : isGrade4Stage ? (
+                    <div className="grid grid-cols-2 gap-2 p-2 bg-slate-50">
+                      <div className="flex flex-col items-center">
+                        <img
+                          src={grade4SpeakingReef}
+                          alt="Coral reef with fish"
+                          className="h-40 sm:h-48 w-full object-cover bg-white rounded-xl border border-slate-200 shadow-xs"
+                        />
+                      </div>
+                      <div className="flex flex-col items-center">
+                        <img
+                          src={grade4SpeakingShark}
+                          alt="Shark swimming in deep water"
+                          className="h-40 sm:h-48 w-full object-cover bg-white rounded-xl border border-slate-200 shadow-xs"
+                        />
+                      </div>
+                    </div>
+                  ) : isGrade3Stage ? (
+                    <div className="grid grid-cols-3 gap-1.5 p-2 bg-slate-50">
+                      <div className="flex flex-col items-center">
+                        <img
+                          src={grade3SpeakingTable}
+                          alt="Conversation at table"
+                          className="h-40 sm:h-48 w-full object-contain bg-white rounded-xl border border-slate-200 shadow-xs p-1"
+                        />
+                      </div>
+                      <div className="flex flex-col items-center">
+                        <img
+                          src={grade3SpeakingTablet}
+                          alt="Child with headphones and tablet"
+                          className="h-40 sm:h-48 w-full object-contain bg-white rounded-xl border border-slate-200 shadow-xs p-1"
+                        />
+                      </div>
+                      <div className="flex flex-col items-center">
+                        <img
+                          src={grade3SpeakingRocket}
+                          alt="Rocket launch into space"
+                          className="h-40 sm:h-48 w-full object-contain bg-white rounded-xl border border-slate-200 shadow-xs p-1"
+                        />
+                      </div>
+                    </div>
+                  ) : isGrade2Stage ? (
+                    <div className="grid grid-cols-3 gap-1.5 p-2 bg-slate-50">
+                      <div className="flex flex-col items-center">
+                        <img
+                          src={grade2Pic1}
+                          alt="Classroom Discussion"
+                          className="h-40 sm:h-48 w-full object-cover rounded-xl border border-slate-200 shadow-xs"
+                        />
+                      </div>
+                      <div className="flex flex-col items-center">
+                        <img
+                          src={grade2Pic2}
+                          alt="Girl at Board"
+                          className="h-40 sm:h-48 w-full object-cover rounded-xl border border-slate-200 shadow-xs"
+                        />
+                      </div>
+                      <div className="flex flex-col items-center">
+                        <img
+                          src={grade2Pic3}
+                          alt="Reading Circle"
+                          className="h-40 sm:h-48 w-full object-cover rounded-xl border border-slate-200 shadow-xs"
+                        />
+                      </div>
+                    </div>
+                  ) : (
+                    <img
+                      src={activePromptImage}
+                      alt={isGrade1Stage ? "Paul and Grandma Story" : "Family dinner prompt"}
+                      className={`w-full ${isGrade1Stage ? 'h-64 sm:h-72 object-contain bg-slate-100 p-1' : 'h-56 sm:h-64 object-cover'} object-center`}
+                    />
+                  )}
+                  <div className="absolute inset-0 bg-violet-900/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <span className="bg-white/90 text-violet-900 text-xs font-extrabold px-3 py-1.5 rounded-xl shadow-md">
+                      🔍 Tap to Zoom Prompt
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

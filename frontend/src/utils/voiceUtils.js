@@ -9,24 +9,24 @@ export const VOICE_OPTIONS = [
   {
     id: "american-female",
     gender: "female",
-    label: "American Accent (Female)",
-    shortLabel: "US Female",
-    flag: "🇺🇸",
+    label: "Female Voice",
+    shortLabel: "Female",
+    flag: "",
     avatar: "👩‍🏫",
-    desc: "Natural, articulate American Female Educator voice",
+    desc: "Natural, articulate female educator voice",
     sampleText:
-      "Hello! I am your AI Assessment Conductor. I will read the questions aloud in an American female voice.",
+      "Hello! I am your AI Assessment Conductor. I will read the questions aloud in a female voice.",
   },
   {
     id: "american-male",
     gender: "male",
-    label: "American Accent (Male)",
-    shortLabel: "US Male",
-    flag: "🇺🇸",
+    label: "Male Voice",
+    shortLabel: "Male",
+    flag: "",
     avatar: "👨‍🏫",
-    desc: "Clear, authoritative American Male Educator voice",
+    desc: "Clear, authoritative male educator voice",
     sampleText:
-      "Hello! I am your AI Assessment Conductor. I will read the questions aloud in an American male voice.",
+      "Hello! I am your AI Assessment Conductor. I will read the questions aloud in a male voice.",
   },
 ];
 

@@ -13,7 +13,7 @@ const SECONDARY_ASSESSMENTS = [
     subtitle: "Part 1",
     stage: "Secondary",
     tag: "Year 7–13 · Grade 6–12",
-    desc: "13 personal questions with CEFR level scoring (A1–C2). Max score: 26.",
+    desc: "13 personal questions with oral evaluation and scoring assessment.",
     icon: (
       <svg
         className="w-6 h-6"
@@ -40,10 +40,10 @@ const SECONDARY_ASSESSMENTS = [
   {
     id: "speaking",
     title: "Speaking Assessment",
-    subtitle: "Junior & Senior",
+    subtitle: "Secondary",
     stage: "Secondary",
     tag: "Year 7–13 · Grade 6–12",
-    desc: "6 comprehension questions with picture prompts. CEFR scoring (A1–C2). Max score: 12.",
+    desc: "Comprehension questions with picture prompts.",
     icon: (
       <svg
         className="w-6 h-6"
@@ -70,10 +70,10 @@ const SECONDARY_ASSESSMENTS = [
   {
     id: "reading",
     title: "Reading Assessment",
-    subtitle: "Junior & Senior",
+    subtitle: "Secondary",
     stage: "Secondary",
     tag: "Year 7–13 · Grade 6–12",
-    desc: "Reading accuracy with story passages. CEFR scoring based on decoding, blending, and fluency.",
+    desc: "Reading passages, accuracy scoring.",
     icon: (
       <svg
         className="w-6 h-6"
@@ -100,10 +100,10 @@ const SECONDARY_ASSESSMENTS = [
   {
     id: "writing",
     title: "Writing Assessment",
-    subtitle: "Junior & Senior",
+    subtitle: "Secondary",
     stage: "Secondary",
     tag: "Year 7–13 · Grade 6–12",
-    desc: "Writing quality with picture prompts. CEFR scoring for narrative and sentence structure.",
+    desc: "Picture stimulus for students to write a story and discussion.",
     icon: (
       <svg
         className="w-6 h-6"
@@ -139,7 +139,7 @@ const PRIMARY_ASSESSMENTS = [
     subtitle: "FS1 · FS2 · KG2 · Year 2 · Year 3",
     stage: "Primary",
     tag: "FS1 · FS2 · KG2 · Year 2 · Year 3",
-    desc: "10 personal questions with oral evaluation and CEFR scoring across FS1, FS2, KG2, Grade 1 / Year 2, and Grade 2 / Year 3.",
+    desc: "10 personal questions with oral evaluation and scoring assessment.",
     icon: (
       <svg
         className="w-6 h-6"
@@ -169,7 +169,7 @@ const PRIMARY_ASSESSMENTS = [
     subtitle: "FS1 · FS2 · KG2 · Year 2",
     stage: "Primary",
     tag: "FS1 · FS2 · KG2 · Year 2",
-    desc: "Comprehension questions with picture prompts, sequential stories, and CEFR level evaluation across FS1, FS2, KG2, and Grade 1 / Year 2.",
+    desc: "Comprehension questions with picture prompts.",
     icon: (
       <svg
         className="w-6 h-6"
@@ -199,7 +199,7 @@ const PRIMARY_ASSESSMENTS = [
     subtitle: "FS1 · FS2 · KG2 · Year 2",
     stage: "Primary",
     tag: "FS1 · FS2 · KG2 · Year 2",
-    desc: "Decodable reading passages, accuracy scoring (/10), fluency metrics, and CEFR level scoring across FS1 to Grade 1 / Year 2.",
+    desc: "Decodable reading passages, accuracy scoring.",
     icon: (
       <svg
         className="w-6 h-6"
@@ -229,7 +229,7 @@ const PRIMARY_ASSESSMENTS = [
     subtitle: "FS1 · FS2 · KG2 · Year 2",
     stage: "Primary",
     tag: "FS1 · FS2 · KG2 · Year 2",
-    desc: "FS1 & Grade 1 / Year 2 word prompts, FS2 & KG2 picture story with AI-assisted evaluation and CEFR rubric.",
+    desc: "Picture stimulus for students to write a story and discussion.",
     icon: (
       <svg
         className="w-6 h-6"
@@ -259,7 +259,7 @@ const PRIMARY_ASSESSMENTS = [
     subtitle: "FS1 · FS2 · KG2 · Year 2 (Phase 2–5)",
     stage: "Primary",
     tag: "FS1 · FS2 · KG2 · Year 2",
-    desc: "Systematic synthetic phonics across Phase 2, Phase 3, Phase 4 consonant blends, and Phase 5 alternative spellings.",
+    desc: "Phonics assessment across Phase 2, 3, 4 and 5.",
     icon: (
       <svg
         className="w-6 h-6"
@@ -306,7 +306,7 @@ export default function AssessmentSelector() {
     if (saved && (saved === "primary" || saved === "secondary")) {
       return saved;
     }
-    return "secondary";
+    return "primary";
   };
 
   const [selectedStage, setSelectedStage] = useState(getInitialStage);
@@ -469,26 +469,6 @@ export default function AssessmentSelector() {
         <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
           <div className="inline-flex bg-slate-200/80 p-1.5 rounded-2xl shadow-inner gap-1">
             <button
-              onClick={() => handleStageChange("secondary")}
-              className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-200 ${
-                selectedStage === "secondary"
-                  ? "bg-white text-blue-700 shadow-sm scale-[1.02]"
-                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/50"
-              }`}
-            >
-              <span>🎓 Secondary School</span>
-              <span
-                className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
-                  selectedStage === "secondary"
-                    ? "bg-blue-100 text-blue-800"
-                    : "bg-slate-300/80 text-slate-700"
-                }`}
-              >
-                {SECONDARY_ASSESSMENTS.length}
-              </span>
-            </button>
-
-            <button
               onClick={() => handleStageChange("primary")}
               className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-200 ${
                 selectedStage === "primary"
@@ -507,6 +487,26 @@ export default function AssessmentSelector() {
                 {PRIMARY_ASSESSMENTS.length} New
               </span>
             </button>
+
+            <button
+              onClick={() => handleStageChange("secondary")}
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-200 ${
+                selectedStage === "secondary"
+                  ? "bg-white text-blue-700 shadow-sm scale-[1.02]"
+                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/50"
+              }`}
+            >
+              <span>🎓 Secondary School</span>
+              <span
+                className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
+                  selectedStage === "secondary"
+                    ? "bg-blue-100 text-blue-800"
+                    : "bg-slate-300/80 text-slate-700"
+                }`}
+              >
+                {SECONDARY_ASSESSMENTS.length}
+              </span>
+            </button>
           </div>
 
           {/* Quick Notice Badge */}
@@ -523,13 +523,8 @@ export default function AssessmentSelector() {
           </div>
         </div>
 
-        {/* Assessment Cards Grid - 3 cards per row for primary */}
-        <div
-          className={`grid gap-6 ${
-            selectedStage === "primary"
-              ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
-              : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-4"
-          }`}
+        {/* Assessment Cards Grid - 4 cards per row (primary and secondary) */}
+        <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4"
         >
           {activeAssessments.map((a) => (
             <button
@@ -542,27 +537,19 @@ export default function AssessmentSelector() {
                 <div className={`h-2 ${a.color} opacity-85`} />
 
                 <div className="p-5 xl:p-6">
-                  {/* Icon + Tag row */}
+                  {/* Icon */}
                   <div className="flex items-start justify-between mb-5">
                     <div
                       className={`w-12 h-12 rounded-2xl flex items-center justify-center border shadow-xs ${a.lightColor}`}
                     >
                       {a.icon}
                     </div>
-                    <span className="text-[10px] font-black text-slate-500 bg-slate-100 border border-slate-200/80 px-2.5 py-1 rounded-full uppercase tracking-wider">
-                      {a.tag}
-                    </span>
                   </div>
 
-                  {/* Subtitle & Title */}
+                  {/* Title */}
                   <div className="mb-2">
-                    <span
-                      className={`text-[10px] font-black ${a.textColor} uppercase tracking-[0.18em]`}
-                    >
-                      {a.subtitle}
-                    </span>
                     <h3
-                      className={`text-xl font-black text-slate-900 ${a.hoverText} transition-colors leading-tight mt-1`}
+                      className={`text-xl font-black text-slate-900 ${a.hoverText} transition-colors leading-tight`}
                     >
                       {a.title}
                     </h3>

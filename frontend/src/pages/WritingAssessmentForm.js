@@ -138,7 +138,7 @@ export default function WritingAssessmentForm() {
             <span className="breadcrumb-sep">/</span>
             <button onClick={() => navigate('/assessment/writing')} className="hover:text-slate-700 transition-colors">Writing</button>
             <span className="breadcrumb-sep">/</span>
-            <span className="text-slate-700 font-medium">Junior — Assessor</span>
+            <span className="text-slate-700 font-medium">Year 7–9 — Assessor</span>
           </nav>
           <div className="flex items-start justify-between gap-4">
             <div>
@@ -156,47 +156,6 @@ export default function WritingAssessmentForm() {
 
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
 
-        {/* Instructions */}
-        <div className="info-banner">
-          <svg className="info-banner-icon w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
-          </svg>
-          <div>
-            <p className="font-semibold text-slate-800 mb-1">Instructions for assessor</p>
-            <ul className="text-slate-600 space-y-0.5 text-xs list-disc list-inside">
-              <li>Sit with the pupil in a calm, distraction-free space.</li>
-              <li>Ask the pupil to write paragraphs / sentences for these pictures.</li>
-              <li>Use the questions below to prompt the student.</li>
-              <li>Allow 10 minutes for student to write.</li>
-            </ul>
-          </div>
-        </div>
-
-
-        {/* Picture prompts */}
-        <div className="card-section">
-          <h2 className="section-heading">
-            <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
-            </svg>
-            Picture Prompts
-          </h2>
-          <div className="grid grid-cols-3 gap-3">
-            {PICTURES.map((src, i) => (
-              <div key={i} className="rounded-xl overflow-hidden border border-slate-200 aspect-video bg-slate-100">
-                <img src={src} alt={`Writing prompt ${i + 1}`} className="w-full h-full object-cover" />
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Questions — read aloud by AI, answers typed by the student */}
-        <WritingQuestions
-          questions={QUESTIONS}
-          answers={aiAnswers}
-          onAnswerChange={handleWritingAnswer}
-          note="Allow 10 minutes for the student to write."
-        />
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Student info */}
@@ -249,6 +208,48 @@ export default function WritingAssessmentForm() {
               </div>
             </div>
           </div>
+
+          {/* Instructions */}
+          <div className="info-banner">
+            <svg className="info-banner-icon w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
+            </svg>
+            <div>
+              <p className="font-semibold text-slate-800 mb-1">Instructions for assessor</p>
+              <ul className="text-slate-600 space-y-0.5 text-xs list-disc list-inside">
+                <li>Sit with the pupil in a calm, distraction-free space.</li>
+                <li>Ask the pupil to write paragraphs / sentences for these pictures.</li>
+                <li>Use the questions below to prompt the student.</li>
+                <li>Allow 10 minutes for student to write.</li>
+              </ul>
+            </div>
+          </div>
+
+
+          {/* Picture prompts */}
+          <div className="card-section">
+            <h2 className="section-heading">
+              <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+              </svg>
+              Picture Prompts
+            </h2>
+            <div className="grid grid-cols-3 gap-3">
+              {PICTURES.map((src, i) => (
+                <div key={i} className="rounded-xl overflow-hidden border border-slate-200 aspect-video bg-slate-100">
+                  <img src={src} alt={`Writing prompt ${i + 1}`} className="w-full h-full object-cover" />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Questions — read aloud by AI, answers typed by the student */}
+          <WritingQuestions
+            questions={QUESTIONS}
+            answers={aiAnswers}
+            onAnswerChange={handleWritingAnswer}
+            note="Allow 10 minutes for the student to write."
+          />
 
           {/* Scoring */}
           <div className="card-section">

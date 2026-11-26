@@ -21,6 +21,63 @@ const STOP_OTHERS_EVENT = 'voice-dictation-start';
 let activeDictationId = null;
 let nextDictationId = 1;
 
+// Quiet-voice support: the mic is opened with the browser's automatic gain control
+// and noise suppression, then amplified (with a limiter so loud pupils don't distort).
+// Browsers that accept an audio track in recognition.start(track) hear the boosted
+// signal directly; others ignore the extra argument, but still benefit from the
+// browser's auto-gain raising the microphone input level while the mic is open.
+const MIC_BOOST_GAIN = 3;
+
+async function openBoostedMic() {
+    if (!navigator.mediaDevices?.getUserMedia) return null;
+    const stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+            autoGainControl: true,
+            noiseSuppression: true,
+            echoCancellation: true,
+            channelCount: 1,
+        },
+    });
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if (!Ctx) return { stream, ctx: null, track: stream.getAudioTracks()[0] || null };
+    const ctx = new Ctx();
+    const source = ctx.createMediaStreamSource(stream);
+    const gain = ctx.createGain();
+    gain.gain.value = MIC_BOOST_GAIN;
+    const limiter = ctx.createDynamicsCompressor();
+    limiter.threshold.value = -12;
+    limiter.knee.value = 6;
+    limiter.ratio.value = 12;
+    limiter.attack.value = 0.003;
+    limiter.release.value = 0.25;
+    const dest = ctx.createMediaStreamDestination();
+    source.connect(gain).connect(limiter).connect(dest);
+    if (ctx.state === 'suspended') {
+        try { await ctx.resume(); } catch (e) { /* ignore */ }
+    }
+    return { stream, ctx, track: dest.stream.getAudioTracks()[0] || null };
+}
+
+function closeBoostedMic(mic) {
+    if (!mic) return;
+    try { mic.stream.getTracks().forEach((t) => t.stop()); } catch (e) { /* ignore */ }
+    try { if (mic.track) mic.track.stop(); } catch (e) { /* ignore */ }
+    try { if (mic.ctx) mic.ctx.close(); } catch (e) { /* ignore */ }
+}
+
+// Start recognition on the boosted track where supported, falling back to the default mic
+function startRecognition(recognition, track) {
+    if (track) {
+        try {
+            recognition.start(track);
+            return;
+        } catch (e) {
+            if (e && e.name === 'InvalidStateError') throw e; // already running
+        }
+    }
+    recognition.start();
+}
+
 export default function VoiceDictation({
     onInterimResult,
     onStart,
@@ -43,6 +100,7 @@ export default function VoiceDictation({
     const restartTimeoutRef = useRef(null);
     const silenceTimeoutRef = useRef(null);
     const idRef = useRef(null);
+    const micRef = useRef(null);
     if (idRef.current === null) idRef.current = nextDictationId++;
 
     // Keep the latest callbacks in refs so parent re-renders (which create new function
@@ -70,6 +128,8 @@ export default function VoiceDictation({
                 // ignore
             }
         }
+        closeBoostedMic(micRef.current);
+        micRef.current = null;
         setIsListening(false);
     };
 
@@ -160,7 +220,7 @@ export default function VoiceDictation({
                 restartTimeoutRef.current = setTimeout(() => {
                     if (isListeningRef.current && recognitionRef.current) {
                         try {
-                            recognitionRef.current.start();
+                            startRecognition(recognitionRef.current, micRef.current?.track);
                         } catch (err) {
                             // If already started or starting, ignore
                         }
@@ -182,6 +242,8 @@ export default function VoiceDictation({
             } catch (e) {
                 // ignore
             }
+            closeBoostedMic(micRef.current);
+            micRef.current = null;
         };
     }, []);
 
@@ -200,10 +262,23 @@ export default function VoiceDictation({
             setIsListening(true);
             isListeningRef.current = true;
 
-            const begin = () => {
+            const begin = async () => {
                 if (!isListeningRef.current || !recognitionRef.current) return;
+                if (!micRef.current) {
+                    try {
+                        micRef.current = await openBoostedMic();
+                    } catch (e) {
+                        micRef.current = null; // fall back to the default mic
+                    }
+                    // Pupil may have clicked stop while the mic was opening
+                    if (!isListeningRef.current) {
+                        closeBoostedMic(micRef.current);
+                        micRef.current = null;
+                        return;
+                    }
+                }
                 try {
-                    recognitionRef.current.start();
+                    startRecognition(recognitionRef.current, micRef.current?.track);
                     resetSilenceTimerRef.current();
                 } catch (e) {
                     console.error('Error starting speech recognition:', e);

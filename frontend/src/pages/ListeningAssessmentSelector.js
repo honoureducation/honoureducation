@@ -21,7 +21,7 @@ const OPTIONS = [
   {
     id: 'part2-junior',
     subtitle: 'Part 2',
-    title: 'Listening Comprehension (Junior)',
+    title: 'Listening Comprehension',
     tag: 'Year 7–9 · Grade 6–8',
     desc: 'Standard paragraph comprehension — 4 questions based on a short passage. Max score: 8.',
     color: 'bg-cyan-500',
@@ -36,7 +36,7 @@ const OPTIONS = [
   {
     id: 'part2-senior',
     subtitle: 'Part 2',
-    title: 'Listening Comprehension (Senior)',
+    title: 'Listening Comprehension',
     tag: 'Year 10–13 · Grade 9–12',
     desc: 'Standard paragraph comprehension — 10 questions based on an extended passage. Max score: 20.',
     color: 'bg-cyan-500',
