@@ -78,27 +78,28 @@ export default function Home() {
         <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-600 rounded-full filter blur-3xl opacity-10 animate-blob" />
         <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-violet-600 rounded-full filter blur-3xl opacity-10 animate-blob animation-delay-2000" />
 
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 md:py-32">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-12 md:gap-8">
-            <div className="max-w-3xl md:max-w-xl lg:max-w-2xl flex-1 text-center md:text-left">
-              <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-600/20 border border-blue-500/30 text-blue-300 text-xs font-semibold mb-6">
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 sm:pt-10 lg:pt-12 pb-16 sm:pb-20 lg:pb-24">
+          <div className="flex flex-col-reverse lg:flex-row items-center justify-between gap-10 lg:gap-12">
+            <div className="w-full max-w-2xl lg:max-w-none lg:flex-1 min-w-0 text-center lg:text-left">
+              <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-600/20 border border-blue-500/30 text-blue-300 text-xs font-semibold mb-5">
                 <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
                 Student Assessment Platform
               </span>
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight tracking-tight mb-4">
-                Multilingual <br />
+              <h1 className="text-[2rem] leading-[1.1] sm:text-5xl lg:text-[3.25rem] xl:text-6xl font-bold text-white tracking-tight mb-4 break-words">
+                Multilingual{" "}
+                <br className="hidden sm:block" />
                 <span className="text-blue-400">Mapping Programme</span>
               </h1>
-              <p className="text-xl md:text-2xl font-medium text-slate-300 mb-6">
+              <p className="text-lg sm:text-xl lg:text-2xl font-medium text-slate-300 mb-4 sm:mb-5">
                 Assess students the right way.
               </p>
-              <p className="text-lg text-slate-400 mb-10 max-w-xl leading-relaxed mx-auto md:mx-0">
-                A comprehensive assessment platform for educators to assess and evaluate student language proficiency and progress across Reading, writing, listening and speaking. CEFR Aligned of scores.
+              <p className="text-base sm:text-lg text-slate-400 mb-8 sm:mb-10 max-w-xl leading-relaxed mx-auto lg:mx-0">
+                A comprehensive assessment platform for educators to assess and evaluate student language proficiency and progress across reading, writing, listening and speaking, with CEFR-aligned scores.
               </p>
-              <div className="flex flex-wrap gap-3 justify-center md:justify-start">
+              <div className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start">
                 <Link
                   to="/assessments"
-                  className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl transition-colors shadow-lg shadow-blue-900/30"
+                  className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl transition-colors shadow-lg shadow-blue-900/30"
                 >
                   Start an Assessment
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -107,21 +108,21 @@ export default function Home() {
                 </Link>
                 <Link
                   to="/records"
-                  className="inline-flex items-center gap-2 px-6 py-3 bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold rounded-xl border border-slate-700 transition-colors"
+                  className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold rounded-xl border border-slate-700 transition-colors"
                 >
                   View Records
                 </Link>
               </div>
             </div>
 
-            <div className="flex-1 flex justify-center md:justify-end animate-fade-in-up">
+            <div className="shrink-0 flex justify-center lg:justify-end animate-fade-in-up">
               <div className="relative">
                 {/* Decorative circle behind logo */}
                 <div className="absolute inset-0 bg-blue-600/10 rounded-full blur-2xl transform scale-110" />
                 <img 
                   src={logo} 
                   alt="Honour Education Logo" 
-                  className="h-48 sm:h-64 md:h-80 lg:h-[400px] w-auto object-contain relative z-10 drop-shadow-[0_0_20px_rgba(37,99,235,0.15)] hover:scale-105 transition-transform duration-500 rounded-full border-4 border-white/10" 
+                  className="h-40 sm:h-56 lg:h-72 xl:h-[360px] w-auto object-contain relative z-10 drop-shadow-[0_0_20px_rgba(37,99,235,0.15)] hover:scale-105 transition-transform duration-500 rounded-full border-4 border-white/10" 
                 />
               </div>
             </div>

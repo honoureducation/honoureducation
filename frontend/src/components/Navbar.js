@@ -58,6 +58,22 @@ export default function Navbar() {
   // Close mobile menu on route change
   useEffect(() => { setIsOpen(false); }, [location]);
 
+  // Sidebar: lock page scroll while open, close on Esc or when the screen gets wide
+  useEffect(() => {
+    if (!isOpen) return undefined;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const onKey = (e) => { if (e.key === 'Escape') setIsOpen(false); };
+    const onResize = () => { if (window.innerWidth >= 1024) setIsOpen(false); };
+    window.addEventListener('keydown', onKey);
+    window.addEventListener('resize', onResize);
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      window.removeEventListener('keydown', onKey);
+      window.removeEventListener('resize', onResize);
+    };
+  }, [isOpen]);
+
   const isActive = (to) =>
     to === '/' ? location.pathname === '/' : location.pathname.startsWith(to);
 
@@ -86,6 +102,7 @@ export default function Navbar() {
   });
 
   return (
+    <>
     <nav
       className={`sticky top-0 z-50 transition-all duration-300 ${scrolled
           ? 'bg-slate-900/95 backdrop-blur-md shadow-xl border-b border-white/5'
@@ -96,28 +113,28 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-16">
 
           {/* Brand */}
-          <Link to={user ? getDashboardRoute() : "/"} className="flex items-center gap-3 group">
-            <div className="h-10 flex items-center justify-center transition-transform duration-300 group-hover:scale-105">
+          <Link to={user ? getDashboardRoute() : "/"} className="flex items-center gap-2.5 group shrink-0 min-w-0">
+            <div className="h-9 sm:h-10 shrink-0 flex items-center justify-center transition-transform duration-300 group-hover:scale-105">
               <img src={logo} alt="Honour Education Logo" className="h-full w-auto object-contain drop-shadow-lg" />
             </div>
-            <div className="hidden sm:block">
-              <span className="text-white font-black text-lg leading-none tracking-tight">Honour Education</span>
-              <span className="block text-blue-400 text-[10px] font-bold uppercase tracking-[0.2em] leading-none mt-1">Multilingual Mapping Programme</span>
+            <div className="hidden sm:block lg:hidden xl:block">
+              <span className="block text-white font-black text-base lg:text-lg leading-none tracking-tight whitespace-nowrap">Honour Education</span>
+              <span className="block text-blue-400 text-[9px] lg:text-[10px] font-bold uppercase tracking-[0.18em] leading-none mt-1 whitespace-nowrap">Multilingual Mapping Programme</span>
             </div>
           </Link>
 
           {/* Desktop nav */}
-          <div className="hidden md:flex items-center gap-1">
+          <div className="hidden lg:flex items-center gap-0.5 mx-2 xl:mx-4 min-w-0">
             {visibleNavLinks.map(({ to, label, icon }) => (
               <Link
                 key={to}
                 to={to}
-                className={`px-4 py-2 rounded-xl text-sm font-bold transition-all duration-200 flex items-center gap-2 group ${isActive(to)
+                className={`px-2.5 xl:px-3 py-2 rounded-xl text-[13px] xl:text-sm font-bold whitespace-nowrap transition-all duration-200 flex items-center gap-1.5 group ${isActive(to)
                     ? 'bg-blue-600/10 text-blue-400 border border-blue-500/20'
                     : 'text-slate-400 hover:text-white hover:bg-slate-800'
                   }`}
               >
-                {icon && <span className={`transition-colors ${isActive(to) ? 'text-blue-400' : 'text-slate-500 group-hover:text-white'}`}>{icon}</span>}
+                {icon && <span className={`hidden 2xl:inline transition-colors ${isActive(to) ? 'text-blue-400' : 'text-slate-500 group-hover:text-white'}`}>{icon}</span>}
                 {label}
               </Link>
             ))}
@@ -125,16 +142,16 @@ export default function Navbar() {
           </div>
 
           {/* Right actions */}
-          <div className="hidden md:flex items-center gap-3">
+          <div className="hidden lg:flex items-center gap-3 shrink-0">
             {user ? (
-              <div className="flex items-center gap-3 pl-4 border-l border-slate-800">
+              <div className="flex items-center gap-3 pl-2 xl:pl-3 border-l border-slate-800">
                 {/* User Menu */}
                 <div className="relative group">
-                  <button className="flex items-center gap-3 px-3 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 transition-all border border-transparent hover:border-slate-700">
+                  <button className="flex items-center gap-2 xl:gap-3 px-2 xl:px-3 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 transition-all border border-transparent hover:border-slate-700">
                     <div className="w-7 h-7 bg-gradient-to-tr from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center text-xs font-black text-white shadow-inner">
                       {user.firstName?.[0]}{user.lastName?.[0]}
                     </div>
-                    <div className="text-left">
+                    <div className="text-left hidden 2xl:block">
                       <p className="text-xs font-bold text-white leading-none">{user.firstName}</p>
                       <p className="text-[10px] text-slate-500 leading-none mt-1 uppercase font-black">
                         {['admin', 'platform_admin', 'school_admin'].includes(user?.role) ? 'Admin' : 'Teacher'}
@@ -215,7 +232,7 @@ export default function Navbar() {
 
           {/* Mobile hamburger */}
           <button
-            className="md:hidden p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+            className="lg:hidden p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
             onClick={() => setIsOpen(!isOpen)}
             aria-label="Toggle menu"
           >
@@ -231,83 +248,116 @@ export default function Navbar() {
           </button>
         </div>
 
-        {/* Mobile menu */}
-        {isOpen && (
-          <div className="md:hidden border-t border-slate-800 py-6 space-y-2 animate-fade-in bg-slate-900 absolute left-0 right-0 px-4 shadow-2xl z-50">
-            {visibleNavLinks.map(({ to, label, icon }) => (
-              <Link
-                key={to}
-                to={to}
-                className={`flex items-center gap-3 px-4 py-4 rounded-2xl text-sm font-bold transition-colors ${isActive(to)
-                    ? 'bg-blue-600/10 text-blue-400 border border-blue-500/20 shadow-lg shadow-blue-900/20'
-                    : 'text-slate-300 hover:text-white hover:bg-slate-800'
-                  }`}
-              >
-                {icon && <span className={isActive(to) ? 'text-blue-400' : 'text-slate-500'}>{icon}</span>}
-                {label}
-              </Link>
-            ))}
-
-            {user ? (
-              <div className="pt-6 border-t border-slate-800 mt-6">
-                <div className="flex items-center gap-4 px-4 py-4 bg-slate-800/50 rounded-2xl mb-6">
-                  <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center text-sm font-black text-white">
-                    {user.firstName?.[0]}{user.lastName?.[0]}
-                  </div>
-                  <div className="overflow-hidden">
-                    <p className="text-sm font-black text-white truncate">{user.fullName}</p>
-                    <p className="text-xs text-slate-500 truncate mt-0.5">{user.email}</p>
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <Link
-                    to={getDashboardRoute()}
-                    className="flex flex-col items-center gap-2 px-4 py-5 bg-slate-800 hover:bg-slate-700 rounded-2xl text-[10px] font-black uppercase tracking-widest text-slate-300 transition-all active:scale-95"
-                  >
-                    <svg className="w-5 h-5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" />
-                    </svg>
-                    Dashboard
-                  </Link>
-                  <Link
-                    to="/profile"
-                    className="flex flex-col items-center gap-2 px-4 py-5 bg-slate-800 hover:bg-slate-700 rounded-2xl text-[10px] font-black uppercase tracking-widest text-slate-300 transition-all active:scale-95"
-                  >
-                    <svg className="w-5 h-5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                    </svg>
-                    Profile
-                  </Link>
-                </div>
-                <button
-                  onClick={handleLogout}
-                  className="w-full mt-4 flex items-center justify-center gap-3 px-4 py-4 bg-rose-500/10 text-rose-500 rounded-2xl text-sm font-black transition-all active:scale-95 border border-rose-500/20"
-                >
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                  </svg>
-                  Sign Out
-                </button>
-              </div>
-            ) : (
-              <div className="pt-6 border-t border-slate-800 mt-6 space-y-3">
-                <Link
-                  to="/login"
-                  className="block px-4 py-4 text-slate-300 hover:text-white hover:bg-slate-800 rounded-2xl text-sm font-black text-center border border-slate-800"
-                >
-                  Login
-                </Link>
-                <Link
-                  to="/register"
-                  className="block w-full text-center px-4 py-4 bg-blue-600 hover:bg-blue-500 text-white text-sm font-black rounded-2xl transition-all shadow-xl shadow-blue-600/10"
-                >
-                  Get Started
-                </Link>
-              </div>
-            )}
-          </div>
-        )}
       </div>
     </nav>
+      {/* Mobile / small-screen sidebar — slides over the page, doesn't move anything */}
+      <div
+        className={`lg:hidden fixed inset-0 z-[60] transition-opacity duration-300 ${isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
+        aria-hidden={!isOpen}
+      >
+        <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm" onClick={() => setIsOpen(false)} />
+        <aside
+          role="dialog"
+          aria-modal="true"
+          aria-label="Main menu"
+          className={`absolute top-0 right-0 h-full w-[85vw] max-w-sm bg-slate-900 border-l border-slate-800 shadow-2xl flex flex-col transition-transform duration-300 ease-out ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}
+        >
+          <div className="flex items-center justify-between gap-3 px-5 h-16 border-b border-slate-800 shrink-0">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <img src={logo} alt="" className="h-9 w-auto object-contain" />
+              <div className="min-w-0">
+                <span className="block text-white font-black text-base leading-none truncate">Honour Education</span>
+                <span className="block text-blue-400 text-[9px] font-bold uppercase tracking-[0.18em] leading-none mt-1 truncate">Multilingual Mapping Programme</span>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsOpen(false)}
+              className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors shrink-0"
+              aria-label="Close menu"
+            >
+              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          <div className="flex-1 overflow-y-auto px-4 py-5">
+          <div className="grid grid-cols-1 gap-1.5">
+          {visibleNavLinks.map(({ to, label, icon }) => (
+            <Link
+              key={to}
+              to={to}
+              className={`flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold transition-colors ${isActive(to)
+                  ? 'bg-blue-600/10 text-blue-400 border border-blue-500/20 shadow-lg shadow-blue-900/20'
+                  : 'text-slate-300 hover:text-white hover:bg-slate-800'
+                }`}
+            >
+              {icon && <span className={isActive(to) ? 'text-blue-400' : 'text-slate-500'}>{icon}</span>}
+              {label}
+            </Link>
+          ))}
+          </div>
+
+          {user ? (
+            <div className="pt-5 border-t border-slate-800 mt-5">
+              <div className="flex items-center gap-4 px-4 py-4 bg-slate-800/50 rounded-2xl mb-6">
+                <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center text-sm font-black text-white">
+                  {user.firstName?.[0]}{user.lastName?.[0]}
+                </div>
+                <div className="overflow-hidden">
+                  <p className="text-sm font-black text-white truncate">{user.fullName}</p>
+                  <p className="text-xs text-slate-500 truncate mt-0.5">{user.email}</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <Link
+                  to={getDashboardRoute()}
+                  className="flex flex-col items-center gap-2 px-4 py-5 bg-slate-800 hover:bg-slate-700 rounded-2xl text-[10px] font-black uppercase tracking-widest text-slate-300 transition-all active:scale-95"
+                >
+                  <svg className="w-5 h-5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" />
+                  </svg>
+                  Dashboard
+                </Link>
+                <Link
+                  to="/profile"
+                  className="flex flex-col items-center gap-2 px-4 py-5 bg-slate-800 hover:bg-slate-700 rounded-2xl text-[10px] font-black uppercase tracking-widest text-slate-300 transition-all active:scale-95"
+                >
+                  <svg className="w-5 h-5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                  Profile
+                </Link>
+              </div>
+              <button
+                onClick={handleLogout}
+                className="w-full mt-4 flex items-center justify-center gap-3 px-4 py-4 bg-rose-500/10 text-rose-500 rounded-2xl text-sm font-black transition-all active:scale-95 border border-rose-500/20"
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+                Sign Out
+              </button>
+            </div>
+          ) : (
+            <div className="pt-5 border-t border-slate-800 mt-5 space-y-3">
+              <Link
+                to="/login"
+                className="block px-4 py-4 text-slate-300 hover:text-white hover:bg-slate-800 rounded-2xl text-sm font-black text-center border border-slate-800"
+              >
+                Login
+              </Link>
+              <Link
+                to="/register"
+                className="block w-full text-center px-4 py-4 bg-blue-600 hover:bg-blue-500 text-white text-sm font-black rounded-2xl transition-all shadow-xl shadow-blue-600/10"
+              >
+                Get Started
+              </Link>
+            </div>
+          )}
+          </div>
+        </aside>
+      </div>
+    </>
   );
 }
