@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import VoiceDictation from "./VoiceDictation";
+import SpeechAccentPicker from "./SpeechAccentPicker";
 import {
   evaluateAnswer,
   LISTENING_PART_1_QUESTIONS,
@@ -660,7 +661,14 @@ export default function AIAssistantConductor({
                 }}
                 idleLabel={isReading ? "Start Reading" : undefined}
                 activeLabel={isReading ? "Listening… (Tap when finished)" : undefined}
+                // Reading: pick the guess that best fits the text, and give pupils
+                // time to pause and sound words out before the mic stops
+                preferText={isReading ? readingItems[currentIdx]?.text : undefined}
+                silenceMs={isReading ? 12000 : undefined}
               />
+            </div>
+            <div className="flex justify-end -mt-1">
+              <SpeechAccentPicker />
             </div>
             {isReading ? (
               <details className="group rounded-xl border border-slate-200 bg-white">

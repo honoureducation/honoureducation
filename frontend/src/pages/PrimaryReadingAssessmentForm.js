@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import StudentPicker from '../components/StudentPicker';
+import SpeechAccentPicker from '../components/SpeechAccentPicker';
 import { studentLabel, studentYearClass } from '../utils/students';
 import StageSelector, { PRIMARY_STAGES } from '../components/StageSelector';
 import { useNavigate, useSearchParams, useLocation, Link } from 'react-router-dom';
@@ -15,6 +16,9 @@ import {
   fluencyLabel,
   primaryPassageLevel,
   passageStatus,
+  passageMarksLevel,
+  passageMarksAccuracy,
+  passageMarksFluency,
   cvcLevel,
 } from '../utils/readingAutoScore';
 
@@ -150,6 +154,7 @@ const GRADE2_READING_PASSAGES = [
     passage: 'Lina carried a basket of apples to the table. She washed them, sliced them, and sprinkled sugar on top. The old woman tied on her shawl and took the apples to the little shed, pushing it through the small wooden door.',
     hint: 'Narrative opening · Past tense verbs (carried, washed, sliced, sprinkled, tied, took, pushing)',
     image: grade2ReadingKids,
+    fit: 'contain',
     imageCaption: 'Lina and Sami',
     imageLabel: 'Lina and Sami preparing the basket of apples',
     keywords: ['Lina', 'basket', 'apples', 'table', 'washed', 'sliced', 'sprinkled', 'sugar', 'shawl', 'shed', 'door'],
@@ -160,6 +165,7 @@ const GRADE2_READING_PASSAGES = [
     passage: 'But Sami tricked the old woman. When she asked him to show his hand, to check if he was strong enough, he held out a wooden spoon. The old woman felt the spoon.',
     hint: 'Dialogue setup · Character cunning · Phonics (tricked, asked, check, strong, wooden spoon)',
     image: grade2ReadingApples,
+    fit: 'contain',
     imageCaption: 'Apples garland',
     imageLabel: 'Apples and the clever trick with the wooden spoon',
     keywords: ['Sami', 'tricked', 'old woman', 'hand', 'strong', 'wooden spoon', 'felt'],
@@ -170,6 +176,7 @@ const GRADE2_READING_PASSAGES = [
     passage: '“Too weak, too weak!” she cried. “But I will still take you away!” She pulled Sami towards the dark shed. She pointed at Lina, who was stirring the pot of soup.',
     hint: 'Expressive speech marks · Tension building · Digraphs and vowel combinations',
     image: grade2ReadingWitch,
+    fit: 'contain',
     imageCaption: 'The old woman',
     imageLabel: 'The old woman with shawl pulling Sami towards shed',
     keywords: ['Too weak', 'take you away', 'pulled', 'dark shed', 'stirring', 'pot of soup'],
@@ -180,6 +187,7 @@ const GRADE2_READING_PASSAGES = [
     passage: '“You too! You will come with me!” she shouted. The pot bubbled and steamed as Lina looked at her brother.',
     hint: 'Climax / dramatic dialogue · Exclamation and descriptive verbs (bubbled, steamed)',
     image: grade2ReadingSpoon,
+    fit: 'contain',
     imageCaption: 'Wooden spoon & soup',
     imageLabel: 'Wooden spoon and bubbling pot of soup',
     keywords: ['come with me', 'shouted', 'bubbled', 'steamed', 'brother'],
@@ -193,6 +201,7 @@ const GRADE2_STIMULUS_PICTURES = [
     passageRef: 'Line 1',
     caption: 'Lina & Sami preparing apples',
     image: grade2ReadingKids,
+    fit: 'contain',
     desc: 'Lina washed them, sliced them, and sprinkled sugar on top.',
   },
   {
@@ -201,6 +210,7 @@ const GRADE2_STIMULUS_PICTURES = [
     passageRef: 'Line 2',
     caption: 'Apples & wooden spoon trick',
     image: grade2ReadingApples,
+    fit: 'contain',
     desc: 'Sami tricked the old woman with a wooden spoon.',
   },
   {
@@ -209,6 +219,7 @@ const GRADE2_STIMULUS_PICTURES = [
     passageRef: 'Line 3',
     caption: 'Old woman pulling Sami to shed',
     image: grade2ReadingWitch,
+    fit: 'contain',
     desc: 'Too weak, too weak! She pulled Sami towards the dark shed.',
   },
   {
@@ -217,6 +228,7 @@ const GRADE2_STIMULUS_PICTURES = [
     passageRef: 'Line 4',
     caption: 'Steaming soup pot & spoon',
     image: grade2ReadingSpoon,
+    fit: 'contain',
     desc: 'The pot bubbled and steamed as Lina looked at her brother.',
   },
 ];
@@ -265,6 +277,7 @@ const GRADE3_READING_PASSAGES = [
     passage: 'Mina stacked the loaves of bread on the wooden shelf. She brushed off the flour, cut the ends neatly, and wrapped them in paper.',
     hint: 'Narrative opening · Past tense regular and irregular verbs (stacked, brushed, cut, wrapped)',
     image: grade3ReadingBread,
+    fit: 'contain',
     imageCaption: 'Loaf of Bread',
     imageLabel: 'Loaf of bread freshly baked and wrapped',
     keywords: ['Mina', 'stacked', 'loaves', 'bread', 'wooden shelf', 'brushed', 'flour', 'cut', 'neatly', 'wrapped', 'paper'],
@@ -275,6 +288,7 @@ const GRADE3_READING_PASSAGES = [
     passage: 'The shop bell tinkled as a cold wind rushed inside. The tall man in the black coat stepped forward. He spoke softly, asking Mina to fetch the heaviest loaf. But when he reached out his hand, he held a stone hidden beneath his glove.',
     hint: 'Atmosphere · Phonics & dialogue cues (tinkled, cold wind, black coat, softly, heaviest, stone hidden beneath glove)',
     image: grade3ReadingGlove,
+    fit: 'contain',
     imageCaption: 'Man’s Glove',
     imageLabel: 'The tall man in the black coat with a hidden stone beneath his glove',
     keywords: ['shop bell', 'tinkled', 'cold wind', 'tall man', 'black coat', 'softly', 'heaviest loaf', 'stone', 'hidden', 'glove'],
@@ -285,6 +299,7 @@ const GRADE3_READING_PASSAGES = [
     passage: 'The baker’s wife frowned and tapped the stone. “Too hard, too hard!” she whispered. “But I will still take you with me!”',
     hint: 'Direct speech & conflict · Phonics (frowned, tapped, whispered, too hard, take you with me)',
     image: grade3ReadingStone,
+    fit: 'contain',
     imageCaption: 'Stone',
     imageLabel: 'The stone tapped by the baker’s wife',
     keywords: ['baker’s wife', 'frowned', 'tapped', 'stone', 'too hard', 'whispered', 'take you with me'],
@@ -295,6 +310,7 @@ const GRADE3_READING_PASSAGES = [
     passage: 'She pulled Mina by the wrist towards the back door. She pointed at Rafi, who was carrying a tray of milk. “You too! You will come with me!” she demanded.',
     hint: 'Action & urgency · Phonics & exclamations (pulled, wrist, back door, pointed, tray of milk, demanded)',
     image: grade3ReadingKids,
+    fit: 'contain',
     imageCaption: 'Mina & Rafi',
     imageLabel: 'Mina and Rafi at the bakery',
     keywords: ['pulled', 'wrist', 'back door', 'pointed', 'Rafi', 'tray of milk', 'demanded'],
@@ -305,6 +321,7 @@ const GRADE3_READING_PASSAGES = [
     passage: 'The milk sloshed in the cups as Rafi glanced at his sister, his eyes wide with fear.',
     hint: 'Emotional reaction · Descriptive verbs and imagery (sloshed, glanced, eyes wide with fear)',
     image: grade3ReadingMilk,
+    fit: 'contain',
     imageCaption: 'Sloshed Milk',
     imageLabel: 'The milk sloshed in the cups as Rafi glanced at his sister',
     keywords: ['milk', 'sloshed', 'cups', 'glanced', 'sister', 'eyes wide', 'fear'],
@@ -318,6 +335,7 @@ const GRADE3_STIMULUS_PICTURES = [
     passageRef: 'Line 1 & Line 4',
     caption: 'Mina & Rafi at the bakery',
     image: grade3ReadingKids,
+    fit: 'contain',
     desc: 'Mina stacked loaves of bread and Rafi carried a tray of milk.',
   },
   {
@@ -326,6 +344,7 @@ const GRADE3_STIMULUS_PICTURES = [
     passageRef: 'Line 1',
     caption: 'Loaves on the wooden shelf',
     image: grade3ReadingBread,
+    fit: 'contain',
     desc: 'Mina stacked the loaves of bread on the wooden shelf.',
   },
   {
@@ -334,6 +353,7 @@ const GRADE3_STIMULUS_PICTURES = [
     passageRef: 'Line 2',
     caption: 'Glove with hidden stone',
     image: grade3ReadingGlove,
+    fit: 'contain',
     desc: 'When he reached out his hand, he held a stone hidden beneath his glove.',
   },
   {
@@ -342,6 +362,7 @@ const GRADE3_STIMULUS_PICTURES = [
     passageRef: 'Line 2 & Line 3',
     caption: 'The hard stone',
     image: grade3ReadingStone,
+    fit: 'contain',
     desc: '“Too hard, too hard!” the baker’s wife whispered.',
   },
   {
@@ -350,6 +371,7 @@ const GRADE3_STIMULUS_PICTURES = [
     passageRef: 'Line 5',
     caption: 'Milk sloshing in cups',
     image: grade3ReadingMilk,
+    fit: 'contain',
     desc: 'The milk sloshed in the cups as Rafi glanced at his sister, eyes wide with fear.',
   },
   {
@@ -932,14 +954,28 @@ export default function PrimaryReadingAssessmentForm() {
   const readingAgg = isPassageStage
     ? aggregateReading(readingResults)
     : aggregateWordStatuses(itemStatuses);
-  const autoLevel = isPassageStage ? primaryPassageLevel(readingAgg) : cvcLevel(readingAgg);
-  const selectedLevel = manualLevel || autoLevel;
-  const isAutoLevel = !manualLevel && !!autoLevel;
   const passageStatuses = manualPassageStatuses.map(
     (s, i) => s || (isPassageStage && readingAgg.perItem[i] ? passageStatus(readingAgg.perItem[i]) : null),
   );
-  const kg2Accuracy = manualAccuracy ?? accuracyOutOf10(readingAgg) ?? '';
-  const kg2Fluency = manualFluency || fluencyLabel(readingAgg) || 'Smooth';
+  // Once the teacher marks any text (Accurate / Hesitation / Struggled), score
+  // from the marks — the AI's mark fills in any text the teacher left alone.
+  const markedPassages = passageStatuses.slice(0, activePassages.length);
+  const teacherMarkedPassage = manualPassageStatuses.slice(0, activePassages.length).some(Boolean);
+  const autoLevel = isPassageStage
+    ? teacherMarkedPassage
+      ? passageMarksLevel(markedPassages)
+      : primaryPassageLevel(readingAgg)
+    : cvcLevel(readingAgg);
+  const selectedLevel = manualLevel || autoLevel;
+  const isAutoLevel = !manualLevel && !!autoLevel;
+  const kg2Accuracy =
+    manualAccuracy ??
+    (teacherMarkedPassage ? passageMarksAccuracy(markedPassages) : accuracyOutOf10(readingAgg)) ??
+    '';
+  const kg2Fluency =
+    manualFluency ||
+    (teacherMarkedPassage ? passageMarksFluency(markedPassages) : fluencyLabel(readingAgg)) ||
+    'Smooth';
 
   // A different stage is a fresh assessment — drop the previous overrides
   useEffect(() => {
@@ -979,7 +1015,7 @@ export default function PrimaryReadingAssessmentForm() {
       type="button"
       key={pic.id}
       onClick={() => setPreviewImage(pic)}
-      title={pic.title || pic.caption}
+      title="Click to enlarge"
       className={`group relative rounded-xl overflow-hidden border border-slate-200 bg-white hover:border-emerald-500 hover:shadow-md transition-all shrink-0 ${sizeClass}`}
     >
       <img
@@ -1334,15 +1370,11 @@ export default function PrimaryReadingAssessmentForm() {
               className="bg-white rounded-3xl p-5 max-w-lg w-full shadow-2xl relative"
               onClick={(e) => e.stopPropagation()}
             >
+              {/* No title, caption or description — the picture must not give the pupil hints */}
               <div className="flex justify-between items-center mb-3">
-                <div>
-                  <span className="text-[11px] font-black text-emerald-600 uppercase tracking-wider block">
-                    {selectedStage} Reading Stimulus
-                  </span>
-                  <h3 className="text-base font-black text-slate-800">
-                    {previewImage.title || previewImage.caption}
-                  </h3>
-                </div>
+                <span className="text-[11px] font-black text-emerald-600 uppercase tracking-wider">
+                  {selectedStage} Reading Stimulus
+                </span>
                 <button
                   type="button"
                   onClick={() => setPreviewImage(null)}
@@ -1351,23 +1383,13 @@ export default function PrimaryReadingAssessmentForm() {
                   ✕
                 </button>
               </div>
-              <div className="rounded-2xl overflow-hidden border border-slate-200 bg-slate-100 mb-3 flex items-center justify-center">
+              <div className="rounded-2xl overflow-hidden border border-slate-200 bg-slate-100 flex items-center justify-center">
                 <img
                   src={previewImage.image}
-                  alt={previewImage.caption}
-                  className="w-full max-h-[60vh] object-contain mx-auto"
+                  alt=""
+                  className="w-full max-h-[70vh] object-contain mx-auto"
                 />
               </div>
-              {previewImage.caption && (
-                <p className="text-center font-serif text-lg font-bold text-slate-800">
-                  "{previewImage.caption}"
-                </p>
-              )}
-              {previewImage.desc && (
-                <p className="text-center text-xs text-slate-500 mt-1">
-                  {previewImage.desc}
-                </p>
-              )}
             </div>
           </div>
         )}
@@ -1679,73 +1701,6 @@ export default function PrimaryReadingAssessmentForm() {
                   );
                 })}
               </div>
-
-              {/* Teacher Notes Box (Exact from official KG2 / Year 1 sheet) */}
-              <div className="mt-6 p-6 bg-slate-50 border-2 border-slate-200 rounded-3xl space-y-4">
-                <div className="flex items-center gap-2">
-                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-600"></span>
-                  <h3 className="text-xs font-black uppercase tracking-wider text-slate-900">
-                    Teacher Notes (From Assessment Sheet)
-                  </h3>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* Accuracy */}
-                  <div className="bg-white p-4 rounded-2xl border border-slate-200">
-                    <label className="block text-xs font-extrabold text-slate-700 mb-1.5">
-                      Accuracy Score <span className="text-slate-400 font-normal">(___ / 10)</span>
-                    </label>
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="number"
-                        min="0"
-                        max="10"
-                        value={kg2Accuracy}
-                        onChange={(e) => setKg2Accuracy(e.target.value)}
-                        className="w-24 px-3.5 py-2 rounded-xl border border-slate-300 font-black text-base text-slate-900 text-center bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                      />
-                      <span className="text-xs font-bold text-slate-500">out of 10</span>
-                    </div>
-                  </div>
-
-                  {/* Fluency */}
-                  <div className="bg-white p-4 rounded-2xl border border-slate-200">
-                    <label className="block text-xs font-extrabold text-slate-700 mb-1.5">
-                      Fluency Level
-                    </label>
-                    <div className="flex flex-wrap gap-2">
-                      {['Smooth', 'Some hesitation', 'Many pauses'].map((fl) => (
-                        <button
-                          key={fl}
-                          type="button"
-                          onClick={() => setKg2Fluency(fl)}
-                          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                            kg2Fluency === fl
-                              ? 'bg-emerald-600 text-white shadow-xs font-black'
-                              : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                          }`}
-                        >
-                          {fl}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Comments */}
-                <div className="bg-white p-4 rounded-2xl border border-slate-200">
-                  <label className="block text-xs font-extrabold text-slate-700 mb-1.5">
-                    Teacher Comments
-                  </label>
-                  <textarea
-                    rows={2}
-                    value={kg2Comments}
-                    onChange={(e) => setKg2Comments(e.target.value)}
-                    placeholder="Enter observation notes, mis-sounded phonemes, or blending confidence..."
-                    className="w-full bg-slate-50 border border-slate-200 focus:border-emerald-500 focus:bg-white rounded-xl px-3.5 py-2 text-xs font-medium text-slate-800 transition-all focus:outline-none focus:ring-4 focus:ring-emerald-100"
-                  />
-                </div>
-              </div>
             </div>
           ) : (
             /* 6 CVC Reading Word Cards (Image 1) */
@@ -1779,9 +1734,12 @@ export default function PrimaryReadingAssessmentForm() {
                   <h3 className="text-xs font-black uppercase tracking-wider text-slate-700">
                     Reading Card
                   </h3>
-                  <span className="text-[11px] font-semibold text-slate-400">
-                    Point to each picture · pupil says the word and sounds it out
-                  </span>
+                  <div className="flex flex-wrap items-center gap-3">
+                    <span className="text-[11px] font-semibold text-slate-400">
+                      Point to each picture · pupil says the word and sounds it out
+                    </span>
+                    <SpeechAccentPicker />
+                  </div>
                 </div>
                 <div className="p-5 sm:p-8 bg-white grid grid-cols-2 sm:grid-cols-3 gap-x-6 gap-y-10">
                   {READING_ITEMS.map((item, idx) => {
@@ -1834,6 +1792,16 @@ export default function PrimaryReadingAssessmentForm() {
                             key={`${selectedStage}-${idx}`}
                             idleLabel={cvcHeard[idx] ? 'Read again' : 'Read'}
                             activeLabel="Listening…"
+                            preferText={item.word}
+                            tone={
+                              status === 'fluent'
+                                ? 'success'
+                                : status === 'support'
+                                ? 'warning'
+                                : status === 'error'
+                                ? 'error'
+                                : undefined
+                            }
                             onStart={() => {
                               setHeardFor(idx, '');
                               // a fresh answer replaces any earlier teacher override
@@ -2037,8 +2005,74 @@ export default function PrimaryReadingAssessmentForm() {
                 </tbody>
               </table>
             </div>
+          </div>
 
-            {/* Teaching Focus Notes */}
+          {/* Teacher Notes — always at the end, just above Submit */}
+          <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-xs space-y-4">
+            <h2 className="text-base font-black text-slate-900 flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-600"></span>
+              Teacher Notes
+            </h2>
+            {isPassageStage && (
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Accuracy */}
+                  <div className="bg-white p-4 rounded-2xl border border-slate-200">
+                    <label className="block text-xs font-extrabold text-slate-700 mb-1.5">
+                      Accuracy Score <span className="text-slate-400 font-normal">(___ / 10)</span>
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="number"
+                        min="0"
+                        max="10"
+                        value={kg2Accuracy}
+                        onChange={(e) => setKg2Accuracy(e.target.value)}
+                        className="w-24 px-3.5 py-2 rounded-xl border border-slate-300 font-black text-base text-slate-900 text-center bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                      />
+                      <span className="text-xs font-bold text-slate-500">out of 10</span>
+                    </div>
+                  </div>
+
+                  {/* Fluency */}
+                  <div className="bg-white p-4 rounded-2xl border border-slate-200">
+                    <label className="block text-xs font-extrabold text-slate-700 mb-1.5">
+                      Fluency Level
+                    </label>
+                    <div className="flex flex-wrap gap-2">
+                      {['Smooth', 'Some hesitation', 'Many pauses'].map((fl) => (
+                        <button
+                          key={fl}
+                          type="button"
+                          onClick={() => setKg2Fluency(fl)}
+                          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                            kg2Fluency === fl
+                              ? 'bg-emerald-600 text-white shadow-xs font-black'
+                              : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                          }`}
+                        >
+                          {fl}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Comments */}
+                <div className="bg-white p-4 rounded-2xl border border-slate-200">
+                  <label className="block text-xs font-extrabold text-slate-700 mb-1.5">
+                    Teacher Comments
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={kg2Comments}
+                    onChange={(e) => setKg2Comments(e.target.value)}
+                    placeholder="Enter observation notes, mis-sounded phonemes, or blending confidence..."
+                    className="w-full bg-slate-50 border border-slate-200 focus:border-emerald-500 focus:bg-white rounded-xl px-3.5 py-2 text-xs font-medium text-slate-800 transition-all focus:outline-none focus:ring-4 focus:ring-emerald-100"
+                  />
+                </div>
+              </>
+            )}
             <div>
               <label className="block text-xs font-extrabold text-slate-700 mb-1.5">
                 Teaching Focus & Next Steps

@@ -148,6 +148,44 @@ export function primaryPassageLevel(agg) {
   return 'B2–C1'; // no mistakes
 }
 
+/**
+ * Primary passages scored from the teacher's marks alone
+ * (✓ Accurate / ~ Hesitation-Errors / ✗ Struggled-Stop per text).
+ * Follows the "mistakes per line" rubric; only marked texts count.
+ *   all accurate                 → B2–C1      (no mistakes)
+ *   no struggled, some hesitant  → B1.2–B1.3  (1–2 mistakes per line)
+ *   up to 1 in 5 struggled       → A2.3–B1.1  (3–4 mistakes per line)
+ *   up to 2 in 5 struggled       → A2.0–A2.2  (over 5 mistakes per line)
+ *   more than that               → A1.0–A1.2  (majority mistakes)
+ */
+export function passageMarksLevel(statuses = []) {
+  const marked = statuses.filter(Boolean);
+  if (!marked.length) return null;
+  const struggled = marked.filter((s) => s === 'struggled').length;
+  const hesitant = marked.filter((s) => s === 'hesitant').length;
+  const share = struggled / marked.length;
+  if (struggled === 0) return hesitant === 0 ? 'B2–C1' : 'B1.2–B1.3';
+  if (share <= 0.2) return 'A2.3–B1.1';
+  if (share <= 0.4) return 'A2.0–A2.2';
+  return 'A1.0–A1.2';
+}
+
+/** Accuracy /10 from the teacher's marks (hesitant counts as half) */
+export function passageMarksAccuracy(statuses = []) {
+  const marked = statuses.filter(Boolean);
+  if (!marked.length) return null;
+  const pts = marked.reduce((n, s) => n + (s === 'accurate' ? 1 : s === 'hesitant' ? 0.5 : 0), 0);
+  return String(Math.round((pts / marked.length) * 10));
+}
+
+export function passageMarksFluency(statuses = []) {
+  const marked = statuses.filter(Boolean);
+  if (!marked.length) return null;
+  if (marked.includes('struggled')) return 'Many pauses';
+  if (marked.includes('hesitant')) return 'Some hesitation';
+  return 'Smooth';
+}
+
 export function passageStatus(item) {
   if (!item.read) return null;
   if (item.accuracy >= 95) return 'accurate';
@@ -155,22 +193,29 @@ export function passageStatus(item) {
   return 'struggled';
 }
 
-/** FS1 / FS2 CVC picture words: based on how many words were read correctly */
+/**
+ * FS1 / FS2 CVC picture words (6 words), following the sheet:
+ *   4+ errors                     → Pre-A1
+ *   6/6 fluent                    → B2–C1
+ *   5/6 fluent                    → B1.2–B1.3
+ *   4/6 fluent                    → A2.3–B1.1
+ *   3/6 fluent                    → A2.0–A2.2
+ *   fewer (e.g. support for all)  → A1.0–A1.2
+ * Support (sounded out) is not an error, but it isn't counted as fluent either.
+ * Words not read yet count as errors.
+ */
 export function cvcLevel(agg) {
   if (!agg.hasReading) return null;
-  // Words read with support (sounding out) count as half
-  const right = agg.perItem.reduce(
-    (n, p) => n + (p.read && p.errors === 0 ? (p.support ? 0.5 : 1) : 0),
-    0,
-  );
   const total = agg.perItem.length;
-  const share = total ? right / total : 0;
-  if (share === 1) return 'B2–C1';
-  if (share >= 0.8) return 'B1.2–B1.3';
-  if (share >= 0.6) return 'A2.3–B1.1';
-  if (share >= 0.45) return 'A2.0–A2.2';
-  if (share > 0) return 'A1.0–A1.2';
-  return 'Pre-A1';
+  const fluent = agg.perItem.filter((p) => p.read && p.errors === 0 && !p.support).length;
+  const support = agg.perItem.filter((p) => p.read && p.errors === 0 && p.support).length;
+  const errors = total - fluent - support;
+  if (errors >= 4) return 'Pre-A1';
+  if (fluent === total) return 'B2–C1';
+  if (fluent === total - 1) return 'B1.2–B1.3';
+  if (fluent === total - 2) return 'A2.3–B1.1';
+  if (fluent === total - 3) return 'A2.0–A2.2';
+  return 'A1.0–A1.2';
 }
 
 export function cvcStatus(item) {

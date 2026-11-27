@@ -154,6 +154,37 @@ const FS1_WRITING_ITEMS = [
   },
 ];
 
+// ------------------------------------------
+// FS1 scoring — out of 12, as on the FS1 sheet. 12 = the letters the pupil
+// writes: h_ _ (2), d_ _ (2), s_ _ (2), we_ (1), b_ _ (2), _ _ _ (3).
+// One mark per correct letter.
+// ------------------------------------------
+const FS1_TOTAL = FS1_WRITING_ITEMS.reduce(
+  (n, item) => n + item.slots.filter((s) => !s.isFixed).length,
+  0,
+);
+
+const fs1WordLetters = (item, written = [], status) => {
+  const open = item.slots
+    .map((slot, i) => ({ slot, i }))
+    .filter(({ slot }) => !slot.isFixed);
+  if (status === "correct") return open.length;
+  const right = open.filter(({ slot, i }) => (written[i] || "").toLowerCase() === slot.char).length;
+  // "Initial Sound" ticked on a word with no letter given (sun) earns the first letter
+  if (!right && status === "initial-only" && !item.slots[0].isFixed) return 1;
+  return right;
+};
+
+// Score bands from the FS1 sheet: 6/12, 8/12, 9/12, 10/12, 12/12
+const fs1Level = (score) => {
+  if (score >= 12) return "B2–C1";
+  if (score >= 10) return "B1.2–B1.3";
+  if (score >= 9) return "A2.3–B1.1";
+  if (score >= 8) return "A2.0–A2.2";
+  if (score >= 6) return "A1.0–A1.2";
+  return "Pre-A1";
+};
+
 // ==========================================
 // CEFR RUBRIC TABLE (COMMON FOR FS1, FS2, & KG2 / YEAR 1 WRITING)
 // 100% exact text from all assessment sheets
@@ -208,6 +239,32 @@ const CEFR_RUBRIC_LEVELS = [
   },
 ];
 
+// FS2 - KG1 & KG2 / Year 1 word writing: same rubric with the sheet's /13 scores
+const EARLY_WORDS_SCORES = {
+  "A1.0–A1.2": "6/13",
+  "A2.0–A2.2": "7/13",
+  "A2.3–B1.1": "9/13",
+  "B1.2–B1.3": "11/13",
+  "B2–C1": "13/13",
+};
+const EARLY_WORDS_RUBRIC = CEFR_RUBRIC_LEVELS.map((r) =>
+  EARLY_WORDS_SCORES[r.level]
+    ? { ...r, description: `${r.description} ${EARLY_WORDS_SCORES[r.level]}` }
+    : r,
+);
+
+// FS1: same rubric with the FS1 sheet's /12 scores
+const FS1_SCORES = {
+  "A1.0–A1.2": "6/12",
+  "A2.0–A2.2": "8/12",
+  "A2.3–B1.1": "9/12",
+  "B1.2–B1.3": "10/12",
+  "B2–C1": "12/12",
+};
+const FS1_RUBRIC = CEFR_RUBRIC_LEVELS.map((r) =>
+  FS1_SCORES[r.level] ? { ...r, description: `${r.description} ${FS1_SCORES[r.level]}` } : r,
+);
+
 // ==========================================
 // FS2 - KG1, KG2 / YEAR 1 & GRADE 1 / YEAR 2 — 6 WORD PROMPTS
 // Exact from uploaded sheets: s__, c__, c__, b___, sh__, ca__
@@ -228,6 +285,151 @@ const markEarlyWord = (written, item) => {
   if (w === item.targetWord) return "correct";
   if (w.startsWith(item.given) || w[0] === item.targetWord[0]) return "partial";
   return "incorrect";
+};
+
+// ------------------------------------------
+// FS2 - KG1 & KG2 / Year 1 word writing — score out of 13, as on the sheets.
+// 13 = the letters the pupil has to write: s_ _ (2), c_ _ (2), c_ _ (2),
+// b_ _ _ (3), sh_ _ (2), ca_ _ (2). One mark per correct letter.
+// ------------------------------------------
+const EARLY_WORDS_TOTAL = EARLY_WORD_ITEMS.reduce(
+  (n, item) => n + item.targetWord.length - item.given.length,
+  0,
+);
+
+// Letters in common, in order (so "sat" for "sit" still earns the "t")
+const lettersInOrder = (a, b) => {
+  const dp = Array.from({ length: a.length + 1 }, () => new Array(b.length + 1).fill(0));
+  for (let i = 1; i <= a.length; i++)
+    for (let j = 1; j <= b.length; j++)
+      dp[i][j] = a[i - 1] === b[j - 1] ? dp[i - 1][j - 1] + 1 : Math.max(dp[i - 1][j], dp[i][j - 1]);
+  return dp[a.length][b.length];
+};
+
+const earlyWordLetters = (written, status, item) => {
+  const missing = item.targetWord.slice(item.given.length);
+  if (status === "correct") return missing.length;
+  const w = (written || "").trim().toLowerCase().replace(/[^a-z]/g, "");
+  if (!w) return status === "partial" ? 1 : 0;
+  // Only the letters after the given ones count (the given letters are printed)
+  const rest = w.startsWith(item.given)
+    ? w.slice(item.given.length)
+    : w[0] === item.given[0]
+      ? w.slice(1)
+      : w;
+  return Math.min(missing.length, lettersInOrder(rest, missing));
+};
+
+// ------------------------------------------
+// Grade 2 & Grade 3 word writing (moon, star, girl, cube) — judged against the
+// sheet's descriptors:
+//   4 = correct word            3 = full word, small error ("starr", "gurl")
+//   2 = initial + some middle/ending sounds, 1–2 letters missing ("mon", "grl")
+//   1 = initial sound only ("m")  0 = scribble / unrelated   null = not attempted
+// The teacher's buttons (✓ Correct / ~ Near / • Initial / ✕ None) override the typing.
+// ------------------------------------------
+const wordQuality = (written, status, target) => {
+  if (status === "correct") return 4;
+  if (status === "near") return 3;
+  if (status === "initial") return 1;
+  if (status === "none") return 0;
+  const w = (written || "").trim().toLowerCase().replace(/[^a-z]/g, "");
+  if (!w) return null;
+  if (w === target) return 4;
+  const common = lettersInOrder(w, target);
+  if (w[0] === target[0] && w.length >= target.length && common >= target.length - 1) return 3;
+  if (w[0] === target[0] && common >= 2) return 2;
+  if (w[0] === target[0]) return 1;
+  return 0;
+};
+
+const wordWritingLevel = (qualities) => {
+  const tried = qualities.filter((q) => q !== null);
+  if (!tried.length) return null;
+  const atLeast = (n) => qualities.filter((q) => q !== null && q >= n).length;
+  if (atLeast(4) === qualities.length) return "B2–C1"; // all words correct
+  if (atLeast(4) >= qualities.length - 1) return "B1.2–B1.3"; // most words correct
+  if (atLeast(3) >= Math.ceil(qualities.length / 2) + 1) return "A2.3–B1.1"; // full words, some errors
+  if (atLeast(2) >= 2) return "A2.0–A2.2"; // initial + middle/ending sounds
+  if (atLeast(1) >= 1) return "A1.0–A1.2"; // some initial sounds
+  return "Pre-A1";
+};
+
+// ------------------------------------------
+// Picture-story writing — what the pupil actually wrote, measured the way the
+// rubrics describe it: single words → phrases → simple sentences → connected
+// sentences with linking words → fluent narrative.
+// ------------------------------------------
+const LINKING_WORDS = [
+  "and", "but", "because", "so", "then", "next", "after", "before", "when", "while",
+  "first", "finally", "suddenly", "later", "also", "until", "since", "although", "meanwhile",
+];
+
+const countWords = (t) => (t || "").trim().split(/\s+/).filter(Boolean).length;
+
+const storyStats = (answers, storyIdx) => {
+  const all = answers.join(" ");
+  const story = answers[storyIdx] || "";
+  const storyWords = countWords(story);
+  // Sentences of 3+ words; if the teacher typed without full stops, estimate from length
+  let sentences = story
+    .split(/[.!?]+|\n+/)
+    .filter((s) => countWords(s) >= 3).length;
+  if (sentences <= 1 && storyWords >= 12) sentences = Math.max(sentences, Math.floor(storyWords / 7));
+  const lower = ` ${all.toLowerCase().replace(/[^a-z\s]/g, " ")} `;
+  const linking = LINKING_WORDS.filter((w) => lower.includes(` ${w} `)).length;
+  const longestAnswer = Math.max(0, ...answers.map(countWords));
+  const longWords = (all.match(/[a-zA-Z]{4,}/g) || []).length;
+  return { totalWords: countWords(all), storyWords, sentences, linking, longestAnswer, longWords };
+};
+
+const LEVEL_ORDER = ["Pre-A1", "A1.0–A1.2", "A2.0–A2.2", "A2.3–B1.1", "B1.2–B1.3", "B2–C1"];
+const capLevel = (level, max) =>
+  LEVEL_ORDER.indexOf(level) > LEVEL_ORDER.indexOf(max) ? max : level;
+
+// stage: "early" (FS2 - KG1, KG2, Grade 1), "mid" (Grade 2, Grade 3), "upper" (Grade 4, Grade 5)
+// relevance: how many picture-related words the AI found — an off-topic answer can't score high
+const storyLevel = (stage, s, relevance) => {
+  if (!s.totalWords) return null;
+  let level;
+  if (stage === "early") {
+    // Rubric: initial sounds → CVC words → 4–5 letter words → simple sentence → fluent
+    if (s.sentences >= 2 && relevance >= 3) level = "B2–C1";
+    else if (s.sentences >= 1 || s.storyWords >= 3) level = "B1.2–B1.3";
+    else if (s.longWords >= 3 || relevance >= 3) level = "A2.3–B1.1";
+    else if (s.totalWords >= 2 || relevance >= 1) level = "A2.0–A2.2";
+    else level = "A1.0–A1.2";
+  } else if (stage === "mid") {
+    // Rubric: single words / labels → short phrases → simple sentences →
+    // connected sentences with conjunctions → fluent narrative linking the pictures
+    if (s.sentences >= 5 && s.linking >= 2 && s.storyWords >= 50 && relevance >= 5) level = "B2–C1";
+    else if (s.sentences >= 3 && s.linking >= 1) level = "B1.2–B1.3";
+    else if (s.sentences >= 1 && s.storyWords >= 5) level = "A2.3–B1.1";
+    else if (s.longestAnswer >= 3) level = "A2.0–A2.2";
+    else level = "A1.0–A1.2";
+  } else {
+    // Rubric: labels / single words → fragmented or very short sentences →
+    // simple sentences with some sequence → short paragraphs → fluent, cohesive narrative
+    if (s.sentences >= 8 && s.linking >= 3 && s.storyWords >= 100 && relevance >= 6) level = "B2–C1";
+    else if (s.sentences >= 5 && s.linking >= 2 && s.storyWords >= 40) level = "B1.2–B1.3";
+    else if (s.sentences >= 3 && s.linking >= 1) level = "A2.3–B1.1";
+    else if (s.sentences >= 1 || s.longestAnswer >= 3) level = "A2.0–A2.2";
+    else level = "A1.0–A1.2";
+  }
+  // Answers with nothing to do with the pictures are capped
+  if (relevance === 0) level = capLevel(level, "A2.0–A2.2");
+  else if (relevance < 3) level = capLevel(level, "A2.3–B1.1");
+  return level;
+};
+
+// Score bands from the FS2 - KG1 / KG2 sheets: 6/13, 7/13, 9/13, 11/13, 13/13
+const earlyWordsLevel = (score) => {
+  if (score >= 13) return "B2–C1";
+  if (score >= 11) return "B1.2–B1.3";
+  if (score >= 9) return "A2.3–B1.1";
+  if (score >= 7) return "A2.0–A2.2";
+  if (score >= 6) return "A1.0–A1.2";
+  return "Pre-A1";
 };
 
 // ==========================================
@@ -854,7 +1056,7 @@ const GRADE3_WRITING_RUBRIC = [
 // 3 Creative Adventure Pictures (Spaceship, Canyon Ruins, Knight & Dragon)
 // 100% exact text from Uploaded Sheets
 // ==========================================
-const GRADE3_STORY_WRITING_QUESTIONS = [
+const GRADE3_STORY_WRITING_QUESTIONS_SOURCE = [
   {
     id: 1,
     number: "1",
@@ -1038,6 +1240,24 @@ const GRADE3_STORY_WRITING_QUESTIONS = [
     ],
   },
 ];
+
+// Canva Grade 3 / Year 4 sheet asks 3 questions: Who can you see? / What are they
+// doing? / Can you write sentence and a paragraph for these pictures?
+// The picture-word keywords are kept on the paragraph question so the AI still
+// credits picture vocabulary used in the pupil's writing.
+const GRADE3_STORY_WRITING_QUESTIONS = (() => {
+  const [who, doing, words, paragraph] = GRADE3_STORY_WRITING_QUESTIONS_SOURCE;
+  return [
+    who,
+    doing,
+    {
+      ...paragraph,
+      id: 3,
+      number: "3",
+      aiKeywords: [...new Set([...paragraph.aiKeywords, ...words.aiKeywords])],
+    },
+  ];
+})();
 
 const GRADE3_STORY_WRITING_RUBRIC = [
   {
@@ -1235,9 +1455,10 @@ const GRADE5_STORY_WRITING_QUESTIONS = [
   {
     id: 1,
     number: "1",
-    title: "Who and what can you see?",
-    promptGuide: 'Point to the pictures and prompt: "Who and what can you see?"',
-    category: "Who and what can you see?",
+    // Canva Grade 5 / Year 6 sheet: "1. Who can you see?"
+    title: "Who can you see?",
+    promptGuide: 'Point to the pictures and prompt: "Who can you see?"',
+    category: "Who can you see?",
     placeholder:
       "e.g. a lonely traveller in a long coat, golden sand dunes, tall rocky spires, a glowing black hole in space, a ruined city in the desert...",
     aiKeywords: [
@@ -1491,7 +1712,7 @@ export default function PrimaryWritingAssessmentForm() {
   const [selectedStage, setSelectedStage] = useState(initialStage);
   const [grade2WritingMode, setGrade2WritingMode] = useState("story"); // 'story' | 'phonics'
   // FS2 - KG1, KG2 / Year 1, Grade 1 / Year 2: 6 word prompts or picture story
-  const [earlyWritingMode, setEarlyWritingMode] = useState("words"); // 'words' | 'story'
+  const [earlyWritingModeChoice, setEarlyWritingMode] = useState("words"); // 'words' | 'story'
   const [earlyWritten, setEarlyWritten] = useState(Array(EARLY_WORD_ITEMS.length).fill(""));
   const [earlyStatuses, setEarlyStatuses] = useState(Array(EARLY_WORD_ITEMS.length).fill(null));
   const [earlyNotes, setEarlyNotes] = useState(Array(EARLY_WORD_ITEMS.length).fill(""));
@@ -1537,6 +1758,10 @@ export default function PrimaryWritingAssessmentForm() {
   const isFS1Stage = selectedStage === "FS1";
   const isEarlyStage =
     selectedStage === "FS2 - KG1" || selectedStage === "KG2 / Year 1" || isGrade1Stage;
+  // FS2 - KG1, KG2 / Year 1 and Grade 1 / Year 2 each have two parts on the sheets:
+  // 6 word prompts (scored out of 13) and a picture story (4 questions)
+  const earlyWritingMode = earlyWritingModeChoice;
+  const isEarlyScoredStage = isEarlyStage && earlyWritingMode === "words";
   const isWordItemsStage =
     isFS1Stage ||
     (isEarlyStage && earlyWritingMode === "words") ||
@@ -1753,15 +1978,12 @@ export default function PrimaryWritingAssessmentForm() {
     (s) => s === "mark-making",
   ).length;
 
-  const fs1RecommendedLevel = useMemo(() => {
-    if (countCorrect >= 5) return "B2–C1";
-    if (countCorrect >= 4) return "B1.2–B1.3";
-    if (countCorrect >= 2 || countInitialOnly + countCorrect >= 4)
-      return "A2.3–B1.1";
-    if (countInitialOnly >= 3 || countCorrect >= 1) return "A2.0–A2.2";
-    if (countInitialOnly >= 1 || countMarkMaking >= 2) return "A1.0–A1.2";
-    return "Pre-A1";
-  }, [countCorrect, countInitialOnly, countMarkMaking]);
+  // FS1: one mark per correct letter written, out of 12 (typed or ticked ✓ Correct CVC)
+  const fs1Score = FS1_WRITING_ITEMS.reduce(
+    (n, item, idx) => n + fs1WordLetters(item, studentWritten[idx], itemStatuses[idx]),
+    0,
+  );
+  const fs1RecommendedLevel = fs1Level(fs1Score);
 
   // ------------------------------------------
   // FS2, KG2, Grade 1, Grade 2, Grade 3 & Grade 4 AI Keywords Detection & Auto-recommendation
@@ -1800,50 +2022,16 @@ export default function PrimaryWritingAssessmentForm() {
   }, [activeQuestions]);
 
   // Smart Auto-Recommendation for Picture & AI stages (FS2 & KG2 / Year 1)
-  const pictureAiRecommendedLevel = useMemo(() => {
-    const sentenceText = (activeAnswers[3] || "").trim();
-    const sentenceMatches = detectedPerQuestion[3] || [];
-    const wordCountTotal = Object.values(activeAnswers)
-      .join(" ")
-      .trim()
-      .split(/\s+/)
-      .filter(Boolean).length;
-
-    // B2–C1: Fluent, confident sentences, high keyword detection
-    if (
-      (sentenceMatches.length >= 2 ||
-        (sentenceText.split(/\s+/).length >= 5 && totalAiMatches >= 6))
-    ) {
-      return "B2–C1";
-    }
-
-    // B1.2–B1.3: Formed simple sentence (few words together)
-    if (
-      sentenceMatches.length >= 1 ||
-      sentenceText.split(/\s+/).length >= 3 ||
-      totalAiMatches >= 5
-    ) {
-      return "B1.2–B1.3";
-    }
-
-    // A2.3–B1.1: 4–5 letter words independently with increasing accuracy
-    if (totalAiMatches >= 3 || wordCountTotal >= 4) {
-      return "A2.3–B1.1";
-    }
-
-    // A2.0–A2.2: Some initial sounds, CVC words confident
-    if (totalAiMatches >= 1 || wordCountTotal >= 2) {
-      return "A2.0–A2.2";
-    }
-
-    // A1.0–A1.2: Initial sounds of words
-    if (wordCountTotal >= 1) {
-      return "A1.0–A1.2";
-    }
-
-    // Pre-A1: Mark-making / poor legibility
-    return "Pre-A1";
-  }, [activeAnswers, detectedPerQuestion, totalAiMatches]);
+  // Picture stories: level from what was written (words, sentences, linking words)
+  // and whether it relates to the pictures. The last question is always the
+  // sentence / paragraph / story one.
+  const storyStage = isGrade4Stage ? "upper" : isGrade3Stage || isGrade2Stage ? "mid" : "early";
+  const storyMeasures = useMemo(
+    () => storyStats(activeQuestions.map((q, i) => activeAnswers[i] || ""), activeQuestions.length - 1),
+    [activeAnswers, activeQuestions],
+  );
+  const pictureAiRecommendedLevel =
+    storyLevel(storyStage, storyMeasures, totalAiMatches) || "A1.0–A1.2";
 
   const grade2CountCorrect = grade2Statuses.filter(
     (s) => s === "correct",
@@ -1853,39 +2041,11 @@ export default function PrimaryWritingAssessmentForm() {
     (s) => s === "initial",
   ).length;
 
-  const grade2RecommendedLevel = useMemo(() => {
-    let correctAttempts = 0;
-    let nearAttempts = 0;
-    let initialAttempts = 0;
-
-    GRADE2_WRITING_ITEMS.forEach((item, idx) => {
-      const written = (grade2Written[idx] || "").trim().toLowerCase();
-      const status = grade2Statuses[idx];
-      if (status === "correct" || written === item.targetWord) {
-        correctAttempts += 1;
-      } else if (
-        status === "near" ||
-        (written.length >= 2 &&
-          (written[0] === item.targetWord[0] ||
-            written.includes(item.targetWord.slice(0, 2))))
-      ) {
-        nearAttempts += 1;
-      } else if (
-        status === "initial" ||
-        (written.length > 0 && written[0] === item.targetWord[0])
-      ) {
-        initialAttempts += 1;
-      }
-    });
-
-    if (correctAttempts >= 4) return "B2–C1";
-    if (correctAttempts >= 3 || correctAttempts + nearAttempts >= 4)
-      return "B1.2–B1.3";
-    if (correctAttempts + nearAttempts >= 2) return "A2.3–B1.1";
-    if (nearAttempts >= 1 || initialAttempts >= 2) return "A2.0–A2.2";
-    if (initialAttempts >= 1) return "A1.0–A1.2";
-    return "Pre-A1";
-  }, [grade2Statuses, grade2Written]);
+  // Grade 2 words: each word judged against the sheet (teacher buttons override typing)
+  const grade2Qualities = GRADE2_WRITING_ITEMS.map((item, idx) =>
+    wordQuality(grade2Written[idx], grade2Statuses[idx], item.targetWord),
+  );
+  const grade2RecommendedLevel = wordWritingLevel(grade2Qualities) || "Pre-A1";
 
   const grade3CountCorrect = grade3Statuses.filter(
     (s) => s === "correct",
@@ -1895,41 +2055,23 @@ export default function PrimaryWritingAssessmentForm() {
     (s) => s === "initial",
   ).length;
 
-  const grade3RecommendedLevel = useMemo(() => {
-    let correctAttempts = 0;
-    let nearAttempts = 0;
-    let initialAttempts = 0;
+  // Grade 3 words: each word judged against the sheet (teacher buttons override typing)
+  const grade3Qualities = GRADE3_WRITING_ITEMS.map((item, idx) =>
+    wordQuality(grade3Written[idx], grade3Statuses[idx], item.targetWord),
+  );
+  const grade3RecommendedLevel = wordWritingLevel(grade3Qualities) || "Pre-A1";
 
-    GRADE3_WRITING_ITEMS.forEach((item, idx) => {
-      const written = (grade3Written[idx] || "").trim().toLowerCase();
-      const status = grade3Statuses[idx];
-      if (status === "correct" || written === item.targetWord) {
-        correctAttempts += 1;
-      } else if (
-        status === "near" ||
-        (written.length >= 2 &&
-          (written[0] === item.targetWord[0] ||
-            written.includes(item.targetWord.slice(0, 2))))
-      ) {
-        nearAttempts += 1;
-      } else if (
-        status === "initial" ||
-        (written.length > 0 && written[0] === item.targetWord[0])
-      ) {
-        initialAttempts += 1;
-      }
-    });
+  // FS2 - KG1 / KG2 / Grade 1: one mark per correct letter written, out of 13
+  const earlyScore = EARLY_WORD_ITEMS.reduce(
+    (n, item, idx) => n + earlyWordLetters(earlyWritten[idx], earlyStatuses[idx], item),
+    0,
+  );
 
-    if (correctAttempts >= 4) return "B2–C1";
-    if (correctAttempts >= 3 || correctAttempts + nearAttempts >= 4)
-      return "B1.2–B1.3";
-    if (correctAttempts + nearAttempts >= 2) return "A2.3–B1.1";
-    if (nearAttempts >= 1 || initialAttempts >= 2) return "A2.0–A2.2";
-    if (initialAttempts >= 1) return "A1.0–A1.2";
-    return "Pre-A1";
-  }, [grade3Statuses, grade3Written]);
-
-  const currentRecommendedLevel = isGrade3Stage
+  // All 6-word stages (FS2 - KG1, KG2 / Year 1, Grade 1 / Year 2) take their level from
+  // the words — typed or just marked ✓ Correct / ~ Partly / ✗ Not yet by the teacher
+  const currentRecommendedLevel = isEarlyStage && earlyWritingMode === "words"
+    ? earlyWordsLevel(earlyScore)
+    : isGrade3Stage
     ? grade3WritingMode === "phonics"
       ? grade3RecommendedLevel
       : pictureAiRecommendedLevel
@@ -1941,11 +2083,71 @@ export default function PrimaryWritingAssessmentForm() {
         ? fs1RecommendedLevel
         : pictureAiRecommendedLevel;
 
-  // Auto-select the AI level in the CEFR rubric once the pupil has written something
+  // Switching part (Writing Assessment I ↔ II, words ↔ story) starts the level fresh
+  useEffect(() => {
+    setSelectedLevel(null);
+  }, [earlyWritingModeChoice, grade2WritingMode, grade3WritingMode]);
+
+  // Which part is on screen decides what "has the pupil answered?" means
+  const levelSource =
+    isEarlyStage && earlyWritingMode === "words"
+      ? "earlyWords"
+      : isGrade3Stage && grade3WritingMode === "phonics"
+        ? "grade3Words"
+        : isGrade2Stage && grade2WritingMode === "phonics"
+          ? "grade2Words"
+          : isFS1Stage
+            ? "fs1"
+            : "story";
+
   const hasWritingData =
-    Object.values(activeAnswers || {}).some((v) => typeof v === "string" && v.trim()) ||
-    [...earlyWritten, ...grade2Written, ...grade3Written].some((v) => (v || "").trim()) ||
-    [...earlyStatuses, ...itemStatuses, ...grade2Statuses, ...grade3Statuses].some(Boolean);
+    levelSource === "earlyWords"
+      ? earlyWritten.some((v) => (v || "").trim()) || earlyStatuses.some(Boolean)
+      : levelSource === "grade3Words"
+        ? grade3Qualities.some((q) => q !== null)
+        : levelSource === "grade2Words"
+          ? grade2Qualities.some((q) => q !== null)
+          : levelSource === "fs1"
+            ? itemStatuses.some(Boolean) ||
+              // a letter typed into any open box (the given letters are pre-filled)
+              FS1_WRITING_ITEMS.some((item, idx) =>
+                item.slots.some((slot, i) => !slot.isFixed && (studentWritten[idx]?.[i] || "").trim()),
+              )
+            : activeQuestions.some((q, i) => (activeAnswers[i] || "").trim());
+
+  // Plain-English reason shown under the rubric so the teacher sees why
+  const describeWords = (qualities) => {
+    const n = (v) => qualities.filter((q) => q === v).length;
+    return [
+      n(4) && `${n(4)} correct`,
+      n(3) && `${n(3)} nearly right`,
+      n(2) && `${n(2)} with letters missing`,
+      n(1) && `${n(1)} first sound only`,
+      n(0) && `${n(0)} not yet`,
+    ]
+      .filter(Boolean)
+      .join(" · ");
+  };
+  const levelReason = !hasWritingData
+    ? ""
+    : levelSource === "earlyWords"
+      ? `Score ${earlyScore} / ${EARLY_WORDS_TOTAL} letters`
+      : levelSource === "fs1"
+        ? `Score ${fs1Score} / ${FS1_TOTAL} letters`
+        : levelSource === "grade2Words"
+          ? describeWords(grade2Qualities)
+          : levelSource === "grade3Words"
+            ? describeWords(grade3Qualities)
+            : [
+                `${storyMeasures.sentences} sentence${storyMeasures.sentences === 1 ? "" : "s"}`,
+                `${storyMeasures.totalWords} word${storyMeasures.totalWords === 1 ? "" : "s"} written`,
+                storyMeasures.linking > 0 &&
+                  `${storyMeasures.linking} linking word${storyMeasures.linking === 1 ? "" : "s"} (and, because, then…)`,
+                totalAiMatches === 0 && "not about the pictures yet",
+              ]
+                .filter(Boolean)
+                .join(" · ");
+
   const selectedLevel = manualLevel || (hasWritingData ? currentRecommendedLevel : null);
   const isAiLevel = !manualLevel && !!selectedLevel;
 
@@ -2088,13 +2290,14 @@ export default function PrimaryWritingAssessmentForm() {
         yearGroupAndClass: formData.yearGroupAndClass || selectedStage,
         teacherName: formData.teacherName.trim(),
         term: formData.term || "T1",
-        assessmentType: `${assessmentType} (Word Writing)`,
+        assessmentType: `${assessmentType} I (Word Writing)`,
         cefrLevel: selectedLevel,
         writingScore: selectedLevel,
         level: selectedLevel,
-        score: correct,
-        totalScore: correct,
-        totalPossible: EARLY_WORD_ITEMS.length,
+        // FS2 - KG1 / KG2 / Grade 1: letters correct out of 13 (as on the sheets)
+        score: isEarlyScoredStage ? earlyScore : correct,
+        totalScore: isEarlyScoredStage ? earlyScore : correct,
+        totalPossible: isEarlyScoredStage ? EARLY_WORDS_TOTAL : EARLY_WORD_ITEMS.length,
         keyWordsUsed: usedKeywords,
         teachingFocus: teachingFocusNotes,
         detailedResponses,
@@ -2119,7 +2322,8 @@ export default function PrimaryWritingAssessmentForm() {
         yearGroupAndClass: formData.yearGroupAndClass || selectedStage,
         teacherName: formData.teacherName.trim(),
         term: formData.term || "T1",
-        assessmentType,
+        // FS2 - KG1 / KG2 / Grade 1 picture part is "Writing Assessment II"
+        assessmentType: isEarlyStage ? `${assessmentType} II (Picture Story)` : assessmentType,
         cefrLevel: selectedLevel,
         writingScore: selectedLevel,
         level: selectedLevel,
@@ -2161,9 +2365,10 @@ export default function PrimaryWritingAssessmentForm() {
         writingScore: selectedLevel,
         level: selectedLevel,
         recommendedLevel: fs1RecommendedLevel,
-        score: countCorrect,
-        totalScore: countCorrect,
-        totalPossible: FS1_WRITING_ITEMS.length,
+        // letters correct out of 12, as on the FS1 sheet
+        score: fs1Score,
+        totalScore: fs1Score,
+        totalPossible: FS1_TOTAL,
         keyWordsUsed: usedKeywords,
         teachingFocus: teachingFocusNotes,
         detailedResponses,
@@ -2209,7 +2414,11 @@ export default function PrimaryWritingAssessmentForm() {
         ? grade2WritingMode === "story"
           ? GRADE2_STORY_WRITING_RUBRIC
           : GRADE2_WRITING_RUBRIC
-        : CEFR_RUBRIC_LEVELS;
+        : isEarlyScoredStage
+          ? EARLY_WORDS_RUBRIC
+          : isFS1Stage
+            ? FS1_RUBRIC
+            : CEFR_RUBRIC_LEVELS;
 
   return (
     <div className="min-h-screen bg-slate-50 py-8 px-4 sm:px-6 lg:px-8 font-sans">
@@ -2252,8 +2461,8 @@ export default function PrimaryWritingAssessmentForm() {
             </span>
             <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl">
               {[
-                { key: "words", label: "✏️ Word Writing (6 Pictures)" },
-                { key: "story", label: "🖼️ Picture Story (4 Questions)" },
+                { key: "words", label: "✏️ Writing Assessment I · 6 Word Pictures" },
+                { key: "story", label: "🖼️ Writing Assessment II · Picture & 4 Questions" },
               ].map((m) => (
                 <button
                   key={m.key}
@@ -2357,38 +2566,6 @@ export default function PrimaryWritingAssessmentForm() {
           <div className="absolute top-0 right-0 -mt-8 -mr-8 w-48 h-48 bg-white/10 rounded-full blur-2xl pointer-events-none" />
           <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div className="space-y-2">
-              <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider">
-                <span>
-                  ✍️{" "}
-                  {isGrade4Stage
-                    ? `${upperStageLabel} Writing Assessment`
-                    : isGrade3Stage
-                      ? "Grade 3 / Year 4 Writing Assessment"
-                      : isGrade2Stage
-                        ? "Grade 2 / Year 3 Writing Assessment"
-                        : isGrade1Stage
-                          ? "Grade 1 / Year 2 Writing Assessment"
-                          : selectedStage === "FS1"
-                            ? "FS1 Early Writing"
-                            : selectedStage === "FS2 - KG1"
-                              ? "FS2 - KG1 Writing Assessment"
-                              : "KG2 / Year 1 Writing Assessment"}
-                </span>
-                <span>•</span>
-                <span>
-                  {isGrade4Stage
-                    ? "3 Sequential Sci-Fi Pictures & AI Conductor"
-                    : isGrade3Stage
-                      ? grade3WritingMode === "story"
-                        ? "3 Creative Story Pictures & AI Detection"
-                        : "4 Picture Word-Writing Prompts"
-                      : isGrade2Stage
-                        ? "4 Picture Word-Writing Prompts"
-                        : selectedStage === "FS1"
-                          ? "6 CVC Missing Grapheme Prompts"
-                          : "Picture Prompt & Story Writing"}
-                </span>
-              </div>
               <h1 className="text-3xl sm:text-4xl font-black tracking-tight">
                 {isGrade4Stage
                   ? `${upperStageLabel} Writing Assessment`
@@ -2403,6 +2580,8 @@ export default function PrimaryWritingAssessmentForm() {
                           : selectedStage === "FS2 - KG1"
                             ? "FS2 - KG1 Writing Assessment"
                             : "KG2 / Year 1 Writing Assessment"}
+                {/* Two-part stages: I = 6 word pictures, II = picture & 4 questions */}
+                {isEarlyStage && (earlyWritingMode === "story" ? " II" : " I")}
               </h1>
               <p className="text-pink-100 text-sm max-w-2xl font-medium">
                 {isGrade5Stage
@@ -2450,7 +2629,7 @@ export default function PrimaryWritingAssessmentForm() {
                 <li>Sit with the pupil in a calm, distraction-free space.</li>
                 <li>Read each word so the child can write it alone.</li>
                 <li>
-                  Point to the picture and say:{" "}
+                  {isWordItemsStage ? "Point to each picture and say:" : "Point to the picture and say:"}{" "}
                   <span className="font-bold italic text-pink-950">
                     {isWordItemsStage
                       ? '"Can you write the word for this picture?"'
@@ -2587,7 +2766,10 @@ export default function PrimaryWritingAssessmentForm() {
                     mark their attempt.
                   </p>
                 </div>
-                <div className="flex items-center gap-2 text-xs font-bold">
+                <div className="flex flex-wrap items-center gap-2 text-xs font-bold">
+                  <span className="px-2.5 py-1 rounded-full bg-pink-50 text-pink-800 border border-pink-200 font-black">
+                    Score: {fs1Score} / {FS1_TOTAL}
+                  </span>
                   <span className="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800">
                     {countCorrect} Correct
                   </span>
@@ -2624,12 +2806,7 @@ export default function PrimaryWritingAssessmentForm() {
                           <span className="text-xs font-black px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600">
                             Word #{idx + 1}
                           </span>
-                          <span className="flex items-center gap-2">
-                            <span className="text-xs font-black tracking-widest text-slate-400 font-mono">
-                              Target: {item.targetWord}
-                            </span>
-                            <ReadAloudButton text={`Picture ${item.id}. Can you write the word for this picture?`} label="Read" />
-                          </span>
+                          <ReadAloudButton text={`Picture ${item.id}. Can you write the word for this picture?`} label="Read" />
                         </div>
 
                         {/* Picture Thumbnail */}
@@ -2645,7 +2822,7 @@ export default function PrimaryWritingAssessmentForm() {
                         <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 mb-4 text-center">
                           <div className="text-[11px] font-black uppercase tracking-wider text-slate-400 mb-2">
                             Assessment Sheet Prompt:{" "}
-                            <span className="font-mono text-pink-600 font-bold text-sm tracking-widest">
+                            <span className="font-mono text-slate-600 font-bold text-sm tracking-widest normal-case">
                               {item.promptDisplay}
                             </span>
                           </div>
@@ -2662,7 +2839,7 @@ export default function PrimaryWritingAssessmentForm() {
                                   className="flex flex-col items-center"
                                 >
                                   {isSlotFixed ? (
-                                    <div className="w-11 h-12 rounded-lg bg-pink-100 border-2 border-pink-300 flex items-center justify-center font-black text-xl text-pink-700 shadow-2xs font-mono uppercase">
+                                    <div className="w-11 h-12 rounded-lg bg-slate-100 border-2 border-slate-300 flex items-center justify-center font-black text-xl text-slate-600 shadow-2xs font-mono lowercase">
                                       {slot.char}
                                     </div>
                                   ) : (
@@ -2678,7 +2855,7 @@ export default function PrimaryWritingAssessmentForm() {
                                         )
                                       }
                                       placeholder="_"
-                                      className={`w-11 h-12 text-center text-xl font-black font-mono uppercase rounded-lg border-2 shadow-inner focus:outline-none transition-all ${
+                                      className={`w-11 h-12 text-center text-xl font-black font-mono lowercase rounded-lg border-2 shadow-inner focus:outline-none transition-all ${
                                         val.toLowerCase() ===
                                         slot.char.toLowerCase()
                                           ? "border-emerald-500 bg-emerald-50 text-emerald-700 ring-2 ring-emerald-200"
@@ -2688,11 +2865,6 @@ export default function PrimaryWritingAssessmentForm() {
                                       }`}
                                     />
                                   )}
-                                  <span className="text-[9px] font-bold text-slate-400 mt-1 uppercase">
-                                    {isSlotFixed
-                                      ? "Given"
-                                      : `Slot ${slotIdx + 1}`}
-                                  </span>
                                 </div>
                               );
                             })}
@@ -3496,15 +3668,14 @@ export default function PrimaryWritingAssessmentForm() {
                                 next[idx] = val;
                                 return next;
                               });
-                              if (
-                                val.trim().toLowerCase() === item.targetWord
-                              ) {
-                                setGrade3Statuses((prev) => {
-                                  const next = [...prev];
-                                  next[idx] = "correct";
-                                  return next;
-                                });
-                              }
+                              // Typing re-judges the word: exact = ✓ Correct, otherwise
+                              // clear any old mark so the new attempt is scored
+                              setGrade3Statuses((prev) => {
+                                const next = [...prev];
+                                next[idx] =
+                                  val.trim().toLowerCase() === item.targetWord ? "correct" : null;
+                                return next;
+                              });
                             }}
                             placeholder="Type what the pupil wrote…"
                             className="w-full text-base font-bold font-mono tracking-wider px-3.5 py-2.5 rounded-xl border-2 border-slate-200 focus:border-pink-500 focus:outline-none transition-colors uppercase"
@@ -3741,15 +3912,14 @@ export default function PrimaryWritingAssessmentForm() {
                                   next[idx] = val;
                                   return next;
                                 });
-                                if (
-                                  val.trim().toLowerCase() === item.targetWord
-                                ) {
-                                  setGrade2Statuses((prev) => {
-                                    const next = [...prev];
-                                    next[idx] = "correct";
-                                    return next;
-                                  });
-                                }
+                                // Typing re-judges the word: exact = ✓ Correct, otherwise
+                                // clear any old mark so the new attempt is scored
+                                setGrade2Statuses((prev) => {
+                                  const next = [...prev];
+                                  next[idx] =
+                                    val.trim().toLowerCase() === item.targetWord ? "correct" : null;
+                                  return next;
+                                });
                               }}
                               placeholder="Type what the pupil wrote…"
                               className={`w-full px-3 py-2 text-base font-bold font-mono tracking-wider rounded-lg border-b-2 border-t-0 border-x-0 bg-white focus:outline-none focus:ring-0 transition-colors ${
@@ -3894,8 +4064,15 @@ export default function PrimaryWritingAssessmentForm() {
                     Point to each picture and say: "Can you write the word for this picture?" Type what the child writes.
                   </p>
                 </div>
-                <span className="text-xs font-bold text-slate-600 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200 self-start sm:self-auto">
-                  ✓ {earlyStatuses.filter((st) => st === "correct").length} / {EARLY_WORD_ITEMS.length} correct
+                <span className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+                  {isEarlyScoredStage && (
+                    <span className="text-xs font-black text-pink-800 bg-pink-50 px-3 py-1.5 rounded-xl border border-pink-200">
+                      Score: {earlyScore} / {EARLY_WORDS_TOTAL}
+                    </span>
+                  )}
+                  <span className="text-xs font-bold text-slate-600 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200">
+                    ✓ {earlyStatuses.filter((st) => st === "correct").length} / {EARLY_WORD_ITEMS.length} words correct
+                  </span>
                 </span>
               </div>
 
@@ -3984,30 +4161,54 @@ export default function PrimaryWritingAssessmentForm() {
                   CEFR Level Assessment Rubric
                 </h3>
                 <p className="text-xs text-slate-500 font-medium">
-                  Select the level that best reflects the student’s
-                  independent writing competency.
+                  The level updates automatically as answers are typed or marked.
+                  Click a row to choose a different level yourself.
                 </p>
               </div>
-              <div className="flex items-center gap-2 text-xs font-bold">
-                <span className="text-slate-400">{isAiLevel ? "✨ AI selected:" : "AI suggests:"}</span>
-                <span className="px-3 py-1 rounded-full bg-pink-100 text-pink-800 border border-pink-200 font-black">
-                  {currentRecommendedLevel}
+            </div>
+
+            {/* Auto level status — always says where the level came from and why */}
+            {!hasWritingData && !manualLevel ? (
+              <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-3 text-xs font-semibold text-slate-500">
+                ⏳ Waiting for answers — the level will be selected automatically once the pupil’s
+                writing is typed in or marked.
+              </div>
+            ) : isAiLevel ? (
+              <div className="rounded-xl border border-pink-200 bg-pink-50 px-4 py-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+                <span className="font-black text-pink-900">✨ Auto level:</span>
+                <span className="px-3 py-1 rounded-full bg-white text-pink-800 border border-pink-300 font-black">
+                  {selectedLevel}
                 </span>
+                {levelReason && <span className="font-semibold text-pink-900/80">Based on: {levelReason}</span>}
+              </div>
+            ) : (
+              <div className="rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+                <span className="font-black text-indigo-900">👩‍🏫 Teacher selected:</span>
+                <span className="px-3 py-1 rounded-full bg-white text-indigo-800 border border-indigo-300 font-black">
+                  {manualLevel}
+                </span>
+                {hasWritingData && (
+                  <span className="font-semibold text-indigo-900/80">
+                    Auto level would be {currentRecommendedLevel}
+                    {levelReason ? ` (${levelReason})` : ""}
+                  </span>
+                )}
                 <button
                   type="button"
                   onClick={() => setSelectedLevel(null)}
-                  className={`text-pink-600 hover:underline text-xs font-bold ${isAiLevel ? "hidden" : ""}`}
+                  className="ml-auto px-3 py-1 rounded-lg bg-white border border-indigo-200 text-indigo-700 font-black hover:bg-indigo-100"
                 >
-                  Use AI level
+                  ↺ Use auto level
                 </button>
               </div>
-            </div>
+            )}
 
             {/* Rubric Cards */}
             <div className="space-y-2.5">
               {activeRubricLevels.map((item) => {
                 const isSelected = selectedLevel === item.level;
-                const isAuto = currentRecommendedLevel === item.level;
+                // Only point at the auto level once there's something to score
+                const isAuto = hasWritingData && currentRecommendedLevel === item.level;
 
                 return (
                   <div
@@ -4035,14 +4236,19 @@ export default function PrimaryWritingAssessmentForm() {
                         >
                           {item.level}
                         </span>
-                        {isAuto && (
+                        {isSelected && isAiLevel && (
                           <span className="text-[10px] font-black uppercase tracking-wider bg-pink-600 text-white px-2 py-0.5 rounded-full">
-                            Suggested
+                            ✨ Auto selected
                           </span>
                         )}
-                        {isSelected && (
-                          <span className="text-[10px] font-black uppercase tracking-wider bg-pink-700 text-white px-2 py-0.5 rounded-full">
-                            Selected
+                        {isSelected && !isAiLevel && (
+                          <span className="text-[10px] font-black uppercase tracking-wider bg-indigo-600 text-white px-2 py-0.5 rounded-full">
+                            👩‍🏫 Teacher selected
+                          </span>
+                        )}
+                        {isAuto && !isSelected && (
+                          <span className="text-[10px] font-black uppercase tracking-wider bg-pink-100 text-pink-700 border border-pink-200 px-2 py-0.5 rounded-full">
+                            Auto level
                           </span>
                         )}
                       </div>
@@ -4289,17 +4495,8 @@ export default function PrimaryWritingAssessmentForm() {
               <div className="flex items-center gap-2">
                 <span className="w-2.5 h-2.5 rounded-full bg-purple-600"></span>
                 <h3 className="font-black text-slate-800 text-sm uppercase tracking-wider">
-                  {isGrade5Stage
-                    ? "Desert Traveller, Black Hole & Ruined City · Full View"
-                    : isGrade4Stage
-                    ? "Neon Corridor, Futuristic City & Planetary Astronauts · Full View"
-                    : isGrade3Stage
-                      ? "Spaceship, Canyon Ruins & Knight Battling Dragon · Full View"
-                      : isGrade2Stage
-                        ? "3-Picture Fantasy Adventure Stimulus · Full View"
-                        : isGrade1Stage
-                          ? "Two People Kayaking on River Rapids · Full View"
-                          : "Children Playing Football in Park · Full View"}
+                  {/* Neutral title — don't describe the picture to the pupil */}
+                  Prompt Picture · Full View
                 </h3>
               </div>
               <button

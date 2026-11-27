@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { getSpeechLang } from '../utils/speechLang';
+import { normaliseWord } from '../utils/readingMistakes';
 
 /**
  * Enhanced Voice Dictation Component
@@ -52,10 +54,51 @@ async function openBoostedMic() {
     limiter.release.value = 0.25;
     const dest = ctx.createMediaStreamDestination();
     source.connect(gain).connect(limiter).connect(dest);
+    // Level meter on the raw microphone input, so the teacher can see if the pupil is too quiet
+    const analyser = ctx.createAnalyser();
+    analyser.fftSize = 1024;
+    source.connect(analyser);
     if (ctx.state === 'suspended') {
         try { await ctx.resume(); } catch (e) { /* ignore */ }
     }
-    return { stream, ctx, track: dest.stream.getAudioTracks()[0] || null };
+    return { stream, ctx, analyser, track: dest.stream.getAudioTracks()[0] || null };
+}
+
+// 0–1 loudness of the raw mic input right now
+function micLevel(analyser, buf) {
+    analyser.getFloatTimeDomainData(buf);
+    let sum = 0;
+    for (let i = 0; i < buf.length; i++) sum += buf[i] * buf[i];
+    const rms = Math.sqrt(sum / buf.length);
+    return Math.min(1, rms * 8);
+}
+
+// Below this the speech is usually too quiet for recognition to catch every word
+const QUIET_LEVEL = 0.06;
+// Warn once the pupil has been speaking this quietly for a while
+const QUIET_WARN_MS = 2500;
+
+/**
+ * Pick the browser guess that best fits the text the pupil is reading.
+ * Each result comes with up to 3 guesses; for passages the first guess is often
+ * a near-miss ("pat the big dock") while another guess is the real reading.
+ */
+function pickAlternative(res, wantWords) {
+    if (!wantWords || res.length < 2) return res[0].transcript;
+    let best = res[0].transcript;
+    let bestScore = -1;
+    for (let a = 0; a < res.length; a++) {
+        const words = String(res[a].transcript).split(/\s+/).map(normaliseWord).filter(Boolean);
+        if (!words.length) continue;
+        const hits = words.filter((w) => wantWords.has(w)).length;
+        // prefer more matching words; on a tie keep the browser's own ranking
+        const score = hits / words.length;
+        if (score > bestScore + 1e-9) {
+            bestScore = score;
+            best = res[a].transcript;
+        }
+    }
+    return best;
 }
 
 function closeBoostedMic(mic) {
@@ -78,6 +121,12 @@ function startRecognition(recognition, track) {
     recognition.start();
 }
 
+const TONES = {
+    success: 'bg-emerald-600 text-white border border-emerald-600 hover:bg-emerald-700',
+    warning: 'bg-amber-500 text-white border border-amber-500 hover:bg-amber-600',
+    error: 'bg-rose-600 text-white border border-rose-600 hover:bg-rose-700',
+};
+
 export default function VoiceDictation({
     onInterimResult,
     onStart,
@@ -91,8 +140,23 @@ export default function VoiceDictation({
     // answer again (the new answer starts fresh instead of adding to the old one)
     onClear,
     hasAnswer = false,
+    // Optional: the word the pupil should say. If any of the browser's guesses
+    // contains it, that guess is used (short words like "bug" are often
+    // first heard as "bag" / "but").
+    preferText,
+    // Optional: colour the idle button with the result — 'success' | 'warning' | 'error'
+    tone,
+    // How long the pupil can stay silent before the mic stops (reading passages
+    // need longer — pupils pause to sound out words)
+    silenceMs = SILENCE_TIMEOUT_MS,
+    // Show a live volume meter and a "too quiet" warning while listening
+    showLevel = true,
 }) {
     const [isListening, setIsListening] = useState(false);
+    const [level, setLevel] = useState(0);
+    const [tooQuiet, setTooQuiet] = useState(false);
+    const silenceMsRef = useRef(silenceMs);
+    silenceMsRef.current = silenceMs;
     const recognitionRef = useRef(null);
     const isListeningRef = useRef(false);
     const accumulatedTextRef = useRef('');
@@ -108,6 +172,8 @@ export default function VoiceDictation({
     const onInterimResultRef = useRef(onInterimResult);
     const onStartRef = useRef(onStart);
     const stopWhenRef = useRef(stopWhen);
+    const preferTextRef = useRef(preferText);
+    preferTextRef.current = preferText;
     const autoStopRef = useRef(null);
     useEffect(() => {
         onInterimResultRef.current = onInterimResult;
@@ -137,8 +203,37 @@ export default function VoiceDictation({
         clearTimeout(silenceTimeoutRef.current);
         silenceTimeoutRef.current = setTimeout(() => {
             if (isListeningRef.current) stopListening();
-        }, SILENCE_TIMEOUT_MS);
+        }, silenceMsRef.current);
     };
+
+    // Live volume meter while listening
+    useEffect(() => {
+        if (!isListening || !showLevel) {
+            setLevel(0);
+            setTooQuiet(false);
+            return undefined;
+        }
+        let quietSince = null;
+        let heardVoice = false;
+        let buf = null;
+        const timer = setInterval(() => {
+            const analyser = micRef.current?.analyser;
+            if (!analyser) return;
+            if (!buf) buf = new Float32Array(analyser.fftSize);
+            const l = micLevel(analyser, buf);
+            setLevel(l);
+            // Only judge "too quiet" once there's some sound — not while the pupil hasn't started
+            if (l > 0.015) heardVoice = true;
+            if (heardVoice && l < QUIET_LEVEL) {
+                if (quietSince === null) quietSince = Date.now();
+                if (Date.now() - quietSince > QUIET_WARN_MS) setTooQuiet(true);
+            } else if (l >= QUIET_LEVEL * 1.5) {
+                quietSince = null;
+                setTooQuiet(false);
+            }
+        }, 120);
+        return () => clearInterval(timer);
+    }, [isListening, showLevel]);
 
     // Refs so the once-created recognition handlers always call the latest versions
     const stopListeningRef = useRef(stopListening);
@@ -162,19 +257,37 @@ export default function VoiceDictation({
         const recognition = new SpeechRecognition();
         recognition.continuous = true;
         recognition.interimResults = true;
-        recognition.maxAlternatives = 3;
-        recognition.lang = 'en-US';
+        recognition.maxAlternatives = 5;
+        recognition.lang = getSpeechLang();
 
         recognition.onresult = (event) => {
             let interimTranscript = '';
             let newFinalTranscript = '';
 
+            const want = String(preferTextRef.current || '').trim().toLowerCase();
+            const wantWordList = want.split(/[\s—–]+/).map(normaliseWord).filter(Boolean);
+            // Single target word (FS1/FS2 cards): use any guess that contains it.
+            // Whole passage: use the guess that best fits the passage.
+            const wantRe = wantWordList.length === 1
+                ? new RegExp(`\\b${want.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i')
+                : null;
+            const wantWords = wantWordList.length > 1 ? new Set(wantWordList) : null;
+            const pick = (res) => {
+                if (wantRe) {
+                    for (let a = 0; a < res.length; a++) {
+                        if (wantRe.test(res[a].transcript)) return res[a].transcript;
+                    }
+                    return res[0].transcript;
+                }
+                return pickAlternative(res, wantWords);
+            };
+
             for (let i = event.resultIndex; i < event.results.length; ++i) {
                 const res = event.results[i];
                 if (res.isFinal) {
-                    newFinalTranscript += res[0].transcript + ' ';
+                    newFinalTranscript += pick(res) + ' ';
                 } else {
-                    interimTranscript += res[0].transcript;
+                    interimTranscript += pick(res);
                 }
             }
 
@@ -278,6 +391,8 @@ export default function VoiceDictation({
                     }
                 }
                 try {
+                    // Use the accent the teacher picked (may have changed since the page loaded)
+                    recognitionRef.current.lang = getSpeechLang();
                     startRecognition(recognitionRef.current, micRef.current?.track);
                     resetSilenceTimerRef.current();
                 } catch (e) {
@@ -302,15 +417,43 @@ export default function VoiceDictation({
         if (onClear) onClear();
     };
 
+    const meterBars = 5;
+    const litBars = Math.round(level * meterBars * 1.4);
+
     return (
-        <span className="inline-flex items-center gap-1.5">
+        <span className="inline-flex flex-wrap items-center justify-center gap-1.5">
+        {isListening && showLevel && micRef.current?.analyser && (
+            <span
+                className="order-last basis-full flex flex-col items-center gap-0.5"
+                aria-live="polite"
+            >
+                <span className="flex items-end gap-0.5 h-3" title="Microphone volume">
+                    {Array.from({ length: meterBars }, (_, i) => (
+                        <span
+                            key={i}
+                            className={`w-1.5 rounded-sm transition-colors ${
+                                i < litBars
+                                    ? tooQuiet ? 'bg-amber-500' : 'bg-emerald-500'
+                                    : 'bg-slate-200'
+                            }`}
+                            style={{ height: `${40 + i * 15}%` }}
+                        />
+                    ))}
+                </span>
+                {tooQuiet && (
+                    <span className="text-[11px] font-bold text-amber-700 text-center leading-tight">
+                        Too quiet — ask the pupil to speak up or move the laptop closer
+                    </span>
+                )}
+            </span>
+        )}
         <button
             type="button"
             onClick={toggleListen}
             className={`${className} flex items-center gap-2.5 px-4 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all shadow-sm select-none ${
                 isListening
                     ? 'bg-rose-50 text-rose-600 border border-rose-300 ring-2 ring-rose-200'
-                    : 'bg-white text-blue-600 border border-blue-200 hover:bg-blue-50 hover:border-blue-300 hover:shadow'
+                    : TONES[tone] || 'bg-white text-blue-600 border border-blue-200 hover:bg-blue-50 hover:border-blue-300 hover:shadow'
             }`}
             title={isListening ? "Click when the student has finished speaking" : "Click to record student's spoken response"}
         >
@@ -326,7 +469,7 @@ export default function VoiceDictation({
                 </>
             ) : (
                 <>
-                    <svg className="w-4 h-4 text-blue-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <svg className={`w-4 h-4 shrink-0 ${TONES[tone] ? 'text-current' : 'text-blue-600'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
                     </svg>
                     <span>{idleLabel}</span>

@@ -396,48 +396,53 @@ export default function PrimaryPhonicAssessmentForm() {
   const p4PassCount = phase4Checks.filter((c) => c === 'pass').length;
   const p5PassCount = phase5Checks.filter((c) => c === 'pass').length;
 
-  // Auto recommend CEFR level
+  // Auto CEFR level — follows the rubric rows on the sheets.
+  // "Secure" = at least 4 of the 5 sets in that phase marked ✓.
+  // Highlighted (red) sounds/words show the pupil still struggled, so they hold back the top level.
+  const struggled = revisitSounds.length + revisitWords.length;
   const getRecommendedLevel = () => {
     if (isPhase45Stage) {
-      if (p4PassCount === 4 && p5PassCount === 4 && revisitSounds.length === 0) {
-        return 'B2–C1';
-      }
-      if (p4PassCount === 4 && p5PassCount >= 2) {
-        return 'B1.2–B1.3';
-      }
-      if (p4PassCount >= 3) {
-        return 'A2.3–B1.1';
-      }
-      if (p4PassCount >= 1) {
-        return 'A2.0–A2.2';
-      }
+      // Phase 4 & 5 sheet (A1.0 → B2–C1)
+      if (p4PassCount === 4 && p5PassCount === 4 && struggled === 0) return 'B2–C1'; // fluent across Phases 2–5
+      if (p4PassCount >= 3 && p5PassCount >= 2) return 'B1.2–B1.3'; // Phases 2–4 few mistakes, beginning Phase 5
+      if (p4PassCount >= 2) return 'A2.3–B1.1'; // Phases 2–3 secure, mistakes with Phase 4 blends
+      if (p4PassCount >= 1 || p5PassCount >= 1) return 'A2.0–A2.2';
       return 'A1.0–A1.2';
     }
-
-    if (p2PassCount === 5 && p3PassCount === 5 && revisitSounds.length === 0) {
-      return 'B2–C1';
-    }
-    if (p2PassCount === 5 && p3PassCount >= 4) {
-      return 'B1.2–B1.3';
-    }
-    if (p2PassCount === 5 && p3PassCount >= 2) {
-      return 'A2.3–B1.1';
-    }
-    if (p2PassCount >= 4 && p3PassCount < 2) {
-      return 'A2.0–A2.2';
-    }
-    if (p2PassCount >= 2) {
-      return 'A1.0–A1.2';
-    }
-    return 'Pre-A1';
+    // Phase 2 & 3 sheet (Pre-A1 → B2–C1)
+    const p2Secure = p2PassCount >= 4;
+    if (p2PassCount === 5 && p3PassCount === 5 && struggled === 0) return 'B2–C1'; // fluent, automatic
+    if (p2Secure && p3PassCount >= 4) return 'B1.2–B1.3'; // fluent across Phases 2–3
+    if (p2Secure && p3PassCount >= 3) return 'A2.3–B1.1'; // Phases 2 & 3 secure, some blending errors
+    if (p2Secure) return 'A2.0–A2.2'; // Phase 2 secure, mistakes with Phase 3
+    if (p2PassCount >= 1) return 'A1.0–A1.2'; // struggles with Phase 2
+    return 'Pre-A1'; // some sounds with support only
   };
 
   const recommendedLevel = getRecommendedLevel();
 
-  // Auto-select the recommended level in the CEFR rubric once sounds are marked
-  const hasPhonicsData = [...phase2Checks, ...phase3Checks, ...phase4Checks, ...phase5Checks].some(Boolean);
+  // Only the phases on this stage's sheet count as "marked"
+  const hasPhonicsData = (isPhase45Stage
+    ? [...phase4Checks, ...phase5Checks]
+    : [...phase2Checks, ...phase3Checks]
+  ).some(Boolean);
   const selectedLevel = manualLevel || (hasPhonicsData ? recommendedLevel : null);
   const isAiLevel = !manualLevel && !!selectedLevel;
+
+  // Plain-English reason shown under the rubric
+  const levelReason = !hasPhonicsData
+    ? ''
+    : [
+        isPhase45Stage
+          ? `Phase 4: ${p4PassCount}/${PHASE_4_SETS.length} ✓`
+          : `Phase 2: ${p2PassCount}/${PHASE_2_SETS.length} sets ✓`,
+        isPhase45Stage
+          ? `Phase 5: ${p5PassCount}/${PHASE_5_SETS.length} ✓`
+          : `Phase 3: ${p3PassCount}/${PHASE_3_SETS.length} sets ✓`,
+        struggled > 0 && `${struggled} sound${struggled === 1 ? '' : 's'}/word${struggled === 1 ? '' : 's'} highlighted to revisit`,
+      ]
+        .filter(Boolean)
+        .join(' · ');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -572,11 +577,6 @@ export default function PrimaryPhonicAssessmentForm() {
           <div className="absolute top-0 right-0 -mt-8 -mr-8 w-48 h-48 bg-white/10 rounded-full blur-2xl pointer-events-none" />
           <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div className="space-y-2">
-              <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider">
-                <span>🔤 {selectedStage} Phonics</span>
-                <span>•</span>
-                <span>{isPhase45Stage ? 'Phase 4 & Phase 5 Blends & Graphemes' : 'Phase 2 & Phase 3 Graphemes'}</span>
-              </div>
               <h1 className="text-3xl sm:text-4xl font-black tracking-tight">
                 {selectedStage} Phonic Assessment
               </h1>
@@ -1109,29 +1109,53 @@ export default function PrimaryPhonicAssessmentForm() {
                   CEFR Level Assessment Rubric
                 </h3>
                 <p className="text-xs text-slate-500 font-medium">
-                  Select the level that reflects the student's phonics knowledge and decoding fluency.
+                  The level updates automatically as you mark each set ✓ / ✗. Click a row to
+                  choose a different level yourself.
                 </p>
               </div>
-              <div className="flex items-center gap-2 text-xs font-bold">
-                <span className="text-slate-400">{isAiLevel ? "✨ Auto selected:" : "Suggested:"}</span>
-                <span className="px-3 py-1 rounded-full bg-amber-100 text-amber-800 border border-amber-200 font-black">
-                  {recommendedLevel}
+            </div>
+
+            {/* Auto level status — always says where the level came from and why */}
+            {!hasPhonicsData && !manualLevel ? (
+              <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-3 text-xs font-semibold text-slate-500">
+                ⏳ Waiting for marks — the level will be selected automatically once you mark the sets ✓ / ✗.
+              </div>
+            ) : isAiLevel ? (
+              <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+                <span className="font-black text-amber-900">✨ Auto level:</span>
+                <span className="px-3 py-1 rounded-full bg-white text-amber-800 border border-amber-300 font-black">
+                  {selectedLevel}
                 </span>
+                {levelReason && <span className="font-semibold text-amber-900/80">Based on: {levelReason}</span>}
+              </div>
+            ) : (
+              <div className="rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+                <span className="font-black text-indigo-900">👩‍🏫 Teacher selected:</span>
+                <span className="px-3 py-1 rounded-full bg-white text-indigo-800 border border-indigo-300 font-black">
+                  {manualLevel}
+                </span>
+                {hasPhonicsData && (
+                  <span className="font-semibold text-indigo-900/80">
+                    Auto level would be {recommendedLevel}
+                    {levelReason ? ` (${levelReason})` : ''}
+                  </span>
+                )}
                 <button
                   type="button"
                   onClick={() => setSelectedLevel(null)}
-                  className={`text-amber-600 hover:underline text-xs font-bold ${isAiLevel ? "hidden" : ""}`}
+                  className="ml-auto px-3 py-1 rounded-lg bg-white border border-indigo-200 text-indigo-700 font-black hover:bg-indigo-100"
                 >
-                  Use suggested level
+                  ↺ Use auto level
                 </button>
               </div>
-            </div>
+            )}
 
             {/* Rubric Cards */}
             <div className="space-y-2.5">
               {(isPhase45Stage ? PHONIC_RUBRIC_PHASE45 : PHONIC_RUBRIC_LEVELS).map((item) => {
                 const isSelected = selectedLevel === item.level;
-                const isAuto = recommendedLevel === item.level;
+                // Only point at the auto level once something has been marked
+                const isAuto = hasPhonicsData && recommendedLevel === item.level;
 
                 return (
                   <div
@@ -1157,14 +1181,19 @@ export default function PrimaryPhonicAssessmentForm() {
                         <span className={`px-2.5 py-0.5 rounded-lg text-xs font-black border ${item.badgeBg}`}>
                           {item.level}
                         </span>
-                        {isAuto && (
+                        {isSelected && isAiLevel && (
                           <span className="text-[10px] font-black uppercase tracking-wider bg-amber-600 text-white px-2 py-0.5 rounded-full">
-                            Suggested
+                            ✨ Auto selected
                           </span>
                         )}
-                        {isSelected && (
-                          <span className="text-[10px] font-black uppercase tracking-wider bg-amber-700 text-white px-2 py-0.5 rounded-full">
-                            Selected
+                        {isSelected && !isAiLevel && (
+                          <span className="text-[10px] font-black uppercase tracking-wider bg-indigo-600 text-white px-2 py-0.5 rounded-full">
+                            👩‍🏫 Teacher selected
+                          </span>
+                        )}
+                        {isAuto && !isSelected && (
+                          <span className="text-[10px] font-black uppercase tracking-wider bg-amber-100 text-amber-700 border border-amber-200 px-2 py-0.5 rounded-full">
+                            Auto level
                           </span>
                         )}
                       </div>

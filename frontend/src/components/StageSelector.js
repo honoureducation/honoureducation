@@ -85,12 +85,13 @@ export default function StageSelector({
                   : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-white hover:border-slate-300 hover:shadow-xs'
               }`}
             >
-              <span className="text-sm font-black leading-tight">{meta.short}</span>
+              {/* Year on top, grade / stage underneath — same bold font and size */}
               {meta.sub && (
-                <span className={`text-[11px] font-semibold mt-0.5 ${active ? 'text-white/85' : 'text-slate-500'}`}>
-                  {meta.sub}
-                </span>
+                <span className="text-sm font-black leading-tight">{meta.sub}</span>
               )}
+              <span className={`text-sm font-black leading-tight ${meta.sub ? 'mt-0.5' : ''}`}>
+                {meta.short}
+              </span>
             </button>
           );
         })}
