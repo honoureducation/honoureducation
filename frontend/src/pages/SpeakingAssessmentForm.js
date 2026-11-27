@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import StudentPicker from '../components/StudentPicker';
-import { studentLabel, studentYearClass } from '../utils/students';
+import StudentDetailsCard from '../components/StudentDetailsCard';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { assessmentAPI } from '../services/api';
@@ -232,89 +231,12 @@ export default function SpeakingAssessmentForm() {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Student Information */}
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
-            <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-6 flex items-center gap-2">
-              <svg className="w-4 h-4 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
-              </svg>
-              Student Details
-            </h2>
-            <StudentPicker
-              tier="secondary"
-              value={formData.studentName}
-              onSelect={(s) => {
-                setFormData((p) => ({
-                  ...p,
-                  studentName: studentLabel(s),
-                  yearGroupAndClass: studentYearClass(s),
-                  email: s.email || p.email || localStorage.getItem('userEmail') || '',
-                }));
-              }}
-            />
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Student Email</label>
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-slate-900"
-                  placeholder="e.g. student@school.com"
-                  required
-                />
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Student Name</label>
-                <input
-                  type="text"
-                  name="studentName"
-                  value={formData.studentName}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-slate-900"
-                  placeholder="Full Name"
-                  required
-                />
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Year Group & Class</label>
-                <input
-                  type="text"
-                  name="yearGroupAndClass"
-                  value={formData.yearGroupAndClass}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-slate-900"
-                  placeholder="e.g. Year 8-B"
-                  required
-                />
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Teacher Name</label>
-                <input
-                  type="text"
-                  name="teacherName"
-                  value={formData.teacherName}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-slate-900"
-                  placeholder="Assessor's Name"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Assessment Term</label>
-                <select
-                  name="term"
-                  value={formData.term}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-slate-900 appearance-none"
-                  required
-                >
-                  <option value="T1">Term 1 (T1)</option>
-                  <option value="T2">Term 2 (T2)</option>
-                  <option value="T3">Term 3 (T3)</option>
-                </select>
-              </div>
-            </div>
-          </div>
+          <StudentDetailsCard
+            formData={formData}
+            setFormData={setFormData}
+            onChange={handleInputChange}
+            accent="blue"
+          />
 
           {/* Pictures Section */}
           <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden p-6">

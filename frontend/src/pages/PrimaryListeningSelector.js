@@ -281,9 +281,6 @@ export default function PrimaryListeningSelector() {
 
                 {/* Title */}
                 <div className="mb-1">
-                  <span className="text-[10px] font-bold text-cyan-500 uppercase tracking-widest">
-                    {o.subtitle}
-                  </span>
                   <h3 className="text-lg font-black text-slate-900 group-hover:text-cyan-500 transition-colors leading-snug">
                     {o.title}
                   </h3>

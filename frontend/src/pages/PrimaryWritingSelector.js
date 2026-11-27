@@ -273,9 +273,6 @@ export default function PrimaryWritingSelector() {
 
                 {/* Title */}
                 <div className="mb-1">
-                  <span className="text-[10px] font-bold text-pink-600 uppercase tracking-widest">
-                    {o.subtitle}
-                  </span>
                   <h3 className="text-lg font-black text-slate-900 group-hover:text-pink-600 transition-colors leading-snug">
                     {o.title}
                   </h3>

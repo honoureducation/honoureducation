@@ -273,9 +273,6 @@ export default function PrimaryReadingSelector() {
 
                 {/* Title */}
                 <div className="mb-1">
-                  <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">
-                    {o.subtitle}
-                  </span>
                   <h3 className="text-lg font-black text-slate-900 group-hover:text-emerald-600 transition-colors leading-snug">
                     {o.title}
                   </h3>

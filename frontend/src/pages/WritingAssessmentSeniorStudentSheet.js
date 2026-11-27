@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import StudentPicker from '../components/StudentPicker';
-import { studentLabel, studentYearClass } from '../utils/students';
+import StudentDetailsCard from '../components/StudentDetailsCard';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { assessmentAPI } from '../services/api';
@@ -122,43 +121,13 @@ export default function WritingAssessmentSeniorStudentSheet() {
 
         {/* Student Info + Submit */}
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-purple-500">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Student Information</h2>
-            <StudentPicker
-              tier="secondary"
-              value={formData.studentName}
-              onSelect={(s) => {
-                setFormData((p) => ({
-                  ...p,
-                  studentName: studentLabel(s),
-                  yearGroupAndClass: studentYearClass(s),
-                  email: s.email || p.email || localStorage.getItem('userEmail') || '',
-                }));
-              }}
-            />
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Email</label>
-                <input type="email" name="email" value={formData.email} onChange={handleInputChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500" required />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Student Name</label>
-                <input type="text" name="studentName" value={formData.studentName} onChange={handleInputChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500" required />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Year Group & Class</label>
-                <input type="text" name="yearGroupAndClass" value={formData.yearGroupAndClass} onChange={handleInputChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500" required />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Teacher Name</label>
-                <input type="text" name="teacherName" value={formData.teacherName} onChange={handleInputChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500" />
-              </div>
-            </div>
-          </div>
+          <StudentDetailsCard
+            formData={formData}
+            setFormData={setFormData}
+            onChange={handleInputChange}
+            accent="purple"
+            showTerm={false}
+          />
 
           {/* Questions + Pictures */}
           <div className="bg-white rounded-lg shadow-md p-6 mb-6">

@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import StudentPicker from '../components/StudentPicker';
-import { studentLabel, studentYearClass } from '../utils/students';
+import StudentDetailsCard from '../components/StudentDetailsCard';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { assessmentAPI } from '../services/api';
@@ -194,80 +193,12 @@ export default function WritingAssessmentLandmarkForm() {
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-8">
           {/* Student Information Section */}
-          <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-blue-500">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Student Information</h2>
-            <StudentPicker
-              tier="secondary"
-              value={formData.studentName}
-              onSelect={(s) => {
-                setFormData((p) => ({
-                  ...p,
-                  studentName: studentLabel(s),
-                  yearGroupAndClass: studentYearClass(s),
-                  email: s.email || p.email || localStorage.getItem('userEmail') || '',
-                }));
-              }}
-            />
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Email</label>
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Student Name</label>
-                <input
-                  type="text"
-                  name="studentName"
-                  value={formData.studentName}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Year Group & Class</label>
-                <input
-                  type="text"
-                  name="yearGroupAndClass"
-                  value={formData.yearGroupAndClass}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Teacher Name</label>
-                <input
-                  type="text"
-                  name="teacherName"
-                  value={formData.teacherName}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Assessment Term</label>
-                <select
-                  name="term"
-                  value={formData.term}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-                  required
-                >
-                  <option value="T1">Term 1 (T1)</option>
-                  <option value="T2">Term 2 (T2)</option>
-                  <option value="T3">Term 3 (T3)</option>
-                </select>
-              </div>
-            </div>
-          </div>
+          <StudentDetailsCard
+            formData={formData}
+            setFormData={setFormData}
+            onChange={handleInputChange}
+            accent="blue"
+          />
 
           {/* Pictures and Questions */}
           <div className="bg-white rounded-lg shadow-md p-6 mb-8">

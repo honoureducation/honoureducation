@@ -187,9 +187,6 @@ export default function PrimarySpeakingSelector() {
 
                 {/* Title */}
                 <div className="mb-1">
-                  <span className="text-[10px] font-bold text-violet-500 uppercase tracking-widest">
-                    {o.subtitle}
-                  </span>
                   <h3 className="text-lg font-black text-slate-900 group-hover:text-violet-500 transition-colors leading-snug">
                     {o.title}
                   </h3>

@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import StudentPicker from '../components/StudentPicker';
-import { studentLabel, studentYearClass } from '../utils/students';
+import StudentDetailsCard from '../components/StudentDetailsCard';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { assessmentAPI } from '../services/api';
@@ -184,52 +183,12 @@ export default function ListeningAssessmentForm() {
         <form onSubmit={handleSubmit} className="space-y-6">
 
           {/* Student info */}
-          <div className="card-section">
-            <h2 className="section-heading">
-              <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
-              </svg>
-              Student Information
-            </h2>
-            <StudentPicker
-              tier="secondary"
-              value={formData.studentName}
-              onSelect={(s) => {
-                setFormData((p) => ({
-                  ...p,
-                  studentName: studentLabel(s),
-                  yearGroupAndClass: studentYearClass(s),
-                  email: s.email || p.email || localStorage.getItem('userEmail') || '',
-                }));
-              }}
-            />
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="form-label">Email <span className="text-red-500">*</span></label>
-                <input type="email" name="email" value={formData.email} onChange={handleInput} placeholder="assessor@school.edu" className="form-input" required />
-              </div>
-              <div>
-                <label className="form-label">Student Name <span className="text-red-500">*</span></label>
-                <input type="text" name="studentName" value={formData.studentName} onChange={handleInput} placeholder="Full name" className="form-input" required />
-              </div>
-              <div>
-                <label className="form-label">Year Group & Class <span className="text-red-500">*</span></label>
-                <input type="text" name="yearGroupAndClass" value={formData.yearGroupAndClass} onChange={handleInput} placeholder="e.g. Year 8A" className="form-input" required />
-              </div>
-              <div>
-                <label className="form-label">Teacher Name</label>
-                <input type="text" name="teacherName" value={formData.teacherName} onChange={handleInput} placeholder="Optional" className="form-input" />
-              </div>
-              <div>
-                <label className="form-label">Assessment Term <span className="text-red-500">*</span></label>
-                <select name="term" value={formData.term} onChange={handleInput} className="form-input" required>
-                  <option value="T1">Term 1 (T1)</option>
-                  <option value="T2">Term 2 (T2)</option>
-                  <option value="T3">Term 3 (T3)</option>
-                </select>
-              </div>
-            </div>
-          </div>
+          <StudentDetailsCard
+            formData={formData}
+            setFormData={setFormData}
+            onChange={handleInput}
+            accent="blue"
+          />
 
           <AIAssistantConductor
             questions={QUESTIONS}
